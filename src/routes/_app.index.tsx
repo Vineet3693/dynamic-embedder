@@ -3,7 +3,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/s
 import { AppSidebar } from '@/components/AppSidebar';
 
 // Pathless layout route — wraps every child with the sidebar shell.
-export const Route = createFileRoute('/_app')({
+export const Route = createFileRoute('/_app/')({
   component: AppLayout,
 });
 
