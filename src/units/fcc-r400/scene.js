@@ -1,3 +1,22 @@
+// Auto-adapted from standalone HTML viewer. Original logic preserved 1:1.
+// Three.js extras are attached to the THREE namespace so the original code works unchanged.
+import * as THREE_NS from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { CopyShader } from 'three/examples/jsm/shaders/CopyShader.js';
+
+const THREE = { ...THREE_NS };
+THREE.OrbitControls = OrbitControls;
+THREE.EffectComposer = EffectComposer;
+THREE.RenderPass = RenderPass;
+THREE.ShaderPass = ShaderPass;
+THREE.UnrealBloomPass = UnrealBloomPass;
+THREE.CopyShader = CopyShader;
+
+export function mountFccScene() {
 /* ═══════════════════════════════════════════════════════════════════
    FCC R-400 — COMPLETE 3D SCENE
    ═══════════════════════════════════════════════════════════════════ */
@@ -1875,18 +1894,31 @@ function simulateLoading() {
 /* ═══════════════════════════════════════════════════════
    BOOT
    ═══════════════════════════════════════════════════════ */
-window.addEventListener('DOMContentLoaded', () => {
+
+  // Expose modal close to global scope so inline onclick="closeValveModal()" works
+  window.closeValveModal = closeValveModal;
   console.log('Initializing 3D FCC viewer...');
   try {
     init();
     animate();
   } catch (error) {
     console.error('Critical initialization error:', error);
-    // Emergency: clear loading screen if JS fails
     const loader = document.getElementById('loading-screen');
     if (loader) {
       loader.classList.add('hidden');
       loader.style.display = 'none';
     }
   }
-});
+
+  // Cleanup
+  return () => {
+    try {
+      window.removeEventListener('resize', onResize);
+      if (renderer) {
+        renderer.dispose?.();
+        renderer.domElement?.parentNode?.removeChild(renderer.domElement);
+      }
+      if (audioCtx) audioCtx.close?.();
+    } catch (e) { console.warn('cleanup error', e); }
+  };
+}
