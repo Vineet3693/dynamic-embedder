@@ -9,68 +9,91 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as UnitsFccR400RouteImport } from './routes/units.fcc-r400'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppUnitsUnitIdRouteImport } from './routes/_app.units.$unitId'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UnitsFccR400Route = UnitsFccR400RouteImport.update({
-  id: '/units/fcc-r400',
-  path: '/units/fcc-r400',
-  getParentRoute: () => rootRouteImport,
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUnitsUnitIdRoute = AppUnitsUnitIdRouteImport.update({
+  id: '/units/$unitId',
+  path: '/units/$unitId',
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/units/fcc-r400': typeof UnitsFccR400Route
+  '/': typeof AppIndexRoute
+  '/units/$unitId': typeof AppUnitsUnitIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/units/fcc-r400': typeof UnitsFccR400Route
+  '/': typeof AppIndexRoute
+  '/units/$unitId': typeof AppUnitsUnitIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/units/fcc-r400': typeof UnitsFccR400Route
+  '/_app': typeof AppRouteWithChildren
+  '/_app/': typeof AppIndexRoute
+  '/_app/units/$unitId': typeof AppUnitsUnitIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/units/fcc-r400'
+  fullPaths: '/' | '/units/$unitId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/units/fcc-r400'
-  id: '__root__' | '/' | '/units/fcc-r400'
+  to: '/' | '/units/$unitId'
+  id: '__root__' | '/_app' | '/_app/' | '/_app/units/$unitId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  UnitsFccR400Route: typeof UnitsFccR400Route
+  AppRoute: typeof AppRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/units/fcc-r400': {
-      id: '/units/fcc-r400'
-      path: '/units/fcc-r400'
-      fullPath: '/units/fcc-r400'
-      preLoaderRoute: typeof UnitsFccR400RouteImport
-      parentRoute: typeof rootRouteImport
+    '/_app/': {
+      id: '/_app/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/units/$unitId': {
+      id: '/_app/units/$unitId'
+      path: '/units/$unitId'
+      fullPath: '/units/$unitId'
+      preLoaderRoute: typeof AppUnitsUnitIdRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
 
+interface AppRouteChildren {
+  AppIndexRoute: typeof AppIndexRoute
+  AppUnitsUnitIdRoute: typeof AppUnitsUnitIdRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppIndexRoute: AppIndexRoute,
+  AppUnitsUnitIdRoute: AppUnitsUnitIdRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  UnitsFccR400Route: UnitsFccR400Route,
+  AppRoute: AppRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

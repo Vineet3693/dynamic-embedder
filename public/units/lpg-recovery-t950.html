@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ═══════════════════════════════════════════════════════════════════
+     LPG RECOVERY T-950 — Light End Separation Unit
+     Standalone 3D Isolation Viewer
+     Three.js r147 | Dark Industrial Theme | Production-Ready
+     ═══════════════════════════════════════════════════════════════════ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-950 | LPG Recovery Unit</title>
+<style>
+/* ─── 1. FULL CSS STYLING ─── */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{overflow:hidden;background:#0a0e17;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#c8d6e5;}
+
+/* ─── Loading Screen ─── */
+#loading-screen{position:fixed;inset:0;z-index:9999;background:#0a0e17;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.8s ease;}
+#loading-screen.hidden{opacity:0;pointer-events:none;}
+#loading-screen h1{font-size:1.4rem;color:#f0c040;margin-bottom:1.2rem;letter-spacing:0.08em;}
+.loader-bar{width:280px;height:4px;background:#1a2035;border-radius:2px;overflow:hidden;}
+.loader-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#f0c040,#e8a020);
+  border-radius:2px;transition:width 0.3s ease;}
+#loading-screen p{margin-top:1rem;font-size:0.8rem;color:#5a6a80;}
+
+/* ─── Topbar ─── */
+#topbar{position:fixed;top:0;left:0;right:0;height:48px;z-index:100;
+  background:linear-gradient(180deg,rgba(10,14,23,0.95),rgba(10,14,23,0.85));
+  border-bottom:1px solid #1e2a3a;display:flex;align-items:center;padding:0 16px;
+  backdrop-filter:blur(8px);}
+#topbar .tag{background:#f0c040;color:#0a0e17;font-weight:700;font-size:0.7rem;
+  padding:2px 8px;border-radius:3px;margin-right:12px;letter-spacing:0.06em;}
+#topbar h2{font-size:0.95rem;color:#e0e8f0;font-weight:600;}
+#topbar .unit-id{color:#f0c040;margin-left:8px;}
+#topbar .status{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:0.75rem;}
+#topbar .status .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;
+  box-shadow:0 0 6px #22c55e;animation:pulse-dot 2s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+/* ─── View Toggle Buttons ─── */
+#view-toggle{position:fixed;top:60px;right:16px;z-index:100;display:flex;flex-direction:column;gap:6px;}
+#view-toggle button{background:rgba(20,30,50,0.9);color:#8a9ab0;border:1px solid #1e2a3a;
+  padding:7px 14px;border-radius:4px;font-size:0.72rem;cursor:pointer;
+  transition:all 0.25s ease;letter-spacing:0.04em;font-weight:500;}
+#view-toggle button:hover,#view-toggle button.active{
+  background:rgba(240,192,64,0.15);color:#f0c040;border-color:#f0c040;}
+
+/* ─── Panel Base ─── */
+.panel{position:fixed;left:16px;width:220px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:14px;backdrop-filter:blur(6px);}
+.panel h3{font-size:0.7rem;color:#f0c040;text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:10px;}
+.panel-r{position:fixed;right:16px;width:210px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:14px;backdrop-filter:blur(6px);}
+.panel-r h3{font-size:0.7rem;color:#f0c040;text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:10px;}
+
+/* ─── Left Cards ─── */
+#card-status{top:60px;}
+#card-streams{top:278px;}
+#card-legend{top:478px;}
+
+/* ─── Right Cards ─── */
+#card-readings{top:60px;}
+#card-rates{top:310px;}
+#card-info{top:448px;}
+#card-quality{top:568px;}
+
+/* ─── Reading Rows ─── */
+.reading{margin-bottom:8px;}
+.reading label{display:block;font-size:0.65rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:2px;}
+.reading .value{font-size:1.05rem;color:#e0e8f0;font-weight:600;font-variant-numeric:tabular-nums;}
+.reading .unit{font-size:0.7rem;color:#5a6a80;margin-left:4px;}
+.reading .bar{height:3px;background:#1a2540;border-radius:2px;margin-top:3px;overflow:hidden;}
+.reading .bar-fill{height:100%;border-radius:2px;transition:width 0.5s ease;}
+
+/* ─── Stream Items ─── */
+.stream-item{display:flex;align-items:center;gap:8px;margin-bottom:7px;
+  padding:5px 8px;background:rgba(30,40,60,0.5);border-radius:4px;}
+.stream-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.stream-item .s-name{font-size:0.72rem;color:#a0b0c0;flex:1;}
+.stream-item .s-val{font-size:0.78rem;color:#e0e8f0;font-weight:600;}
+
+/* ─── Legend Items ─── */
+.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.legend-swatch{width:18px;height:8px;border-radius:2px;flex-shrink:0;}
+.legend-item span{font-size:0.72rem;color:#8a9ab0;}
+
+/* ─── Info Box ─── */
+.info-box{padding:8px;background:rgba(30,40,60,0.4);border-radius:4px;
+  border-left:3px solid #38bdf8;margin-bottom:8px;}
+.info-box p{font-size:0.68rem;color:#8a9ab0;margin-bottom:2px;}
+.info-box .lbl{color:#5a6a80;}
+
+/* ─── Bottom Panel ─── */
+#bottom-panel{position:fixed;bottom:40px;left:16px;right:16px;height:80px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:12px 18px;backdrop-filter:blur(6px);display:flex;gap:24px;align-items:center;}
+.process-stat{text-align:center;flex:1;}
+.process-stat .num{font-size:1.2rem;color:#e0e8f0;font-weight:700;font-variant-numeric:tabular-nums;}
+.process-stat .desc{font-size:0.6rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-top:2px;}
+
+/* ─── Alert Ticker ─── */
+#alert-ticker{position:fixed;bottom:0;left:0;right:0;height:32px;z-index:100;
+  background:rgba(15,20,35,0.95);border-top:1px solid #1e2a3a;overflow:hidden;
+  display:flex;align-items:center;}
+#alert-ticker .label{background:#f0c040;color:#0a0e17;font-size:0.65rem;
+  font-weight:700;padding:0 10px;height:100%;display:flex;align-items:center;
+  letter-spacing:0.08em;white-space:nowrap;}
+#ticker-content{flex:1;overflow:hidden;white-space:nowrap;}
+#ticker-scroll{display:inline-block;animation:ticker-scroll 55s linear infinite;
+  font-size:0.72rem;color:#8a9ab0;padding-left:20px;}
+@keyframes ticker-scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+.ticker-item{margin-right:60px;}
+.ticker-item.warn{color:#f59e0b;}
+.ticker-item.info{color:#38bdf8;}
+.ticker-item.ok{color:#22c55e;}
+
+/* ─── Popup Overlay ─── */
+#popup-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.6);
+  display:none;align-items:center;justify-content:center;}
+#popup-overlay.show{display:flex;}
+#popup-box{background:rgba(12,18,30,0.97);border:1px solid #f0c040;border-radius:8px;
+  padding:20px 24px;max-width:420px;width:90%;color:#e0e8f0;}
+#popup-box h3{font-size:0.9rem;color:#f0c040;margin-bottom:12px;letter-spacing:0.06em;}
+#popup-box table{width:100%;border-collapse:collapse;margin-bottom:12px;}
+#popup-box th{font-size:0.65rem;color:#5a6a80;text-align:left;padding:4px 8px;
+  border-bottom:1px solid #1e2a3a;text-transform:uppercase;letter-spacing:0.05em;}
+#popup-box td{font-size:0.78rem;padding:4px 8px;border-bottom:1px solid #111828;
+  font-variant-numeric:tabular-nums;}
+#popup-close{background:#f0c040;color:#0a0e17;border:none;padding:6px 18px;
+  border-radius:4px;cursor:pointer;font-size:0.75rem;font-weight:600;float:right;}
+
+/* ─── Canvas Container ─── */
+#canvas-container{position:fixed;inset:0;z-index:1;}
+canvas{display:block;}
+
+/* ─── Tooltip ─── */
+#tooltip{position:fixed;z-index:200;background:rgba(10,14,23,0.95);border:1px solid #f0c040;
+  color:#e0e8f0;font-size:0.72rem;padding:6px 10px;border-radius:4px;pointer-events:none;
+  display:none;max-width:220px;}
+</style>
+</head>
+<body>
+
+<!-- ─── Loading Screen ─── -->
+<div id="loading-screen">
+  <h1>T-950 LPG RECOVERY</h1>
+  <div class="loader-bar"><div class="loader-bar-fill" id="loader-fill"></div></div>
+  <p>Initializing 3D isolation viewer...</p>
+</div>
+
+<!-- ─── Topbar ─── -->
+<div id="topbar">
+  <span class="TAG">PROCESS UNIT</span>
+  <h2>LPG Recovery — Light End Separation<span class="unit-id">T-950</span></h2>
+  <div class="status"><div class="dot"></div><span>ONLINE</span></div>
+</div>
+
+<!-- ─── View Toggle ─── -->
+<div id="view-toggle">
+  <button class="active" data-view="external">External</button>
+  <button data-view="internal">Internal</button>
+  <button data-view="cutaway">Cutaway</button>
+  <button data-view="flow">Flow</button>
+</div>
+
+<!-- ─── LEFT Card 1: PROCESS STATUS ─── -->
+<div class="panel" id="card-status">
+  <h3>Process Status</h3>
+  <div class="reading">
+    <label>Feed Rate</label>
+    <div><span class="value" id="r-feed">42.5</span><span class="unit">ton/h</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-feed" style="width:71%;background:#22c55e;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Refrigeration Duty</label>
+    <div><span class="value" id="r-refrig">2.8</span><span class="unit">MW</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-refrig" style="width:56%;background:#38bdf8;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Compressor Load</label>
+    <div><span class="value" id="r-compload">78</span><span class="unit">%</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-compload" style="width:78%;background:#f59e0b;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Chiller Temperature</label>
+    <div><span class="value" id="r-chill">-25.2</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-chill" style="width:84%;background:#a78bfa;"></div></div>
+  </div>
+</div>
+
+<!-- ─── LEFT Card 2: PROCESS STREAMS ─── -->
+<div class="panel" id="card-streams">
+  <h3>Process Streams</h3>
+  <div class="stream-item"><div class="stream-dot" style="background:#888;"></div>
+    <span class="s-name">Refinery Gas In</span><span class="s-val" id="s-rgas">42.5 t/h</span></div>
+  <div class="stream-item"><div class="stream-dot" style="background:#bbb;"></div>
+    <span class="s-name">Fuel Gas Out</span><span class="s-val" id="s-fgas">12.3 t/h</span></div>
+  <div class="stream-item"><div class="stream-dot" style="background:#3b82f6;"></div>
+    <span class="s-name">Propane LPG</span><span class="s-val" id="s-c3">14.8 t/h</span></div>
+  <div class="stream-item"><div class="stream-dot" style="background:#06b6d4;"></div>
+    <span class="s-name">Butane LPG</span><span class="s-val" id="s-c4">9.6 t/h</span></div>
+  <div class="stream-item"><div class="stream-dot" style="background:#f59e0b;"></div>
+    <span class="s-name">Natural Gasoline</span><span class="s-val" id="s-c5">5.8 t/h</span></div>
+</div>
+
+<!-- ─── LEFT Card 3: FLUID LEGEND ─── -->
+<div class="panel" id="card-legend">
+  <h3>Fluid Legend</h3>
+  <div class="legend-item"><div class="legend-swatch" style="background:#888;"></div>
+    <span>Refinery Gas (grey)</span></div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#bbb;"></div>
+    <span>Fuel Gas — C1/C2 (light grey)</span></div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#3b82f6;"></div>
+    <span>Propane — C3 (blue)</span></div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#06b6d4;"></div>
+    <span>Butane — C4 (cyan)</span></div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#f59e0b;"></div>
+    <span>Natural Gasoline — C5+ (amber)</span></div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#22d3ee;"></div>
+    <span>Refrigerant (cyan glow)</span></div>
+</div>
+
+<!-- ─── RIGHT Card 1: LIVE READINGS ─── -->
+<div class="panel-r" id="card-readings">
+  <h3>Live Readings</h3>
+  <div class="reading">
+    <label>Compressor Discharge P</label>
+    <div><span class="value" id="r-cdpress">18.2</span><span class="unit">barg</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-cdpress" style="width:73%;background:#ef4444;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Chiller Outlet Temp</label>
+    <div><span class="value" id="r-chtemp">-25.2</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-chtemp" style="width:84%;background:#38bdf8;"></div></div>
+  </div>
+  <div class="reading">
+    <label>De-Ethanizer P / Reflux</label>
+    <div><span class="value" id="r-dep">22.5</span><span class="unit">barg</span> /
+      <span class="value" id="r-der">3.2</span><span class="unit">ratio</span></div>
+  </div>
+  <div class="reading">
+    <label>De-Propanizer P / Reflux</label>
+    <div><span class="value" id="r-dpp">16.8</span><span class="unit">barg</span> /
+      <span class="value" id="r-dpr">4.1</span><span class="unit">ratio</span></div>
+  </div>
+  <div class="reading">
+    <label>De-Butanizer P / Reflux</label>
+    <div><span class="value" id="r-dbp">5.2</span><span class="unit">barg</span> /
+      <span class="value" id="r-dbr">2.8</span><span class="unit">ratio</span></div>
+  </div>
+</div>
+
+<!-- ─── RIGHT Card 2: PRODUCT RATES ─── -->
+<div class="panel-r" id="card-rates">
+  <h3>Product Rates</h3>
+  <div class="reading">
+    <label>Propane LPG</label>
+    <div><span class="value" id="r-c3rate">355</span><span class="unit">ton/day</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-c3rate" style="width:74%;background:#3b82f6;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Butane LPG</label>
+    <div><span class="value" id="r-c4rate">230</span><span class="unit">ton/day</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-c4rate" style="width:58%;background:#06b6d4;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Natural Gasoline C5+</label>
+    <div><span class="value" id="r-c5rate">139</span><span class="unit">ton/day</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-c5rate" style="width:35%;background:#f59e0b;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Fuel Gas</label>
+    <div><span class="value" id="r-fgrate">2950</span><span class="unit">m³/hr</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-fgrate" style="width:62%;background:#aaa;"></div></div>
+  </div>
+</div>
+
+<!-- ─── RIGHT Card 3: UNIT INFO ─── -->
+<div class="panel-r" id="card-info">
+  <h3>Unit Info</h3>
+  <div class="info-box">
+    <p><span class="lbl">Columns:</span> De-Ethanizer, De-Propanizer, De-Butanizer</p>
+    <p><span class="lbl">Refrigeration:</span> Propane refrigeration cycle</p>
+    <p><span class="lbl">Design Capacity:</span> 1,020 ton/day feed</p>
+    <p><span class="lbl">Products:</span> Propane, Butane LPG, Nat. Gasoline</p>
+    <p><span class="lbl">Operating:</span> <span style="color:#22c55e;">RUNNING</span></p>
+  </div>
+</div>
+
+<!-- ─── RIGHT Card 4: PRODUCT QUALITY ─── -->
+<div class="panel-r" id="card-quality">
+  <h3>Product Quality</h3>
+  <div class="reading">
+    <label>Propane Purity (C3)</label>
+    <div><span class="value" id="r-c3purity">95.8</span><span class="unit">%</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-c3purity" style="width:96%;background:#22c55e;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Butane Purity (C4)</label>
+    <div><span class="value" id="r-c4purity">93.4</span><span class="unit">%</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-c4purity" style="width:93%;background:#06b6d4;"></div></div>
+  </div>
+  <div class="reading">
+    <label>C5+ RVP</label>
+    <div><span class="value" id="r-rvp">4.8</span><span class="unit">psi</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-rvp" style="width:32%;background:#f59e0b;"></div></div>
+  </div>
+</div>
+
+<!-- ─── Bottom Panel ─── -->
+<div id="bottom-panel">
+  <div class="process-stat"><div class="num" id="b-feed">42.5</div><div class="desc">Feed Rate (ton/h)</div></div>
+  <div class="process-stat"><div class="num" id="b-chill">-25.2</div><div class="desc">Chiller Temp (°C)</div></div>
+  <div class="process-stat"><div class="num" id="b-c3">355</div><div class="desc">Propane (t/d)</div></div>
+  <div class="process-stat"><div class="num" id="b-c4">230</div><div class="desc">Butane (t/d)</div></div>
+  <div class="process-stat"><div class="num" id="b-fg">2950</div><div class="desc">Fuel Gas (m³/h)</div></div>
+  <div class="process-stat"><div class="num" id="b-cload">78%</div><div class="desc">Compressor Load</div></div>
+</div>
+
+<!-- ─── Alert Ticker ─── -->
+<div id="alert-ticker">
+  <div class="label">ALERTS</div>
+  <div id="ticker-content">
+    <div id="ticker-scroll">
+      <span class="ticker-item ok">&#9679; T-950 LPG recovery unit operating normally — all columns stable</span>
+      <span class="ticker-item warn">&#9679; De-propanizer reflux drum level trending high — check LCV-9506</span>
+      <span class="ticker-item info">&#9679; Feed compressor surge margin at 18% — within safe operating window</span>
+      <span class="ticker-item ok">&#9679; Propane refrigeration compressor vibration 2.1 mm/s — normal</span>
+      <span class="ticker-item warn">&#9679; De-ethanizer overhead temperature elevated +3°C — monitor C1/C2 split</span>
+      <span class="ticker-item info">&#9679; Caustic wash vessel caustic concentration at 8.2% — scheduled refresh</span>
+      <span class="ticker-item ok">&#9679; LPG bullet B-950A level 62% — product shipping on schedule</span>
+      <span class="ticker-item warn">&#9679; De-butanizer reboiler duty approaching design limit — verify steam supply</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Popup Overlay ─── -->
+<div id="popup-overlay">
+  <div id="popup-box">
+    <h3 id="popup-title">Equipment Info</h3>
+    <div id="popup-body"></div>
+    <button id="popup-close">Close</button>
+  </div>
+</div>
+
+<!-- ─── Tooltip ─── -->
+<div id="tooltip"></div>
+
+<!-- ─── Canvas Container ─── -->
+<div id="canvas-container"></div>
+
+<!-- ─── 2. THREE.JS r147 CDN SETUP ─── -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   LPG RECOVERY T-950 — COMPLETE 3D SCENE
+   ═══════════════════════════════════════════════════════════════════ */
+
+// ─── Global State ───
+let scene, camera, renderer, controls, composer;
+let raycaster, mouse, clock;
+let interactiveObjects = [];
+let particleSystems = [];
+let currentView = 'external';
+let fanBlades = [];
+let clickableMeshes = { depropanizer: null, compressor: null };
+
+// ─── Camera Presets ───
+const cameraPresets = {
+  external: { pos: [35, 18, 35], target: [2, 4, 0] },
+  internal: { pos: [4, 6, 2], target: [4, 4, 0] },
+  cutaway:  { pos: [28, 10, 28], target: [2, 3, 0] },
+  flow:     { pos: [22, 12, 22], target: [2, 4, 0] }
+};
+
+/* ═══════════════════════════════════════════════════════
+   INITIALIZATION
+   ═══════════════════════════════════════════════════════ */
+function init() {
+  const container = document.getElementById('canvas-container');
+  clock = new THREE.Clock();
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0e17);
+  scene.fog = new THREE.FogExp2(0x0a0e17, 0.008);
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 250);
+  camera.position.set(35, 18, 35);
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+  container.appendChild(renderer.domElement);
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(2, 4, 0);
+  controls.minDistance = 5;
+  controls.maxDistance = 80;
+  try {
+    composer = new THREE.EffectComposer(renderer);
+    composer.addPass(new THREE.RenderPass(scene, camera));
+    const bloomPass = new THREE.UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight), 0.4, 0.5, 0.85);
+    composer.addPass(bloomPass);
+  } catch (e) {
+    console.error("Post-processing failed:", e);
+    composer = null;
+  }
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+  setupLights();
+  buildLPGUnit();
+  buildParticles();
+  // Ground
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(200, 200),
+    new THREE.MeshStandardMaterial({ color: 0x0d1220, roughness: 0.95, metalness: 0.1 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.5;
+  ground.receiveShadow = true;
+  scene.add(ground);
+  window.addEventListener('resize', onResize);
+  renderer.domElement.addEventListener('click', onClick);
+  renderer.domElement.addEventListener('mousemove', onMouseMove);
+  setupViewToggle();
+  setupPopup();
+  simulateLoading();
+}
+
+/* ═══════════════════════════════════════════════════════
+   5-LIGHT SETUP
+   ═══════════════════════════════════════════════════════ */
+function setupLights() {
+  const key = new THREE.DirectionalLight(0xffeedd, 1.2);
+  key.position.set(20, 25, 15);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.left = -30; key.shadow.camera.right = 30;
+  key.shadow.camera.top = 30; key.shadow.camera.bottom = -30;
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0x8899cc, 0.4);
+  fill.position.set(-15, 10, -8);
+  scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xffcc88, 0.35);
+  rim.position.set(-8, 12, -20);
+  scene.add(rim);
+  const amb = new THREE.AmbientLight(0x303848, 0.5);
+  scene.add(amb);
+  const under = new THREE.PointLight(0x2244aa, 0.3, 40);
+  under.position.set(2, -2, 0);
+  scene.add(under);
+}
+
+/* ═══════════════════════════════════════════════════════
+   MATERIALS
+   ═══════════════════════════════════════════════════════ */
+function mat(c, o = {}) {
+  return new THREE.MeshStandardMaterial({
+    color: c, metalness: o.m ?? 0.85, roughness: o.r ?? 0.25,
+    transparent: o.t ?? false, opacity: o.o ?? 1.0,
+    emissive: o.e ?? 0x000000, emissiveIntensity: o.ei ?? 0
+  });
+}
+const M = {
+  shell:     () => mat(0xd5dce0, { m: 0.8, r: 0.2, t: true, o: 0.55 }),
+  shellS:    () => mat(0xd5dce0, { m: 0.8, r: 0.2 }),
+  dark:      () => mat(0x383e45, { m: 0.9, r: 0.2 }),
+  ss:        () => mat(0xc0c8d0, { m: 0.95, r: 0.15 }),
+  yellow:    () => mat(0xf0c040, { m: 0.6, r: 0.35 }),
+  concrete:  () => mat(0x606868, { m: 0.05, r: 0.95 }),
+  grating:   () => mat(0x505a64, { m: 0.7, r: 0.5, t: true, o: 0.6 }),
+  red:       () => mat(0xcc2222, { m: 0.5, r: 0.4 }),
+  pipeGrey:  () => mat(0x888888, { m: 0.5, r: 0.4 }),
+  pipeBlue:  () => mat(0x3b82f6, { m: 0.5, r: 0.4 }),
+  pipeCyan:  () => mat(0x06b6d4, { m: 0.5, r: 0.4 }),
+  pipeAmber: () => mat(0xf59e0b, { m: 0.5, r: 0.4 }),
+  pipeLGrey: () => mat(0xbbbbbb, { m: 0.5, r: 0.4 }),
+  refrig:    () => mat(0x22d3ee, { m: 0.4, r: 0.3, e: 0x22d3ee, ei: 0.3 }),
+  glass:     () => new THREE.MeshPhysicalMaterial({
+    color: 0xaaccff, metalness: 0.05, roughness: 0.05,
+    transmission: 0.9, transparent: true, opacity: 0.45 }),
+  insul:     () => mat(0xd4c4a8, { m: 0.1, r: 0.9, t: true, o: 0.35 }),
+  green:     () => mat(0x22c55e, { m: 0.5, r: 0.4 }),
+};
+
+/* ═══════════════════════════════════════════════════════
+   HELPER: Pipe (TubeGeometry along CatmullRom)
+   ═══════════════════════════════════════════════════════ */
+function addPipe(points, radius, material) {
+  const curve = new THREE.CatmullRomCurve3(points);
+  const geo = new THREE.TubeGeometry(curve, 28, Math.max(0.01, radius), 8, false);
+  const mesh = new THREE.Mesh(geo, material);
+  mesh.castShadow = true;
+  scene.add(mesh);
+  return mesh;
+}
+
+/* ═══════════════════════════════════════════════════════
+   HELPER: Vertical Column with trays, downcomers, skirts
+   ═══════════════════════════════════════════════════════ */
+function buildColumn(x, z, R, H, trays, label) {
+  const g = new THREE.Group();
+  g.name = label;
+  // Skirt
+  const skirt = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.05, R + 0.15, 1.5, 32), M.dark());
+  skirt.position.y = 0.75;
+  skirt.castShadow = true;
+  g.add(skirt);
+  // Shell
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(R, R, H, 48, 1, true), M.shell());
+  shell.position.y = 1.5 + H / 2;
+  shell.castShadow = true;
+  g.add(shell);
+  // Top cap (hemispherical)
+  const topCap = new THREE.Mesh(new THREE.SphereGeometry(R, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2), M.shellS());
+  topCap.position.y = 1.5 + H;
+  g.add(topCap);
+  // Bottom cap
+  const botCap = new THREE.Mesh(new THREE.SphereGeometry(R, 48, 24, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.shellS());
+  botCap.position.y = 1.5;
+  botCap.rotation.x = Math.PI;
+  g.add(botCap);
+  // Trays + downcomers
+  const traySpacing = H / (trays + 1);
+  for (let i = 1; i <= trays; i++) {
+    const ty = 1.5 + i * traySpacing;
+    // Tray ring
+    const tray = new THREE.Mesh(
+      new THREE.TorusGeometry(R * 0.92, 0.025, 6, 32),
+      M.ss());
+    tray.rotation.x = Math.PI / 2;
+    tray.position.y = ty;
+    g.add(tray);
+    // Downcomer (vertical plate on alternating sides)
+    if (i % 2 === 0) {
+      const dc = new THREE.Mesh(
+        new THREE.BoxGeometry(0.04, traySpacing * 0.7, R * 1.4), M.ss());
+      dc.position.set(R * 0.7, ty - traySpacing * 0.35, 0);
+      g.add(dc);
+    } else {
+      const dc = new THREE.Mesh(
+        new THREE.BoxGeometry(R * 1.4, traySpacing * 0.7, 0.04), M.ss());
+      dc.position.set(0, ty - traySpacing * 0.35, R * 0.7);
+      g.add(dc);
+    }
+  }
+  // Weld seam rings
+  [H * 0.25, H * 0.5, H * 0.75].forEach(f => {
+    const wr = new THREE.Mesh(new THREE.TorusGeometry(R + 0.02, 0.03, 8, 48),
+      mat(0xb0b8c0, { m: 0.9, r: 0.15 }));
+    wr.rotation.x = Math.PI / 2;
+    wr.position.y = 1.5 + f;
+    g.add(wr);
+  });
+  // Platform at ~60% height
+  const platY = 1.5 + H * 0.6;
+  addPlatform(g, platY, R * 2.2, R * 2.2);
+  // Ladder
+  addLadder(g, R + 0.3, 0, H + 1.5);
+  g.position.set(x, 0, z);
+  scene.add(g);
+  return g;
+}
+
+/* ═══════════════════════════════════════════════════════
+   HELPER: Platform + Handrails on a group
+   ═══════════════════════════════════════════════════════ */
+function addPlatform(parent, y, w, d) {
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(w, 0.08, d), M.grating());
+  deck.position.y = y;
+  parent.add(deck);
+  // Handrail posts
+  const rH = 1.1;
+  const corners = [[-w/2, d/2], [w/2, d/2], [w/2, -d/2], [-w/2, -d/2]];
+  corners.forEach(([cx, cz]) => {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, rH, 8), M.yellow());
+    post.position.set(cx, y + rH / 2, cz);
+    parent.add(post);
+  });
+  // Top rails
+  [[-w/2, d/2, w/2, d/2], [w/2, d/2, w/2, -d/2],
+   [w/2, -d/2, -w/2, -d/2], [-w/2, -d/2, -w/2, d/2]].forEach(([x1,z1,x2,z2]) => {
+    const len = Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
+    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, len, 8), M.yellow());
+    rail.position.set((x1 + x2) / 2, y + rH, (z1 + z2) / 2);
+    rail.rotation.z = Math.PI / 2;
+    rail.rotation.y = Math.atan2(z2 - z1, x2 - x1);
+    // Simplified horizontal rail
+    rail.rotation.set(0, Math.atan2(z2 - z1, x2 - x1) - Math.PI / 2, 0);
+    rail.position.y = y + rH;
+    parent.add(rail);
+  });
+  // Toe boards
+  [[-w/2, d/2, w, 0.04], [0, -d/2, w, 0.04]].forEach(([ox, oz, bw, bd]) => {
+    // simplified
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   HELPER: Ladder
+   ═══════════════════════════════════════════════════════ */
+function addLadder(parent, xOffset, zPos, height) {
+  const ladder = new THREE.Group();
+  [-0.25, 0.25].forEach(zOff => {
+    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, height, 8), M.yellow());
+    rail.position.set(xOffset, height / 2, zPos + zOff);
+    ladder.add(rail);
+  });
+  const rungs = Math.floor(height / 0.4);
+  for (let i = 0; i < rungs; i++) {
+    const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 6), M.yellow());
+    rung.rotation.x = Math.PI / 2;
+    rung.position.set(xOffset, 0.3 + i * 0.4, zPos);
+    ladder.add(rung);
+  }
+  parent.add(ladder);
+}
+
+/* ═══════════════════════════════════════════════════════
+   HELPER: Horizontal vessel (shell + heads) on saddles
+   ═══════════════════════════════════════════════════════ */
+function buildHVessel(x, z, r, length, yOff, label, orient) {
+  const g = new THREE.Group();
+  g.name = label;
+  const cyl = new THREE.Mesh(
+    new THREE.CylinderGeometry(r, r, length, 32, 1, true), M.shell());
+  if (orient === 'z') { cyl.rotation.x = Math.PI / 2; }
+  else { cyl.rotation.z = Math.PI / 2; }
+  cyl.position.y = yOff;
+  cyl.castShadow = true;
+  g.add(cyl);
+  // Heads
+  const headGeo = new THREE.SphereGeometry(r, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+  const h1 = new THREE.Mesh(headGeo, M.shellS());
+  const h2 = new THREE.Mesh(headGeo, M.shellS());
+  if (orient === 'z') {
+    h1.position.set(0, yOff, -length / 2); h1.rotation.x = Math.PI / 2;
+    h2.position.set(0, yOff, length / 2); h2.rotation.x = -Math.PI / 2;
+  } else {
+    h1.position.set(-length / 2, yOff, 0); h1.rotation.z = Math.PI / 2;
+    h2.position.set(length / 2, yOff, 0); h2.rotation.z = -Math.PI / 2;
+  }
+  g.add(h1, h2);
+  // Saddles
+  [-length * 0.3, length * 0.3].forEach(off => {
+    const saddle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, r * 1.5, 0.6), M.dark());
+    if (orient === 'z') { saddle.position.set(0, yOff - r * 0.9, off); }
+    else { saddle.position.set(off, yOff - r * 0.9, 0); }
+    g.add(saddle);
+  });
+  g.position.set(x, 0, z);
+  scene.add(g);
+  return g;
+}
+
+/* ═══════════════════════════════════════════════════════
+   BUILD LPG RECOVERY T-950
+   ═══════════════════════════════════════════════════════ */
+function buildLPGUnit() {
+  // ═══ FEED COMPRESSOR (box body + motor + coupling, concrete base) ═══
+  const compGrp = new THREE.Group();
+  compGrp.name = 'feedCompressor';
+  const compBase = new THREE.Mesh(new THREE.BoxGeometry(4, 2.5, 2.5), M.dark());
+  compBase.position.y = 1.25; compBase.castShadow = true;
+  compGrp.add(compBase);
+  // Motor
+  const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 1.8, 16), M.shellS());
+  motor.rotation.z = Math.PI / 2; motor.position.set(3.2, 2, 0);
+  compGrp.add(motor);
+  // Coupling
+  const coupling = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.4, 12), M.red());
+  coupling.rotation.z = Math.PI / 2; coupling.position.set(2.2, 2, 0);
+  compGrp.add(coupling);
+  // Concrete base
+  const cbase = new THREE.Mesh(new THREE.BoxGeometry(6, 0.5, 3.5), M.concrete());
+  cbase.position.y = 0; compGrp.add(cbase);
+  // Inlet/outlet nozzles
+  // Inlet/outlet nozzles
+  const nz1 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 1.2, 12), M.pipeGrey());
+  nz1.position.set(-2.5, 2.5, 0);
+  compGrp.add(nz1);
+  const nz2 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 1.2, 12), M.pipeGrey());
+  nz2.position.set(-2.5, 1.5, 0);
+  compGrp.add(nz2);
+  compGrp.position.set(-22, 0, 0);
+  scene.add(compGrp);
+  clickableMeshes.compressor = compGrp;
+
+  // ═══ FEED CHILLER (shell-and-tube r=0.8, L=3, horizontal) ═══
+  const chillerGrp = buildHVessel(-14, 0, 0.8, 3, 2.5, 'feedChiller', 'x');
+  // Refrigerant jacket (outer shell)
+  const jacket = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.0, 1.0, 2.8, 32, 1, true),
+    mat(0x22d3ee, { m: 0.4, r: 0.3, t: true, o: 0.25, e: 0x22d3ee, ei: 0.15 }));
+  jacket.rotation.z = Math.PI / 2; jacket.position.set(-14, 2.5, 0);
+  scene.add(jacket);
+  // Chiller support
+  const chSup = new THREE.Mesh(new THREE.BoxGeometry(4, 0.4, 2), M.concrete());
+  chSup.position.set(-14, 0, 0); scene.add(chSup);
+
+  // ═══ REFRIGERATION COMPRESSOR (box + motor) ═══
+  const refCompGrp = new THREE.Group();
+  refCompGrp.name = 'refrigCompressor';
+  const rcBody = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2, 2), M.dark());
+  rcBody.position.y = 1; rcBody.castShadow = true;
+  refCompGrp.add(rcBody);
+  const rcMotor = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1.5, 16), M.shellS());
+  rcMotor.rotation.z = Math.PI / 2; rcMotor.position.set(2.2, 1.3, 0);
+  refCompGrp.add(rcMotor);
+  const rcBase = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.4, 2.8), M.concrete());
+  rcBase.position.y = 0; refCompGrp.add(rcBase);
+  refCompGrp.position.set(-20, 0, 6);
+  scene.add(refCompGrp);
+
+  // ═══ REFRIGERANT CONDENSER (air-cooled fin-fan box + rotating fan) ═══
+  const condGrp = new THREE.Group();
+  condGrp.name = 'refrigCondenser';
+  const condBox = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 2.5), M.dark());
+  condBox.position.y = 1.5; condGrp.add(condBox);
+  // Fins
+  for (let i = 0; i < 8; i++) {
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.04, 2.7), M.ss());
+    fin.position.set(0, 0.6 + i * 0.15, 0);
+    condGrp.add(fin);
+  }
+  // Fan
+  const fanHub = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.3, 8), M.yellow());
+  fanHub.position.y = 2.3; condGrp.add(fanHub);
+  for (let b = 0; b < 4; b++) {
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.2), M.ss());
+    blade.position.y = 2.3;
+    blade.rotation.y = (b / 4) * Math.PI * 2;
+    blade.position.x = Math.cos((b / 4) * Math.PI * 2) * 0.5;
+    blade.position.z = Math.sin((b / 4) * Math.PI * 2) * 0.5;
+    condGrp.add(blade);
+    fanBlades.push(blade);
+  }
+  // Fan guard ring
+  const guardRing = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.04, 6, 24), M.yellow());
+  guardRing.rotation.x = Math.PI / 2; guardRing.position.y = 2.3;
+  condGrp.add(guardRing);
+  const condBase = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.4, 3), M.concrete());
+  condBase.position.y = 0; condGrp.add(condBase);
+  condGrp.position.set(-16, 0, 6);
+  scene.add(condGrp);
+
+  // ═══ DE-ETHANIZER COLUMN (r=1.0, H=12, 25 trays) ═══
+  const deEth = buildColumn(-6, 0, 1.0, 12, 25, 'deEthanizer');
+  // Reboiler (r=0.5, L=2 horizontal) at base
+  buildHVessel(-6, 2.5, 0.5, 2, 1.5, 'deEthReboiler', 'x');
+  // Condenser (vertical box above column)
+  const deEthCond = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2, 1.5), M.dark());
+  deEthCond.position.set(-6, 16, 0); deEthCond.castShadow = true;
+  scene.add(deEthCond);
+  // Reflux drum (r=0.35, L=1.2 horizontal)
+  buildHVessel(-6, -2.5, 0.35, 1.2, 14.5, 'deEthReflux', 'x');
+
+  // ═══ DE-PROPANIZER COLUMN (r=1.2, H=14, 30 trays) — MAIN ═══
+  const deProp = buildColumn(4, 0, 1.2, 14, 30, 'dePropanizer');
+  clickableMeshes.depropanizer = deProp;
+  // Highlight glow
+  const propGlow = new THREE.PointLight(0x3b82f6, 0.4, 8);
+  propGlow.position.set(4, 8, 0);
+  scene.add(propGlow);
+  // Reboiler (r=0.6, L=2.5)
+  buildHVessel(4, 3, 0.6, 2.5, 1.5, 'dePropReboiler', 'x');
+  // Condenser
+  const dePropCond = new THREE.Mesh(new THREE.BoxGeometry(2, 2.5, 2), M.dark());
+  dePropCond.position.set(4, 18.5, 0); dePropCond.castShadow = true;
+  scene.add(dePropCond);
+  // Reflux drum (r=0.4, L=1.5)
+  buildHVessel(4, -3, 0.4, 1.5, 17, 'dePropReflux', 'x');
+
+  // ═══ DE-BUTANIZER COLUMN (r=1.0, H=10, 20 trays) ═══
+  const deBut = buildColumn(14, 0, 1.0, 10, 20, 'deButanizer');
+  // Reboiler (r=0.5, L=2)
+  buildHVessel(14, 2.5, 0.5, 2, 1.5, 'deButReboiler', 'x');
+  // Condenser
+  const deButCond = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2, 1.5), M.dark());
+  deButCond.position.set(14, 14.5, 0); deButCond.castShadow = true;
+  scene.add(deButCond);
+  // Reflux drum (r=0.35, L=1.2)
+  buildHVessel(14, -2.5, 0.35, 1.2, 13, 'deButReflux', 'x');
+
+  // ═══ CAUSTIC WASH VESSEL (r=0.4, L=1.5, horizontal) ═══
+  buildHVessel(10, 5, 0.4, 1.5, 2.5, 'causticWash', 'x');
+  // Caustic label
+  const causticTag = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.25),
+    mat(0xf0c040, { e: 0xf0c040, ei: 0.2 }));
+  causticTag.position.set(10, 3.5, 5.9);
+  scene.add(causticTag);
+
+  // ═══ 2 LPG STORAGE BULLETS (r=1.0, L=4 each) on saddles ═══
+  buildHVessel(22, 3, 1.0, 4, 2.0, 'lpgBulletA', 'x');
+  buildHVessel(22, -3, 1.0, 4, 2.0, 'lpgBulletB', 'x');
+  // Bullet saddles
+  [-1.2, 1.2].forEach(off => {
+    [3, -3].forEach(zp => {
+      const sad = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.2, 1.5), M.dark());
+      sad.position.set(22 + off, 0.6, zp); scene.add(sad);
+      const ped = new THREE.Mesh(new THREE.BoxGeometry(1, 0.3, 1.8), M.concrete());
+      ped.position.set(22 + off, 0, zp); scene.add(ped);
+    });
+  });
+
+  // ═══ PIPE RACK (running along X axis) ═══
+  const rackGrp = new THREE.Group();
+  const rackLen = 50;
+  // Columns
+  for (let rx = -24; rx <= 24; rx += 6) {
+    const col = new THREE.Mesh(new THREE.BoxGeometry(0.2, 8, 0.2), M.dark());
+    col.position.set(rx, 4, -8);
+    rackGrp.add(col);
+  }
+  // Horizontal beams at 2 levels
+  [6, 7.5].forEach(ry => {
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(rackLen, 0.15, 1.5), M.dark());
+    beam.position.set(0, ry, -8);
+    rackGrp.add(beam);
+    // Cross beams
+    const xbeam = new THREE.Mesh(new THREE.BoxGeometry(rackLen, 0.1, 0.1), M.dark());
+    xbeam.position.set(0, ry - 0.1, -7.5);
+    rackGrp.add(xbeam);
+  });
+  scene.add(rackGrp);
+
+  // ═══ PROCESS PIPING ═══
+  // Refinery gas to compressor
+  addPipe([new THREE.Vector3(-28, 2, 0), new THREE.Vector3(-24, 2, 0)], 0.18, M.pipeGrey());
+  // Compressor to chiller
+  addPipe([new THREE.Vector3(-19.5, 2.5, 0), new THREE.Vector3(-17, 2.5, 0),
+    new THREE.Vector3(-15.5, 2.5, 0)], 0.15, M.pipeGrey());
+  // Chiller to de-ethanizer
+  addPipe([new THREE.Vector3(-12.5, 2.5, 0), new THREE.Vector3(-10, 3, 0),
+    new THREE.Vector3(-8, 4, 0), new THREE.Vector3(-6, 6, 0)], 0.15, M.pipeGrey());
+  // C1/C2 fuel gas overhead de-ethanizer (going up and away)
+  addPipe([new THREE.Vector3(-6, 14, 0), new THREE.Vector3(-6, 16, 0),
+    new THREE.Vector3(-8, 17, 0), new THREE.Vector3(-12, 17, 0)], 0.12, M.pipeLGrey());
+  // C3+ from de-ethanizer bottom to depropanizer
+  addPipe([new THREE.Vector3(-6, 1.5, 0), new THREE.Vector3(-6, 1, 2),
+    new THREE.Vector3(-2, 1, 0), new THREE.Vector3(2, 1, 0),
+    new THREE.Vector3(4, 1.5, 0)], 0.14, M.pipeBlue());
+  // Propane overhead from depropanizer
+  addPipe([new THREE.Vector3(4, 16, 0), new THREE.Vector3(4, 18, 0),
+    new THREE.Vector3(6, 18.5, 0), new THREE.Vector3(10, 18.5, 0)], 0.14, M.pipeBlue());
+  // C4+ from depropanizer bottom to debutanizer
+  addPipe([new THREE.Vector3(4, 1.5, 0), new THREE.Vector3(4, 1, -2),
+    new THREE.Vector3(8, 1, 0), new THREE.Vector3(12, 1, 0),
+    new THREE.Vector3(14, 1.5, 0)], 0.12, M.pipeCyan());
+  // Butane overhead from debutanizer
+  addPipe([new THREE.Vector3(14, 12.5, 0), new THREE.Vector3(14, 14.5, 0),
+    new THREE.Vector3(16, 15, 0), new THREE.Vector3(20, 15, 0)], 0.12, M.pipeCyan());
+  // C5+ gasoline from debutanizer bottom
+  addPipe([new THREE.Vector3(14, 1.5, 0), new THREE.Vector3(14, 1, 2),
+    new THREE.Vector3(18, 1, 0), new THREE.Vector3(22, 1, 0)], 0.10, M.pipeAmber());
+  // Propane to caustic wash
+  addPipe([new THREE.Vector3(10, 18.5, 0), new THREE.Vector3(10, 10, 0),
+    new THREE.Vector3(10, 5, 0)], 0.10, M.pipeBlue());
+  // Caustic wash to storage bullets
+  addPipe([new THREE.Vector3(10.75, 2.5, 5), new THREE.Vector3(14, 2.5, 4),
+    new THREE.Vector3(20, 2.5, 3)], 0.10, M.pipeBlue());
+  addPipe([new THREE.Vector3(10.75, 2.5, 5), new THREE.Vector3(14, 2.5, -2),
+    new THREE.Vector3(20, 2.5, -3)], 0.10, M.pipeCyan());
+  // Refrigerant circulation (compressor → condenser → chiller)
+  addPipe([new THREE.Vector3(-20, 2, 6), new THREE.Vector3(-18, 2, 6)], 0.10, M.refrig());
+  addPipe([new THREE.Vector3(-14.5, 2.5, 6), new THREE.Vector3(-14, 3, 4),
+    new THREE.Vector3(-14, 2.5, 1)], 0.08, M.refrig());
+  addPipe([new THREE.Vector3(-14, 2.5, -1), new THREE.Vector3(-14, 2, -4),
+    new THREE.Vector3(-16, 2, -6), new THREE.Vector3(-18, 2, -6),
+    new THREE.Vector3(-20, 1, -6), new THREE.Vector3(-20, 0.5, 0)], 0.08, M.refrig());
+
+  // ═══ INSTRUMENTS ═══
+  // Pressure gauges on columns
+  [[-6, 14, 1.1, 'PT-9501'], [4, 16, 1.3, 'PT-9502'], [14, 12, 1.1, 'PT-9503']].forEach(
+    ([px, py, pz, tag]) => {
+      const gauge = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.25, 12), M.dark());
+      gauge.position.set(px, py, pz); scene.add(gauge);
+      const face = new THREE.Mesh(new THREE.CircleGeometry(0.1, 12),
+        new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      face.rotation.y = Math.PI / 2;
+      face.position.set(px, py, pz + 0.14); scene.add(face);
+    });
+  // Temperature elements
+  [[-6, 8, -1.1], [4, 10, -1.3], [14, 6, -1.1]].forEach(([tx, ty, tz]) => {
+    const tw = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.7, 6), M.ss());
+    tw.rotation.z = Math.PI / 4; tw.position.set(tx, ty, tz);
+    scene.add(tw);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   PARTICLE SYSTEMS (8+ flows)
+   ═══════════════════════════════════════════════════════ */
+function buildParticles() {
+  // 1) Refinery gas through compressor (grey)
+  createPS('refGasComp', 0x888888, 250, [
+    new THREE.Vector3(-28, 2, 0), new THREE.Vector3(-22, 2, 0),
+    new THREE.Vector3(-20, 2.2, 0), new THREE.Vector3(-19, 2.5, 0)], 0.5, 0.09);
+  // 2) Chilled gas to de-ethanizer (grey/blue)
+  createPS('chilledGas', 0x6688cc, 200, [
+    new THREE.Vector3(-12.5, 2.5, 0), new THREE.Vector3(-10, 3, 0),
+    new THREE.Vector3(-8, 4, 0), new THREE.Vector3(-6, 6, 0)], 0.45, 0.08);
+  // 3) C1/C2 fuel gas overhead (light grey)
+  createPS('fuelGasOH', 0xbbbbbb, 200, [
+    new THREE.Vector3(-6, 14, 0), new THREE.Vector3(-6, 16, 0),
+    new THREE.Vector3(-8, 17, 0), new THREE.Vector3(-12, 17, 0)], 0.5, 0.08);
+  // 4) C3+ liquid to depropanizer (blue)
+  createPS('c3toDeprop', 0x3b82f6, 200, [
+    new THREE.Vector3(-6, 1.5, 0), new THREE.Vector3(-2, 1, 0),
+    new THREE.Vector3(2, 1, 0), new THREE.Vector3(4, 1.5, 0)], 0.4, 0.09);
+  // 5) Propane rising in depropanizer (blue)
+  createPS('propaneRise', 0x3b82f6, 300, [
+    new THREE.Vector3(4, 2, 0), new THREE.Vector3(4, 5, 0.3),
+    new THREE.Vector3(4, 8, -0.2), new THREE.Vector3(4, 11, 0.2),
+    new THREE.Vector3(4, 14, 0)], 0.35, 0.07);
+  // 6) Butane rising in debutanizer (cyan)
+  createPS('butaneRise', 0x06b6d4, 250, [
+    new THREE.Vector3(14, 2, 0), new THREE.Vector3(14, 4, 0.2),
+    new THREE.Vector3(14, 7, -0.2), new THREE.Vector3(14, 10, 0),
+    new THREE.Vector3(14, 11.5, 0)], 0.35, 0.07);
+  // 7) C5+ gasoline down from debutanizer (amber)
+  createPS('gasolineDown', 0xf59e0b, 180, [
+    new THREE.Vector3(14, 1.5, 0), new THREE.Vector3(18, 1, 0),
+    new THREE.Vector3(22, 1, 0), new THREE.Vector3(25, 0.8, 0)], 0.4, 0.09);
+  // 8) Refrigerant circulation (cyan glow)
+  createPS('refrigCirc', 0x22d3ee, 200, [
+    new THREE.Vector3(-20, 2, 6), new THREE.Vector3(-18, 2, 6),
+    new THREE.Vector3(-16, 2.2, 6), new THREE.Vector3(-14.5, 2.5, 6),
+    new THREE.Vector3(-14, 2.5, 3), new THREE.Vector3(-14, 2.5, 0)], 0.4, 0.06);
+}
+
+function createPS(name, color, count, curve, speed, size) {
+  const pts = [], vels = [];
+  for (let i = 0; i < count; i++) {
+    const t = Math.random();
+    const p = curve[0].clone().lerp(curve[curve.length - 1], t);
+    p.x += (Math.random() - 0.5) * 0.25;
+    p.y += (Math.random() - 0.5) * 0.25;
+    p.z += (Math.random() - 0.5) * 0.25;
+    pts.push(p.x, p.y, p.z);
+    vels.push({ offset: t, sv: 0.7 + Math.random() * 0.6, sp: (Math.random() - 0.5) * 0.15 });
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  const pMat = new THREE.PointsMaterial({
+    color, size, transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const sys = new THREE.Points(geo, pMat);
+  sys.name = name;
+  sys.userData = { curve, velocities: vels, speed, count };
+  scene.add(sys);
+  particleSystems.push(sys);
+  return sys;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RAYCASTER INTERACTION
+   ═══════════════════════════════════════════════════════ */
+const tooltip = document.getElementById('tooltip');
+
+function collectInteractive() {
+  // Collect all mesh children from clickable groups
+  Object.values(clickableMeshes).forEach(grp => {
+    if (!grp) return;
+    grp.traverse(child => {
+      if (child.isMesh) interactiveObjects.push(child);
+    });
+  });
+}
+
+function onClick(e) {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && obj.parent) {
+      if (obj === clickableMeshes.depropanizer) { showDepropanizerPopup(); return; }
+      if (obj === clickableMeshes.compressor) { showCompressorPopup(); return; }
+      obj = obj.parent;
+    }
+  }
+}
+
+function onMouseMove(e) {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && obj.parent) {
+      if (obj === clickableMeshes.depropanizer) {
+        tooltip.style.display = 'block';
+        tooltip.style.left = e.clientX + 12 + 'px';
+        tooltip.style.top = e.clientY + 12 + 'px';
+        tooltip.textContent = 'De-Propanizer C-952 — Click for tray temperatures';
+        return;
+      }
+      if (obj === clickableMeshes.compressor) {
+        tooltip.style.display = 'block';
+        tooltip.style.left = e.clientX + 12 + 'px';
+        tooltip.style.top = e.clientY + 12 + 'px';
+        tooltip.textContent = 'Feed Compressor K-951 — Click for load/speed info';
+        return;
+      }
+      obj = obj.parent;
+    }
+  }
+  tooltip.style.display = 'none';
+}
+
+/* ═══════════════════════════════════════════════════════
+   POPUP SYSTEM
+   ═══════════════════════════════════════════════════════ */
+function setupPopup() {
+  document.getElementById('popup-close').addEventListener('click', () => {
+    document.getElementById('popup-overlay').classList.remove('show');
+  });
+  document.getElementById('popup-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('popup-overlay'))
+      document.getElementById('popup-overlay').classList.remove('show');
+  });
+}
+
+function showDepropanizerPopup() {
+  const temps = [];
+  for (let i = 1; i <= 30; i++) {
+    const t = (42 + (30 - i) * 1.8 + (Math.random() - 0.5) * 1.5).toFixed(1);
+    temps.push(i, t);
+  }
+  let rows = '';
+  for (let i = 0; i < temps.length; i += 2) {
+    const cls = parseFloat(temps[i + 1]) > 60 ? ' style="color:#f59e0b;"' :
+                parseFloat(temps[i + 1]) < 20 ? ' style="color:#38bdf8;"' : '';
+    rows += `<tr><td>Tray ${temps[i]}</td><td${cls}>${temps[i + 1]} °C</td></tr>`;
+  }
+  document.getElementById('popup-title').textContent = 'C-952 De-Propanizer — Tray Temperatures';
+  document.getElementById('popup-body').innerHTML = `<table>${rows}</table>`;
+  document.getElementById('popup-overlay').classList.add('show');
+}
+
+function showCompressorPopup() {
+  const load = (75 + Math.random() * 8).toFixed(1);
+  const speed = (2980 + Math.random() * 40).toFixed(0);
+  const discharge = (17.5 + Math.random() * 1.5).toFixed(1);
+  const suction = (2.8 + Math.random() * 0.4).toFixed(1);
+  const vib = (1.8 + Math.random() * 0.8).toFixed(1);
+  const bearing = (62 + Math.random() * 8).toFixed(0);
+  document.getElementById('popup-title').textContent = 'K-951 Feed Compressor — Operating Data';
+  document.getElementById('popup-body').innerHTML = `
+    <table>
+      <tr><th>Parameter</th><th>Value</th></tr>
+      <tr><td>Load</td><td>${load} %</td></tr>
+      <tr><td>Speed</td><td>${speed} RPM</td></tr>
+      <tr><td>Discharge Pressure</td><td>${discharge} barg</td></tr>
+      <tr><td>Suction Pressure</td><td>${suction} barg</td></tr>
+      <tr><td>Vibration</td><td>${vib} mm/s</td></tr>
+      <tr><td>Bearing Temp</td><td>${bearing} °C</td></tr>
+    </table>`;
+  document.getElementById('popup-overlay').classList.add('show');
+}
+
+/* ═══════════════════════════════════════════════════════
+   VIEW MODES
+   ═══════════════════════════════════════════════════════ */
+function setupViewToggle() {
+  document.querySelectorAll('#view-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      if (view === currentView) return;
+      currentView = view;
+      document.querySelectorAll('#view-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      animateCamera(cameraPresets[view]);
+    });
+  });
+}
+
+function animateCamera(preset) {
+  const sp = camera.position.clone(), ep = new THREE.Vector3(...preset.pos);
+  const st = controls.target.clone(), et = new THREE.Vector3(...preset.target);
+  const dur = 1200, t0 = performance.now();
+  function step(now) {
+    const t = Math.min((now - t0) / dur, 1);
+    const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    camera.position.lerpVectors(sp, ep, e);
+    controls.target.lerpVectors(st, et, e);
+    controls.update();
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ═══════════════════════════════════════════════════════
+   LIVE HUD
+   ═══════════════════════════════════════════════════════ */
+function updateHUD(time) {
+  // Left Card 1: Process Status
+  const feed = 42.5 + Math.sin(time * 0.12) * 1.5 + (Math.random() - 0.5) * 0.3;
+  setVal('r-feed', feed.toFixed(1)); setBar('bar-feed', (feed / 60) * 100);
+  const refrig = 2.8 + Math.sin(time * 0.1) * 0.15;
+  setVal('r-refrig', refrig.toFixed(1)); setBar('bar-refrig', (refrig / 5) * 100);
+  const cload = 78 + Math.sin(time * 0.08) * 4;
+  setVal('r-compload', Math.round(cload)); setBar('bar-compload', cload);
+  const chill = -25.2 + Math.sin(time * 0.15) * 1.2 + (Math.random() - 0.5) * 0.2;
+  setVal('r-chill', chill.toFixed(1)); setBar('bar-chill', ((Math.abs(chill) / 30) * 100));
+
+  // Left Card 2: Process Streams
+  setVal('s-rgas', feed.toFixed(1) + ' t/h');
+  setVal('s-fgas', (12.3 + Math.sin(time * 0.1) * 0.5).toFixed(1) + ' t/h');
+  setVal('s-c3', (14.8 + Math.sin(time * 0.09) * 0.4).toFixed(1) + ' t/h');
+  setVal('s-c4', (9.6 + Math.sin(time * 0.11) * 0.3).toFixed(1) + ' t/h');
+  setVal('s-c5', (5.8 + Math.sin(time * 0.07) * 0.2).toFixed(1) + ' t/h');
+
+  // Right Card 1: Live Readings
+  const cdpress = 18.2 + Math.sin(time * 0.2) * 0.8;
+  setVal('r-cdpress', cdpress.toFixed(1)); setBar('bar-cdpress', (cdpress / 25) * 100);
+  setVal('r-chtemp', chill.toFixed(1)); setBar('bar-chtemp', ((Math.abs(chill) / 30) * 100));
+  setVal('r-dep', (22.5 + Math.sin(time * 0.08) * 0.5).toFixed(1));
+  setVal('r-der', (3.2 + Math.sin(time * 0.06) * 0.2).toFixed(1));
+  setVal('r-dpp', (16.8 + Math.sin(time * 0.09) * 0.6).toFixed(1));
+  setVal('r-dpr', (4.1 + Math.sin(time * 0.07) * 0.15).toFixed(1));
+  setVal('r-dbp', (5.2 + Math.sin(time * 0.1) * 0.3).toFixed(1));
+  setVal('r-dbr', (2.8 + Math.sin(time * 0.08) * 0.1).toFixed(1));
+
+  // Right Card 2: Product Rates
+  const c3r = 355 + Math.sin(time * 0.1) * 10;
+  setVal('r-c3rate', Math.round(c3r)); setBar('bar-c3rate', (c3r / 480) * 100);
+  const c4r = 230 + Math.sin(time * 0.11) * 8;
+  setVal('r-c4rate', Math.round(c4r)); setBar('bar-c4rate', (c4r / 400) * 100);
+  const c5r = 139 + Math.sin(time * 0.08) * 5;
+  setVal('r-c5rate', Math.round(c5r)); setBar('bar-c5rate', (c5r / 400) * 100);
+  const fgr = 2950 + Math.sin(time * 0.09) * 80;
+  setVal('r-fgrate', Math.round(fgr)); setBar('bar-fgrate', (fgr / 5000) * 100);
+
+  // Right Card 4: Product Quality
+  const c3p = 95.8 + Math.sin(time * 0.05) * 0.4;
+  setVal('r-c3purity', c3p.toFixed(1)); setBar('bar-c3purity', c3p);
+  const c4p = 93.4 + Math.sin(time * 0.06) * 0.5;
+  setVal('r-c4purity', c4p.toFixed(1)); setBar('bar-c4purity', c4p);
+  const rvp = 4.8 + Math.sin(time * 0.07) * 0.3;
+  setVal('r-rvp', rvp.toFixed(1)); setBar('bar-rvp', (rvp / 15) * 100);
+
+  // Bottom Panel
+  setVal('b-feed', feed.toFixed(1));
+  setVal('b-chill', chill.toFixed(1));
+  setVal('b-c3', Math.round(c3r));
+  setVal('b-c4', Math.round(c4r));
+  setVal('b-fg', Math.round(fgr));
+  setVal('b-cload', Math.round(cload) + '%');
+}
+
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+function setBar(id, pct) {
+  const el = document.getElementById(id);
+  if (el) el.style.width = Math.min(100, Math.max(0, pct)) + '%';
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATION LOOP
+   ═══════════════════════════════════════════════════════ */
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+  controls.update();
+
+  // Animate particles
+  particleSystems.forEach(sys => {
+    const pos = sys.geometry.attributes.position.array;
+    const { curve, velocities, speed, count } = sys.userData;
+    for (let i = 0; i < count; i++) {
+      const v = velocities[i];
+      v.offset = (v.offset + delta * speed * v.sv) % 1;
+      const total = curve.length - 1;
+      const sf = v.offset * total;
+      const si = Math.min(Math.floor(sf), total - 1);
+      const st = sf - si;
+      const p = new THREE.Vector3().lerpVectors(curve[si], curve[si + 1], st);
+      p.x += v.sp * Math.sin(elapsed * 2 + i);
+      p.y += v.sp * Math.cos(elapsed * 1.5 + i);
+      p.z += v.sp * Math.sin(elapsed * 1.8 + i * 0.5);
+      pos[i * 3] = p.x; pos[i * 3 + 1] = p.y; pos[i * 3 + 2] = p.z;
+    }
+    sys.geometry.attributes.position.needsUpdate = true;
+  });
+
+  // Rotate fan blades
+  fanBlades.forEach((blade, idx) => {
+    const fanAngle = elapsed * 3;
+    const baseAngle = (idx / 4) * Math.PI * 2;
+    blade.position.x = Math.cos(baseAngle + fanAngle) * 0.5;
+    blade.position.z = Math.sin(baseAngle + fanAngle) * 0.5;
+    blade.rotation.y = baseAngle + fanAngle;
+  });
+
+  // Live HUD
+  updateHUD(elapsed);
+
+  // Render with bloom
+  if (composer && camera) {
+    composer.render();
+  } else if (camera) {
+    renderer.render(scene, camera);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY
+   ═══════════════════════════════════════════════════════ */
+function onResize() {
+  if (camera) {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  if (renderer) renderer.setSize(window.innerWidth, window.innerHeight);
+  if (composer) composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function simulateLoading() {
+  const fill = document.getElementById('loader-fill');
+  let progress = 0;
+  const iv = setInterval(() => {
+    progress += Math.random() * 15 + 5;
+    if (progress >= 100) {
+      progress = 100; clearInterval(iv);
+      setTimeout(() => {
+        document.getElementById('loading-screen').classList.add('hidden');
+        collectInteractive();
+      }, 400);
+    }
+    fill.style.width = progress + '%';
+  }, 200);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+    try {
+        init();
+        animate();
+    } catch (e) {
+        console.error("Main initialization failed:", e);
+        // Emergency clear of loading screen if something crashes early
+        const ls = document.getElementById('loading-screen');
+        if (ls) ls.classList.add('hidden');
+    }
+});
+</script>
+</body>
+</html>
+

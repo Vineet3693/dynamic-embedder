@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ═══════════════════════════════════════════════════════════════════
+     KERO HYDROTREATER R-650 — Jet Fuel Production Unit
+     Standalone 3D Isolation Viewer
+     Three.js r147 | Dark Industrial Theme | Production-Ready
+     ═══════════════════════════════════════════════════════════════════ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R-650 | Kero Hydrotreater</title>
+<style>
+/* ─── 1. FULL CSS STYLING ─── */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{overflow:hidden;background:#0a0e17;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#c8d6e5;}
+
+/* ─── Loading Screen ─── */
+#loading-screen{position:fixed;inset:0;z-index:9999;background:#0a0e17;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.8s ease;}
+#loading-screen.hidden{opacity:0;pointer-events:none;}
+#loading-screen h1{font-size:1.4rem;color:#f0c040;margin-bottom:1.2rem;letter-spacing:0.08em;}
+.loader-bar{width:280px;height:4px;background:#1a2035;border-radius:2px;overflow:hidden;}
+.loader-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#f0c040,#e8a020);
+  border-radius:2px;transition:width 0.3s ease;}
+#loading-screen p{margin-top:1rem;font-size:0.8rem;color:#5a6a80;}
+
+/* ─── Topbar ─── */
+#topbar{position:fixed;top:0;left:0;right:0;height:48px;z-index:100;
+  background:linear-gradient(180deg,rgba(10,14,23,0.95),rgba(10,14,23,0.85));
+  border-bottom:1px solid #1e2a3a;display:flex;align-items:center;padding:0 16px;
+  backdrop-filter:blur(8px);}
+#topbar .tag{background:#f0c040;color:#0a0e17;font-weight:700;font-size:0.7rem;
+  padding:2px 8px;border-radius:3px;margin-right:12px;letter-spacing:0.06em;}
+#topbar h2{font-size:0.95rem;color:#e0e8f0;font-weight:600;}
+#topbar .unit-id{color:#f0c040;margin-left:8px;}
+#topbar .status{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:0.75rem;}
+#topbar .status .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;
+  box-shadow:0 0 6px #22c55e;animation:pulse-dot 2s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+/* ─── View Toggle Buttons ─── */
+#view-toggle{position:fixed;top:60px;right:16px;z-index:100;display:flex;flex-direction:column;gap:6px;}
+#view-toggle button{background:rgba(20,30,50,0.9);color:#8a9ab0;border:1px solid #1e2a3a;
+  padding:7px 14px;border-radius:4px;font-size:0.72rem;cursor:pointer;
+  transition:all 0.25s ease;letter-spacing:0.04em;font-weight:500;}
+#view-toggle button:hover,#view-toggle button.active{
+  background:rgba(240,192,64,0.15);color:#f0c040;border-color:#f0c040;}
+
+/* ─── Left Panel Cards ─── */
+#left-panel{position:fixed;top:60px;left:16px;width:225px;z-index:100;
+  display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 180px);overflow-y:auto;}
+.panel-card{background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:12px;backdrop-filter:blur(6px);}
+.panel-card h3{font-size:0.68rem;color:#f0c040;text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #1a2540;}
+.reading{margin-bottom:8px;}
+.reading label{display:block;font-size:0.62rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:2px;}
+.reading .value{font-size:1rem;color:#e0e8f0;font-weight:600;font-variant-numeric:tabular-nums;}
+.reading .unit{font-size:0.65rem;color:#5a6a80;margin-left:4px;}
+.reading .bar{height:3px;background:#1a2540;border-radius:2px;margin-top:3px;overflow:hidden;}
+.reading .bar-fill{height:100%;border-radius:2px;transition:width 0.5s ease;}
+.stream-row{display:flex;justify-content:space-between;align-items:center;
+  padding:3px 0;border-bottom:1px solid rgba(30,40,60,0.4);}
+.stream-row span:first-child{font-size:0.68rem;color:#8a9ab0;}
+.stream-row span:last-child{font-size:0.72rem;color:#e0e8f0;font-weight:600;font-variant-numeric:tabular-nums;}
+.legend-item{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.legend-item span{font-size:0.68rem;color:#a0b0c0;}
+
+/* ─── Right Panel Cards ─── */
+#right-panel{position:fixed;top:60px;right:16px;width:220px;z-index:100;
+  display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 180px);overflow-y:auto;margin-top:152px;}
+.quality-row{display:flex;justify-content:space-between;padding:2px 0;
+  border-bottom:1px solid rgba(30,40,60,0.3);}
+.quality-row .ql{font-size:0.62rem;color:#5a6a80;}
+.quality-row .qv{font-size:0.7rem;color:#e0e8f0;font-weight:600;font-variant-numeric:tabular-nums;}
+.info-line{font-size:0.65rem;color:#8a9ab0;margin-bottom:3px;}
+.info-line .il{color:#5a6a80;}
+.catalyst-row{display:flex;justify-content:space-between;padding:3px 0;
+  border-bottom:1px solid rgba(30,40,60,0.3);}
+.catalyst-row .cl{font-size:0.65rem;color:#8a9ab0;}
+.catalyst-row .cv{font-size:0.72rem;color:#e0e8f0;font-weight:600;}
+
+/* ─── Bottom Panel (Process Summary) ─── */
+#bottom-panel{position:fixed;bottom:40px;left:16px;right:16px;height:80px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:12px 18px;backdrop-filter:blur(6px);display:flex;gap:24px;align-items:center;}
+.process-stat{text-align:center;flex:1;}
+.process-stat .num{font-size:1.2rem;color:#e0e8f0;font-weight:700;
+  font-variant-numeric:tabular-nums;}
+.process-stat .desc{font-size:0.6rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-top:2px;}
+
+/* ─── Alert Ticker Bar ─── */
+#alert-ticker{position:fixed;bottom:0;left:0;right:0;height:32px;z-index:100;
+  background:rgba(15,20,35,0.95);border-top:1px solid #1e2a3a;overflow:hidden;
+  display:flex;align-items:center;}
+#alert-ticker .label{background:#f0c040;color:#0a0e17;font-size:0.65rem;
+  font-weight:700;padding:0 10px;height:100%;display:flex;align-items:center;
+  letter-spacing:0.08em;white-space:nowrap;}
+#ticker-content{flex:1;overflow:hidden;white-space:nowrap;}
+#ticker-scroll{display:inline-block;animation:ticker-scroll 55s linear infinite;
+  font-size:0.72rem;color:#8a9ab0;padding-left:20px;}
+@keyframes ticker-scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+.ticker-item{margin-right:60px;}
+.ticker-item.warn{color:#f59e0b;}
+.ticker-item.info{color:#38bdf8;}
+.ticker-item.ok{color:#22c55e;}
+
+/* ─── Canvas Container ─── */
+#canvas-container{position:fixed;inset:0;z-index:1;}
+canvas{display:block;}
+
+/* ─── Tooltip ─── */
+#tooltip{position:fixed;z-index:200;background:rgba(10,14,23,0.95);border:1px solid #f0c040;
+  color:#e0e8f0;font-size:0.72rem;padding:8px 12px;border-radius:4px;pointer-events:none;
+  display:none;max-width:220px;line-height:1.4;}
+#tooltip strong{color:#f0c040;}
+
+/* ─── Reactor Bed Popup ─── */
+#bed-popup{position:fixed;z-index:300;background:rgba(10,14,23,0.96);border:1px solid #f0c040;
+  border-radius:6px;padding:14px 18px;display:none;min-width:200px;
+  backdrop-filter:blur(8px);box-shadow:0 4px 20px rgba(0,0,0,0.5);}
+#bed-popup h4{font-size:0.72rem;color:#f0c040;text-transform:uppercase;letter-spacing:0.08em;
+  margin-bottom:8px;}
+#bed-popup .bed-row{display:flex;justify-content:space-between;padding:3px 0;
+  border-bottom:1px solid rgba(30,40,60,0.4);}
+#bed-popup .bed-row .bl{font-size:0.68rem;color:#8a9ab0;}
+#bed-popup .bed-row .bv{font-size:0.75rem;color:#e0e8f0;font-weight:600;}
+#bed-popup .close-btn{position:absolute;top:6px;right:10px;cursor:pointer;
+  color:#8a9ab0;font-size:0.9rem;background:none;border:none;}
+#bed-popup .close-btn:hover{color:#f0c040;}
+</style>
+</head>
+<body>
+
+<!-- ─── Loading Screen ─── -->
+<div id="loading-screen">
+  <h1>R-650 KERO HYDROTREATER</h1>
+  <div class="loader-bar"><div class="loader-bar-fill" id="loader-fill"></div></div>
+  <p>Initializing 3D isolation viewer — Jet Fuel Production...</p>
+</div>
+
+<!-- ─── Topbar ─── -->
+<div id="topbar">
+  <span class="tag">PROCESS UNIT</span>
+  <h2>Kero Hydrotreater<span class="unit-id">R-650</span></h2>
+  <div class="status"><div class="dot"></div><span>ONLINE — JET FUEL MODE</span></div>
+</div>
+
+<!-- ─── View Toggle ─── -->
+<div id="view-toggle">
+  <button class="active" data-view="external">External</button>
+  <button data-view="internal">Internal</button>
+  <button data-view="cutaway">Cutaway</button>
+  <button data-view="flow">Flow</button>
+</div>
+
+<!-- ─── Left Panel: Cards 1-3 ─── -->
+<div id="left-panel">
+  <!-- Card 1: Reaction Status -->
+  <div class="panel-card">
+    <h3>Reaction Status</h3>
+    <div class="reading">
+      <label>WABT</label>
+      <div><span class="value" id="r-wabt">342.6</span><span class="unit">°C</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-wabt" style="width:68%;background:#ef4444;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Bed 1 Exit Temp</label>
+      <div><span class="value" id="r-bed1">348.2</span><span class="unit">°C</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-bed1" style="width:69%;background:#f97316;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Bed 2 Exit Temp</label>
+      <div><span class="value" id="r-bed2">345.1</span><span class="unit">°C</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-bed2" style="width:69%;background:#f97316;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Bed 3 Exit Temp</label>
+      <div><span class="value" id="r-bed3">340.8</span><span class="unit">°C</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-bed3" style="width:68%;background:#f97316;"></div></div>
+    </div>
+    <div class="reading">
+      <label>H2 Consumption</label>
+      <div><span class="value" id="r-h2cons">52.4</span><span class="unit">Nm³/h</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-h2cons" style="width:52%;background:#38bdf8;"></div></div>
+    </div>
+  </div>
+  <!-- Card 2: Process Streams -->
+  <div class="panel-card">
+    <h3>Process Streams</h3>
+    <div class="stream-row"><span>Kero Feed</span><span id="s-feed">84.2 m³/h</span></div>
+    <div class="stream-row"><span>Makeup H2</span><span id="s-h2">4,800 Nm³/h</span></div>
+    <div class="stream-row"><span>Recycle H2</span><span id="s-recycle">38,500 Nm³/h</span></div>
+    <div class="stream-row"><span>Jet Fuel Out</span><span id="s-jet">82.1 m³/h</span></div>
+    <div class="stream-row"><span>Sour Gas</span><span id="s-sour">2,200 Nm³/h</span></div>
+    <div class="stream-row"><span>Wash Water</span><span id="s-wash">6.5 m³/h</span></div>
+  </div>
+  <!-- Card 3: Fluid Legend -->
+  <div class="panel-card">
+    <h3>Fluid Legend</h3>
+    <div class="legend-item"><div class="legend-dot" style="background:#d4a020;"></div><span>Kerosene (amber)</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div><span>Hydrogen (blue)</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:#c8b870;"></div><span>Jet Fuel (straw)</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:#eab308;"></div><span>Caustic (yellow)</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div><span>Sour Gas (green)</span></div>
+  </div>
+</div>
+
+<!-- ─── Right Panel: Cards 1-4 ─── -->
+<div id="right-panel">
+  <!-- Card 1: Live Readings -->
+  <div class="panel-card">
+    <h3>Live Readings</h3>
+    <div class="reading">
+      <label>Reactor Inlet Temp</label>
+      <div><span class="value" id="r-rxin">345.3</span><span class="unit">°C</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-rxin" style="width:69%;background:#ef4444;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Reactor Pressure</label>
+      <div><span class="value" id="r-rxpres">48.2</span><span class="unit">barg</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-rxpres" style="width:80%;background:#38bdf8;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Feed Rate</label>
+      <div><span class="value" id="r-feedrate">84.2</span><span class="unit">m³/h</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-feedrate" style="width:70%;background:#22c55e;"></div></div>
+    </div>
+    <div class="reading">
+      <label>H2/Oil Ratio</label>
+      <div><span class="value" id="r-h2oil">356</span><span class="unit">Nm³/m³</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-h2oil" style="width:71%;background:#a78bfa;"></div></div>
+    </div>
+  </div>
+  <!-- Card 2: Jet Fuel Quality -->
+  <div class="panel-card">
+    <h3>Jet Fuel Quality</h3>
+    <div class="quality-row"><span class="ql">Total Sulfur</span><span class="qv" id="q-sulfur">12 ppm</span></div>
+    <div class="quality-row"><span class="ql">Smoke Point</span><span class="qv" id="q-smoke">28.4 mm</span></div>
+    <div class="quality-row"><span class="ql">Freezing Point</span><span class="qv" id="q-freeze">-47.2 °C</span></div>
+    <div class="quality-row"><span class="ql">Flash Point</span><span class="qv" id="q-flash">43.8 °C</span></div>
+    <div class="quality-row"><span class="ql">Aromatics</span><span class="qv" id="q-aro">14.2 vol%</span></div>
+    <div class="quality-row"><span class="ql">Density</span><span class="qv" id="q-dens">798.4 kg/m³</span></div>
+  </div>
+  <!-- Card 3: Unit Info -->
+  <div class="panel-card">
+    <h3>Unit Info</h3>
+    <p class="info-line"><span class="il">Catalyst:</span> CoMo/Al₂O₃</p>
+    <p class="info-line"><span class="il">Catalyst Beds:</span> 3</p>
+    <p class="info-line"><span class="il">Design Temp:</span> 380 °C</p>
+    <p class="info-line"><span class="il">Design Press:</span> 60 barg</p>
+    <p class="info-line"><span class="il">LHSV:</span> 1.8 h⁻¹</p>
+    <p class="info-line"><span class="il">Product:</span> Jet A-1</p>
+  </div>
+  <!-- Card 4: Catalyst Status -->
+  <div class="panel-card">
+    <h3>Catalyst Status</h3>
+    <div class="catalyst-row"><span class="cl">S Removal</span><span class="cv" id="c-srem">99.4%</span></div>
+    <div class="catalyst-row"><span class="cl">Mercaptan Rmv</span><span class="cv" id="c-merc">99.8%</span></div>
+    <div class="catalyst-row"><span class="cl">Catalyst Age</span><span class="cv" id="c-age">14 mo</span></div>
+    <div class="catalyst-row"><span class="cl">Reactor ΔT</span><span class="cv" id="c-dt">18.6 °C</span></div>
+  </div>
+</div>
+
+<!-- ─── Bottom Panel: Process Summary ─── -->
+<div id="bottom-panel">
+  <div class="process-stat"><div class="num" id="b-feed">84.2</div><div class="desc">Feed Rate (m³/h)</div></div>
+  <div class="process-stat"><div class="num" id="b-wabt">342.6</div><div class="desc">WABT (°C)</div></div>
+  <div class="process-stat"><div class="num" id="b-pres">48.2</div><div class="desc">Rx Pressure (barg)</div></div>
+  <div class="process-stat"><div class="num" id="b-sin">1850</div><div class="desc">S In (ppm)</div></div>
+  <div class="process-stat"><div class="num" id="b-sout">12</div><div class="desc">S Out (ppm)</div></div>
+  <div class="process-stat"><div class="num" id="b-smoke">28.4</div><div class="desc">Smoke Point (mm)</div></div>
+</div>
+
+<!-- ─── Alert Ticker ─── -->
+<div id="alert-ticker">
+  <div class="label">ALERTS</div>
+  <div id="ticker-content">
+    <div id="ticker-scroll">
+      <span class="ticker-item ok">&#9679; R-650 operating normally — all parameters within jet fuel spec</span>
+      <span class="ticker-item info">&#9679; Bed 2 quench H2 valve adjusted +3% at 08:15 — WABT stabilized</span>
+      <span class="ticker-item warn">&#9679; Product sulfur trending 14 ppm — approaching 15 ppm alarm limit</span>
+      <span class="ticker-item ok">&#9679; Recycle compressor K-651 discharge pressure normal at 52 barg</span>
+      <span class="ticker-item info">&#9679; Salt dryer electrode voltage 22 kV — within design range</span>
+      <span class="ticker-item warn">&#9679; Charge heater outlet temp 348°C — monitor for excursion</span>
+      <span class="ticker-item ok">&#9679; Amine scrubber L-652 lean loading 0.08 mol/mol — normal</span>
+      <span class="ticker-item info">&#9679; Next catalyst sampling due in 22 days per cycle management plan</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Tooltip ─── -->
+<div id="tooltip"></div>
+
+<!-- ─── Reactor Bed Popup ─── -->
+<div id="bed-popup">
+  <button class="close-btn" onclick="document.getElementById('bed-popup').style.display='none'">&times;</button>
+  <h4>Reactor R-650 — Bed Temperatures</h4>
+  <div class="bed-row"><span class="bl">Inlet</span><span class="bv" id="bp-inlet">345.3 °C</span></div>
+  <div class="bed-row"><span class="bl">Bed 1 Exit</span><span class="bv" id="bp-b1">348.2 °C</span></div>
+  <div class="bed-row"><span class="bl">Quench 1 ΔT</span><span class="bv" id="bp-q1">-12.4 °C</span></div>
+  <div class="bed-row"><span class="bl">Bed 2 Exit</span><span class="bv" id="bp-b2">345.1 °C</span></div>
+  <div class="bed-row"><span class="bl">Quench 2 ΔT</span><span class="bv" id="bp-q2">-11.8 °C</span></div>
+  <div class="bed-row"><span class="bl">Bed 3 Exit</span><span class="bv" id="bp-b3">340.8 °C</span></div>
+  <div class="bed-row"><span class="bl">WABT</span><span class="bv" id="bp-wabt">342.6 °C</span></div>
+  <div class="bed-row"><span class="bl">Reactor ΔT</span><span class="bv" id="bp-dt">18.6 °C</span></div>
+</div>
+
+<!-- ─── Canvas Container ─── -->
+<div id="canvas-container"></div>
+
+<!-- ─── 2. THREE.JS r147 CDN SETUP ─── -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   KERO HYDROTREATER R-650 — COMPLETE 3D SCENE
+   ═══════════════════════════════════════════════════════════════════ */
+
+// ─── Global State ───
+let scene, camera, renderer, controls, composer;
+let raycaster, mouse, clock;
+let reactorGroup = null;
+let heaterGroup = null;
+let burnersOn = true;
+let burnerFlames = [];
+let burnerLights = [];
+let dryerElectrodes = [];
+let dryerGlows = [];
+let currentView = 'external';
+
+// ─── Camera Presets for 4 View Modes ───
+const cameraPresets = {
+  external: { pos: [35, 18, 35], target: [5, 3, 0] },
+  internal: { pos: [0, 7, 3], target: [0, 5, 0] },
+  cutaway:  { pos: [25, 10, 25], target: [5, 2, 0] },
+  flow:     { pos: [20, 12, 20], target: [5, 3, 0] }
+};
+
+/* ═══════════════════════════════════════════════════════
+   INITIALIZATION
+   ═══════════════════════════════════════════════════════ */
+function init() {
+  const container = document.getElementById('canvas-container');
+  clock = new THREE.Clock();
+
+  // ─── Scene ───
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0e17);
+  scene.fog = new THREE.FogExp2(0x0a0e17, 0.008);
+
+  // ─── Camera ───
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 300);
+  camera.position.set(35, 18, 35);
+
+  // ─── Renderer ───
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+  container.appendChild(renderer.domElement);
+
+  // ─── Controls ───
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(5, 3, 0);
+  controls.minDistance = 5;
+  controls.maxDistance = 80;
+
+  // ─── Post-processing (UnrealBloomPass) ───
+  composer = new THREE.EffectComposer(renderer);
+  composer.addPass(new THREE.RenderPass(scene, camera));
+  const bloomPass = new THREE.UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.45, 0.5, 0.85
+  );
+  composer.addPass(bloomPass);
+
+  // ─── Raycaster ───
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  // ─── 5-Light Setup ───
+  setupLights();
+
+  // ─── Build 3D Model ───
+  buildHydrotreater();
+
+  // ─── Particle Systems ───
+  buildParticles();
+
+  // ─── Ground Plane ───
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(160, 160),
+    new THREE.MeshStandardMaterial({ color: 0x0d1220, roughness: 0.95, metalness: 0.1 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -2.5;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // ─── Events ───
+  window.addEventListener('resize', onResize);
+  renderer.domElement.addEventListener('click', onClick);
+  renderer.domElement.addEventListener('mousemove', onMouseMove);
+  setupViewToggle();
+
+  // ─── Hide Loading Screen ───
+  simulateLoading();
+}
+
+/* ═══════════════════════════════════════════════════════
+   5-LIGHT SETUP
+   ═══════════════════════════════════════════════════════ */
+function setupLights() {
+  // 1) Key light — warm directional from upper-right
+  const keyLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+  keyLight.position.set(20, 25, 15);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.set(2048, 2048);
+  keyLight.shadow.camera.left = -30; keyLight.shadow.camera.right = 30;
+  keyLight.shadow.camera.top = 30; keyLight.shadow.camera.bottom = -30;
+  scene.add(keyLight);
+
+  // 2) Fill light — cool blue from left
+  const fillLight = new THREE.DirectionalLight(0x8899cc, 0.4);
+  fillLight.position.set(-15, 10, -8);
+  scene.add(fillLight);
+
+  // 3) Back rim light — amber from behind
+  const rimLight = new THREE.DirectionalLight(0xffcc88, 0.35);
+  rimLight.position.set(-8, 12, -20);
+  scene.add(rimLight);
+
+  // 4) Ambient light — low-intensity
+  const ambientLight = new THREE.AmbientLight(0x303848, 0.5);
+  scene.add(ambientLight);
+
+  // 5) Point light for heater glow
+  const heaterGlow = new THREE.PointLight(0xff6622, 0.4, 25);
+  heaterGlow.position.set(-5, 2, 6);
+  scene.add(heaterGlow);
+}
+
+/* ═══════════════════════════════════════════════════════
+   3. MATERIALS
+   ═══════════════════════════════════════════════════════ */
+function mat(color, opts = {}) {
+  return new THREE.MeshStandardMaterial({
+    color, metalness: opts.metalness ?? 0.85, roughness: opts.roughness ?? 0.25,
+    transparent: opts.transparent ?? false, opacity: opts.opacity ?? 1.0,
+    side: opts.side ?? THREE.FrontSide, emissive: opts.emissive ?? 0x000000,
+    emissiveIntensity: opts.emissiveIntensity ?? 0
+  });
+}
+
+const M = {
+  shell:       () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2, transparent: true, opacity: 0.55 }),
+  shellSolid:  () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2 }),
+  darkSteel:   () => mat(0x383e45, { metalness: 0.9, roughness: 0.2 }),
+  stainless:   () => mat(0xc0c8d0, { metalness: 0.95, roughness: 0.15 }),
+  oshaYellow:  () => mat(0xf0c040, { metalness: 0.6, roughness: 0.35 }),
+  catalyst:    () => mat(0xb8b8c0, { metalness: 0.3, roughness: 0.7 }),
+  concrete:    () => mat(0x606868, { metalness: 0.05, roughness: 0.95 }),
+  grating:     () => mat(0x505a64, { metalness: 0.7, roughness: 0.5, transparent: true, opacity: 0.6 }),
+  insulation:  () => mat(0xd4c4a8, { metalness: 0.1, roughness: 0.9, transparent: true, opacity: 0.35 }),
+  warningRed:  () => mat(0xcc2222, { metalness: 0.5, roughness: 0.4 }),
+  // Pipe colors
+  pipeKero:    () => mat(0xd4a020, { metalness: 0.5, roughness: 0.4 }),
+  pipeH2:      () => mat(0x3b82f6, { metalness: 0.5, roughness: 0.4 }),
+  pipeJet:     () => mat(0xc8b870, { metalness: 0.5, roughness: 0.4 }),
+  pipeCaustic: () => mat(0xeab308, { metalness: 0.5, roughness: 0.4 }),
+  pipeSourGas: () => mat(0x22c55e, { metalness: 0.5, roughness: 0.4 }),
+  pipeWater:   () => mat(0x38bdf8, { metalness: 0.5, roughness: 0.4 }),
+  pipeSteam:   () => mat(0xd4d4d4, { metalness: 0.7, roughness: 0.3 }),
+  // Firebox
+  firebrick:   () => mat(0x8B4513, { metalness: 0.1, roughness: 0.9 }),
+  flame:       () => mat(0xff6600, { emissive: 0xff4400, emissiveIntensity: 2, transparent: true, opacity: 0.8 }),
+};
+
+/* ═══════════════════════════════════════════════════════
+   HELPER: Pipe builder
+   ═══════════════════════════════════════════════════════ */
+function addPipe(points, radius, pipeMat, parent) {
+  const curve = new THREE.CatmullRomCurve3(points);
+  const tubeGeo = new THREE.TubeGeometry(curve, 32, radius, 8, false);
+  const pipe = new THREE.Mesh(tubeGeo, pipeMat);
+  pipe.castShadow = true;
+  (parent || scene).add(pipe);
+  return pipe;
+}
+
+function addNozzle(x, y, z, dir, len, r, pipeMat, parent) {
+  const grp = new THREE.Group();
+  const pipe = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 12), pipeMat);
+  pipe.position.set(x, y, z);
+  if (dir === 'bottom') pipe.rotation.x = Math.PI;
+  else if (dir === 'left') pipe.rotation.z = Math.PI / 2;
+  else if (dir === 'right') pipe.rotation.z = -Math.PI / 2;
+  else if (dir === 'front') pipe.rotation.x = Math.PI / 2;
+  else if (dir === 'back') pipe.rotation.x = -Math.PI / 2;
+  grp.add(pipe);
+  const flange = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.8, r * 1.8, 0.08, 12), M.darkSteel());
+  const fOff = dir === 'bottom' ? -len / 2 : len / 2;
+  flange.position.set(x, y + fOff, z);
+  grp.add(flange);
+  (parent || scene).add(grp);
+  return grp;
+}
+
+/* ═══════════════════════════════════════════════════════
+   4. BUILD COMPLETE KERO HYDROTREATER UNIT
+   ═══════════════════════════════════════════════════════ */
+function buildHydrotreater() {
+  buildReactor();
+  buildExchanger();
+  buildHeater();
+  buildHPSeparator();
+  buildStripper();
+  buildStripperAux();
+  buildSaltDryer();
+  buildCausticWash();
+  buildWaterWash();
+  buildInhibitorInjection();
+  buildRecycleCompressor();
+  buildAmineScrubber();
+  buildAirCoolers();
+  buildInterconnectingPiping();
+  buildPlatforms();
+}
+
+/* ─── 4a. REACTOR R-650 (r=1.8, H=10, vertical) ─── */
+function buildReactor() {
+  reactorGroup = new THREE.Group();
+  reactorGroup.name = 'R-650 Reactor';
+  const R = 1.8, H = 10;
+
+  // Main shell (transparent for internal view)
+  const shellMesh = new THREE.Mesh(new THREE.CylinderGeometry(R, R, H, 48, 1, true), M.shell());
+  shellMesh.castShadow = true;
+  reactorGroup.add(shellMesh);
+
+  // Top/bottom hemispherical heads
+  const topCap = new THREE.Mesh(new THREE.SphereGeometry(R, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+  topCap.position.y = H / 2;
+  reactorGroup.add(topCap);
+  const botCap = new THREE.Mesh(new THREE.SphereGeometry(R, 48, 24, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.shellSolid());
+  botCap.position.y = -H / 2;
+  reactorGroup.add(botCap);
+
+  // Skirt (r=1.9, H=3)
+  const skirt = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 2.1, 3, 32, 1, true), M.darkSteel());
+  skirt.position.y = -H / 2 - 1.5;
+  reactorGroup.add(skirt);
+  const skirtBase = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 0.2, 32), M.darkSteel());
+  skirtBase.position.y = -H / 2 - 3;
+  reactorGroup.add(skirtBase);
+
+  // 3 Catalyst beds (CoMo light grey)
+  const bedPositions = [2.0, -0.5, -3.0];
+  const bedHeights = [2.2, 2.0, 1.8];
+  bedPositions.forEach((yp, i) => {
+    const bed = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.92, R * 0.92, bedHeights[i], 32), M.catalyst());
+    bed.position.y = yp;
+    bed.name = 'catalyst_bed_' + i;
+    reactorGroup.add(bed);
+  });
+
+  // Inter-bed quench H2 ring distributors (2)
+  const quenchPositions = [1.0, -1.5];
+  quenchPositions.forEach((yp, i) => {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(R * 0.7, 0.06, 8, 32), M.pipeH2());
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = yp;
+    reactorGroup.add(ring);
+    // Quench nozzles (6)
+    for (let n = 0; n < 6; n++) {
+      const a = (n / 6) * Math.PI * 2;
+      const nz = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.18, 6), M.stainless());
+      nz.position.set(Math.cos(a) * R * 0.7, yp - 0.1, Math.sin(a) * R * 0.7);
+      nz.rotation.x = Math.PI;
+      reactorGroup.add(nz);
+    }
+    // H2 inlet nozzle
+    const h2Noz = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.0, 8), M.pipeH2());
+    h2Noz.rotation.z = Math.PI / 2;
+    h2Noz.position.set(R + 0.6, yp, 0);
+    reactorGroup.add(h2Noz);
+  });
+
+  // Top distributor tray
+  const topDist = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.9, R * 0.9, 0.12, 32), M.stainless());
+  topDist.position.y = H / 2 - 0.8;
+  reactorGroup.add(topDist);
+  // Chimney tray holes (8)
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    const chimney = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.35, 8), M.stainless());
+    chimney.position.set(Math.cos(a) * R * 0.5, H / 2 - 0.55, Math.sin(a) * R * 0.5);
+    reactorGroup.add(chimney);
+  }
+
+  // Bottom collector tray
+  const botColl = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.88, R * 0.88, 0.1, 32), M.stainless());
+  botColl.position.y = -H / 2 + 1.2;
+  reactorGroup.add(botColl);
+
+  // Thermocouple wells (3 — one per bed)
+  bedPositions.forEach((yp, i) => {
+    const tc = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.8, 6), M.warningRed());
+    tc.position.set(-R + 0.3, yp, 0);
+    tc.rotation.z = 0.3;
+    reactorGroup.add(tc);
+  });
+
+  // Manway
+  const manway = new THREE.Group();
+  manway.add(new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.5, 16), M.shellSolid()));
+  manway.children[0].position.set(0, H / 2 + 0.3, 0);
+  manway.add(new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 0.1, 16), M.darkSteel()));
+  manway.children[1].position.set(0, H / 2 + 0.6, 0);
+  reactorGroup.add(manway);
+
+  // Weld seam rings
+  const weldMat = mat(0xb0b8c0, { metalness: 0.9, roughness: 0.15 });
+  for (let y = -4; y <= 4; y += 2) {
+    const wr = new THREE.Mesh(new THREE.TorusGeometry(R + 0.02, 0.03, 8, 48), weldMat);
+    wr.rotation.x = Math.PI / 2;
+    wr.position.y = y;
+    reactorGroup.add(wr);
+  }
+
+  // Insulation bands
+  for (let y = -4; y <= 4; y += 2.5) {
+    const ins = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.08, R + 0.08, 2.3, 48, 1, true), M.insulation());
+    ins.position.y = y;
+    reactorGroup.add(ins);
+  }
+
+  reactorGroup.position.set(0, H / 2 + 3, 0);
+  scene.add(reactorGroup);
+}
+
+/* ─── 4b. FEED/EFFLUENT EXCHANGER E-651 (r=0.8, L=4, horizontal) ─── */
+function buildExchanger() {
+  const grp = new THREE.Group();
+  grp.name = 'E-651 Exchanger';
+  const R = 0.8, L = 4;
+
+  // Shell
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(R, R, L, 32, 1, true), M.shell());
+  shell.rotation.z = Math.PI / 2;
+  shell.castShadow = true;
+  grp.add(shell);
+
+  // End caps
+  [-L / 2, L / 2].forEach(xp => {
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(R, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+    cap.rotation.z = xp < 0 ? Math.PI / 2 : -Math.PI / 2;
+    cap.position.x = xp;
+    grp.add(cap);
+  });
+
+  // Channel heads (both ends)
+  [-L / 2 - 0.5, L / 2 + 0.5].forEach(xp => {
+    const head = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.7, R * 0.7, 0.4, 24), M.shellSolid());
+    head.rotation.z = Math.PI / 2;
+    head.position.x = xp;
+    grp.add(head);
+  });
+
+  // Tubes (internal — visible lines)
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, L * 0.9, 6), M.stainless());
+    tube.rotation.z = Math.PI / 2;
+    tube.position.set(0, Math.cos(a) * R * 0.55, Math.sin(a) * R * 0.55);
+    grp.add(tube);
+  }
+
+  // Saddles (2)
+  [-1.2, 1.2].forEach(xp => {
+    const saddle = new THREE.Mesh(new THREE.BoxGeometry(0.6, R * 1.2, R * 2.2), M.darkSteel());
+    saddle.position.set(xp, -(R + 0.4), 0);
+    grp.add(saddle);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.15, R * 2.6), M.concrete());
+    base.position.set(xp, -(R + 1.0), 0);
+    grp.add(base);
+  });
+
+  // Nozzles
+  addNozzle(0, R + 0.3, 0, 'top', 0.8, 0.15, M.pipeKero(), grp);
+  addNozzle(0, -(R + 0.3), 0, 'bottom', 0.8, 0.15, M.pipeKero(), grp);
+  addNozzle(-(L / 2 + 1), 0.3, 0, 'left', 0.8, 0.12, M.pipeH2(), grp);
+  addNozzle(L / 2 + 1, 0.3, 0, 'right', 0.8, 0.12, M.pipeH2(), grp);
+
+  grp.position.set(-8, 2.5, 0);
+  scene.add(grp);
+}
+
+/* ─── 4c. CHARGE HEATER H-651 (box 2×3×2, 3 burners) ─── */
+function buildHeater() {
+  heaterGroup = new THREE.Group();
+  heaterGroup.name = 'H-651 Heater';
+  const W = 2, H = 3, D = 2;
+
+  // Firebox body
+  const body = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), M.firebrick());
+  body.position.y = H / 2;
+  body.castShadow = true;
+  heaterGroup.add(body);
+
+  // Steel casing
+  const casing = new THREE.Mesh(new THREE.BoxGeometry(W + 0.1, H + 0.1, D + 0.1), M.darkSteel());
+  casing.material.transparent = true;
+  casing.material.opacity = 0.15;
+  casing.position.y = H / 2;
+  heaterGroup.add(casing);
+
+  // Chimney stack
+  const chimney = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 5, 16, 1, true), M.darkSteel());
+  chimney.position.set(0, H + 2.5, 0);
+  heaterGroup.add(chimney);
+  const chimneyTop = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.35, 0.3, 16), M.darkSteel());
+  chimneyTop.position.set(0, H + 5.1, 0);
+  heaterGroup.add(chimneyTop);
+
+  // 3 Animated burners with flames
+  const burnerX = [-0.6, 0, 0.6];
+  burnerX.forEach((bx, i) => {
+    // Burner base
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 0.3, 12), M.darkSteel());
+    base.position.set(bx, 0.2, 0);
+    heaterGroup.add(base);
+    // Burner tip
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.2, 8), M.warningRed());
+    tip.position.set(bx, 0.45, 0);
+    heaterGroup.add(tip);
+    // Flame cone (will be animated)
+    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.12 + i * 0.02, 0.6 + i * 0.1, 8), M.flame());
+    flame.position.set(bx, 0.8 + i * 0.05, 0);
+    flame.name = 'flame_' + i;
+    burnerFlames.push(flame);
+    heaterGroup.add(flame);
+    // Burner light
+    const bLight = new THREE.PointLight(0xff6622, 0.8, 4);
+    bLight.position.set(bx, 0.8, 0);
+    burnerLights.push(bLight);
+    heaterGroup.add(bLight);
+  });
+
+  // Convection tubes (top section — 4 horizontal)
+  for (let i = 0; i < 4; i++) {
+    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, W * 0.8, 8), M.stainless());
+    tube.rotation.z = Math.PI / 2;
+    tube.position.set(0, H * 0.6 + i * 0.3, 0);
+    heaterGroup.add(tube);
+  }
+
+  // Radiant tubes (2 vertical)
+  [-0.4, 0.4].forEach(xp => {
+    const rTube = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, H * 0.7, 8), M.stainless());
+    rTube.position.set(xp, H * 0.4, D / 2 - 0.15);
+    heaterGroup.add(rTube);
+  });
+
+  // Nozzles
+  addNozzle(-W / 2 - 0.5, 1.5, 0, 'left', 1.0, 0.18, M.pipeKero(), heaterGroup);
+  addNozzle(W / 2 + 0.5, 1.5, 0, 'right', 1.0, 0.18, M.pipeKero(), heaterGroup);
+
+  heaterGroup.position.set(-5, -0.3, 6);
+  scene.add(heaterGroup);
+}
+
+/* ─── 4d. HP SEPARATOR V-651 (r=0.8, L=3, horizontal) ─── */
+function buildHPSeparator() {
+  const grp = new THREE.Group();
+  grp.name = 'V-651 HP Separator';
+  const R = 0.8, L = 3;
+
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(R, R, L, 32, 1, true), M.shell());
+  shell.rotation.z = Math.PI / 2;
+  shell.castShadow = true;
+  grp.add(shell);
+
+  [-L / 2, L / 2].forEach(xp => {
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(R, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+    cap.rotation.z = xp < 0 ? Math.PI / 2 : -Math.PI / 2;
+    cap.position.x = xp;
+    grp.add(cap);
+  });
+
+  // Saddles
+  [-0.8, 0.8].forEach(xp => {
+    const saddle = new THREE.Mesh(new THREE.BoxGeometry(0.4, R * 1.0, R * 2.0), M.darkSteel());
+    saddle.position.set(xp, -(R + 0.3), 0);
+    grp.add(saddle);
+  });
+
+  // Gas outlet (top)
+  addNozzle(0, R + 0.3, 0, 'top', 0.8, 0.15, M.pipeSourGas(), grp);
+  // Liquid outlet (bottom)
+  addNozzle(0, -(R + 0.3), 0, 'bottom', 0.8, 0.15, M.pipeKero(), grp);
+  // Inlet (left)
+  addNozzle(-(L / 2 + 0.5), 0.2, 0, 'left', 0.7, 0.18, M.pipeKero(), grp);
+
+  // Internal mist mat
+  const mist = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.88, R * 0.88, 0.2, 24), M.stainless());
+  mist.rotation.z = Math.PI / 2;
+  mist.position.set(0.3, 0, 0);
+  grp.add(mist);
+
+  grp.position.set(8, 2.5, 0);
+  scene.add(grp);
+}
+
+/* ─── 4e. PRODUCT STRIPPER C-651 (r=0.8, H=8, vertical, 18 trays) ─── */
+function buildStripper() {
+  const grp = new THREE.Group();
+  grp.name = 'C-651 Stripper';
+  const R = 0.8, H = 8;
+
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(R, R, H, 32, 1, true), M.shell());
+  shell.castShadow = true;
+  grp.add(shell);
+
+  // Top/bottom heads
+  const topCap = new THREE.Mesh(new THREE.SphereGeometry(R, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+  topCap.position.y = H / 2;
+  grp.add(topCap);
+  const botCap = new THREE.Mesh(new THREE.SphereGeometry(R, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.shellSolid());
+  botCap.position.y = -H / 2;
+  grp.add(botCap);
+
+  // 18 trays + downcomers
+  for (let i = 0; i < 18; i++) {
+    const y = H / 2 - 0.4 - i * (H - 0.8) / 18;
+    // Tray
+    const tray = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.9, R * 0.9, 0.04, 24), M.stainless());
+    tray.position.y = y;
+    grp.add(tray);
+    // Downcomer (every other side)
+    if (i % 2 === 0) {
+      const dc = new THREE.Mesh(new THREE.BoxGeometry(0.08, (H - 0.8) / 18 * 0.8, R * 0.3), M.stainless());
+      dc.position.set(R * 0.6, y - (H - 0.8) / 36, 0);
+      grp.add(dc);
+    }
+  }
+
+  // Skirt
+  const skirt = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.05, R + 0.15, 2.5, 24, 1, true), M.darkSteel());
+  skirt.position.y = -H / 2 - 1.25;
+  grp.add(skirt);
+
+  // Nozzles
+  addNozzle(0, H / 2 + 0.3, 0, 'top', 0.6, 0.12, M.pipeKero(), grp);
+  addNozzle(0, -(H / 2 + 0.3), 0, 'bottom', 0.6, 0.12, M.pipeJet(), grp);
+  addNozzle(R + 0.4, 1, 0, 'right', 0.7, 0.1, M.pipeKero(), grp);
+
+  // Manway
+  const mw = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.3, 12), M.shellSolid());
+  mw.rotation.z = Math.PI / 2;
+  mw.position.set(R + 0.2, H / 2 - 1, 0);
+  grp.add(mw);
+
+  grp.position.set(14, H / 2 + 2.5, 0);
+  scene.add(grp);
+}
+
+/* ─── 4f. STRIPPER AUX: Reboiler, Condenser, Reflux Drum ─── */
+function buildStripperAux() {
+  // Reboiler E-653 (r=0.5, L=2, horizontal)
+  const reb = new THREE.Group();
+  reb.name = 'E-653 Reboiler';
+  const rebShell = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2, 24, 1, true), M.shell());
+  rebShell.rotation.z = Math.PI / 2;
+  reb.add(rebShell);
+  [-1, 1].forEach(xp => {
+    const c = new THREE.Mesh(new THREE.SphereGeometry(0.5, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+    c.rotation.z = xp < 0 ? Math.PI / 2 : -Math.PI / 2;
+    c.position.x = xp;
+    reb.add(c);
+  });
+  reb.position.set(17, 1.5, 3);
+  scene.add(reb);
+
+  // Condenser E-654 (vertical)
+  const cond = new THREE.Group();
+  cond.name = 'E-654 Condenser';
+  const condBody = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 2.5, 20, 1, true), M.shell());
+  cond.add(condBody);
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const fin = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.03, 16), M.darkSteel());
+    fin.position.set(0, -1 + i * 0.4, 0);
+    cond.add(fin);
+  }
+  cond.position.set(17, 5, -2);
+  scene.add(cond);
+
+  // Reflux Drum D-651 (r=0.35, L=1.2, horizontal)
+  const drum = new THREE.Group();
+  drum.name = 'D-651 Reflux Drum';
+  const drumShell = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 1.2, 20, 1, true), M.shell());
+  drumShell.rotation.z = Math.PI / 2;
+  drum.add(drumShell);
+  [-0.6, 0.6].forEach(xp => {
+    const c = new THREE.Mesh(new THREE.SphereGeometry(0.35, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+    c.rotation.z = xp < 0 ? Math.PI / 2 : -Math.PI / 2;
+    c.position.x = xp;
+    drum.add(c);
+  });
+  // Saddle
+  const drumSaddle = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.6, 1.2), M.darkSteel());
+  drumSaddle.position.set(0, -0.5, 0);
+  drum.add(drumSaddle);
+  drum.position.set(19, 4, -2);
+  scene.add(drum);
+}
+
+/* ─── 4g. SALT DRYER V-653 (r=0.5, L=2, horizontal, electrostatic) ─── */
+function buildSaltDryer() {
+  const grp = new THREE.Group();
+  grp.name = 'V-653 Salt Dryer';
+  const R = 0.5, L = 2;
+
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(R, R, L, 24, 1, true), M.shell());
+  shell.rotation.z = Math.PI / 2;
+  shell.castShadow = true;
+  grp.add(shell);
+
+  [-L / 2, L / 2].forEach(xp => {
+    const c = new THREE.Mesh(new THREE.SphereGeometry(R, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+    c.rotation.z = xp < 0 ? Math.PI / 2 : -Math.PI / 2;
+    c.position.x = xp;
+    grp.add(c);
+  });
+
+  // Internal electrodes (3 grids) with glow
+  for (let i = 0; i < 3; i++) {
+    const xp = -0.6 + i * 0.6;
+    const electrode = new THREE.Mesh(new THREE.BoxGeometry(0.03, R * 1.2, R * 0.6), M.stainless());
+    electrode.position.set(xp, 0, 0);
+    grp.add(electrode);
+    dryerElectrodes.push(electrode);
+    const glow = new THREE.PointLight(0x66aaff, 0.5, 2);
+    glow.position.set(xp, 0, 0);
+    grp.add(glow);
+    dryerGlows.push(glow);
+  }
+
+  // HV leads
+  [-0.6, 0, 0.6].forEach(xp => {
+    const lead = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, R + 0.8, 6), M.warningRed());
+    lead.position.set(xp, R + 0.3, 0);
+    grp.add(lead);
+  });
+
+  // Saddles
+  [-0.5, 0.5].forEach(xp => {
+    const s = new THREE.Mesh(new THREE.BoxGeometry(0.3, R, R * 1.8), M.darkSteel());
+    s.position.set(xp, -(R + 0.3), 0);
+    grp.add(s);
+  });
+
+  // Nozzles
+  addNozzle(-(L / 2 + 0.4), 0.1, 0, 'left', 0.6, 0.1, M.pipeJet(), grp);
+  addNozzle(L / 2 + 0.4, 0.1, 0, 'right', 0.6, 0.1, M.pipeJet(), grp);
+
+  grp.position.set(20, 2, 0);
+  scene.add(grp);
+}
+
+/* ─── 4h. CAUSTIC WASH DRUM V-654 (r=0.4, L=1.5, horizontal) ─── */
+function buildCausticWash() {
+  const grp = new THREE.Group();
+  grp.name = 'V-654 Caustic Wash';
+  const R = 0.4, L = 1.5;
+
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(R, R, L, 20, 1, true), M.shell());
+  shell.rotation.z = Math.PI / 2;
+  grp.add(shell);
+  [-L / 2, L / 2].forEach(xp => {
+    const c = new THREE.Mesh(new THREE.SphereGeometry(R, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+    c.rotation.z = xp < 0 ? Math.PI / 2 : -Math.PI / 2;
+    c.position.x = xp;
+    grp.add(c);
+  });
+
+  const s = new THREE.Mesh(new THREE.BoxGeometry(0.25, R * 0.8, R * 1.6), M.darkSteel());
+  s.position.set(0, -(R + 0.2), 0);
+  grp.add(s);
+
+  addNozzle(-(L / 2 + 0.3), 0.1, 0, 'left', 0.5, 0.08, M.pipeJet(), grp);
+  addNozzle(L / 2 + 0.3, 0.1, 0, 'right', 0.5, 0.08, M.pipeCaustic(), grp);
+  addNozzle(0, R + 0.2, 0, 'top', 0.4, 0.06, M.pipeCaustic(), grp);
+
+  grp.position.set(22.5, 2, 0);
+  scene.add(grp);
+}
+
+/* ─── 4i. WATER WASH DRUM V-655 (r=0.35, L=1.2, horizontal) ─── */
+function buildWaterWash() {
+  const grp = new THREE.Group();
+  grp.name = 'V-655 Water Wash';
+  const R = 0.35, L = 1.2;
+
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(R, R, L, 20, 1, true), M.shell());
+  shell.rotation.z = Math.PI / 2;
+  grp.add(shell);
+  [-L / 2, L / 2].forEach(xp => {
+    const c = new THREE.Mesh(new THREE.SphereGeometry(R, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+    c.rotation.z = xp < 0 ? Math.PI / 2 : -Math.PI / 2;
+    c.position.x = xp;
+    grp.add(c);
+  });
+
+  const s = new THREE.Mesh(new THREE.BoxGeometry(0.2, R * 0.7, R * 1.4), M.darkSteel());
+  s.position.set(0, -(R + 0.2), 0);
+  grp.add(s);
+
+  addNozzle(-(L / 2 + 0.3), 0.1, 0, 'left', 0.5, 0.08, M.pipeCaustic(), grp);
+  addNozzle(L / 2 + 0.3, 0.1, 0, 'right', 0.5, 0.08, M.pipeJet(), grp);
+  addNozzle(0, -(R + 0.2), 0, 'bottom', 0.4, 0.06, M.pipeWater(), grp);
+
+  grp.position.set(24.8, 2, 0);
+  scene.add(grp);
+}
+
+/* ─── 4j. INHIBITOR INJECTION (small box + pump) ─── */
+function buildInhibitorInjection() {
+  const grp = new THREE.Group();
+  grp.name = 'Inhibitor Injection';
+
+  // Tank
+  const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.6, 12), M.shellSolid());
+  tank.position.y = 0.5;
+  grp.add(tank);
+  // Pump
+  const pump = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.25), M.darkSteel());
+  pump.position.set(0.5, 0.15, 0);
+  grp.add(pump);
+  // Motor
+  const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.3, 8), M.darkSteel());
+  motor.rotation.z = Math.PI / 2;
+  motor.position.set(0.9, 0.15, 0);
+  grp.add(motor);
+  // Injection nozzle
+  const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 6), M.pipeJet());
+  nozzle.position.set(0, 0.3, 0.3);
+  nozzle.rotation.x = Math.PI / 2;
+  grp.add(nozzle);
+
+  grp.position.set(24, 1, 2);
+  scene.add(grp);
+}
+
+/* ─── 4k. RECYCLE COMPRESSOR K-651 (box + motor) ─── */
+function buildRecycleCompressor() {
+  const grp = new THREE.Group();
+  grp.name = 'K-651 Compressor';
+
+  // Body
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.2, 1.2), M.darkSteel());
+  body.position.y = 0.6;
+  body.castShadow = true;
+  grp.add(body);
+  // Motor
+  const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1.5, 16), M.darkSteel());
+  motor.rotation.z = Math.PI / 2;
+  motor.position.set(1.6, 0.6, 0);
+  grp.add(motor);
+  // Coupling
+  const coupling = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.3, 8), M.warningRed());
+  coupling.rotation.z = Math.PI / 2;
+  coupling.position.set(1.05, 0.6, 0);
+  grp.add(coupling);
+  // Foundation
+  const found = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.3, 1.8), M.concrete());
+  found.position.y = -0.15;
+  grp.add(found);
+
+  // Nozzles
+  addNozzle(-0.9, 1.2, 0, 'top', 0.6, 0.15, M.pipeH2(), grp);
+  addNozzle(0.9, 1.2, 0, 'top', 0.6, 0.15, M.pipeH2(), grp);
+
+  grp.position.set(-2, 0, 6);
+  scene.add(grp);
+}
+
+/* ─── 4l. AMINE SCRUBBER C-652 (r=0.6, H=4, small packed column) ─── */
+function buildAmineScrubber() {
+  const grp = new THREE.Group();
+  grp.name = 'C-652 Amine Scrubber';
+  const R = 0.6, H = 4;
+
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(R, R, H, 24, 1, true), M.shell());
+  shell.castShadow = true;
+  grp.add(shell);
+
+  // Top/bottom caps
+  const topCap = new THREE.Mesh(new THREE.SphereGeometry(R, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+  topCap.position.y = H / 2;
+  grp.add(topCap);
+  const botCap = new THREE.Mesh(new THREE.SphereGeometry(R, 24, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.shellSolid());
+  botCap.position.y = -H / 2;
+  grp.add(botCap);
+
+  // Packing (2 beds represented as filled cylinders)
+  [0.6, -0.6].forEach(yp => {
+    const packing = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.85, R * 0.85, 1.0, 20), M.catalyst());
+    packing.position.y = yp;
+    grp.add(packing);
+  });
+
+  // Skirt
+  const skirt = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.05, R + 0.1, 1.5, 16, 1, true), M.darkSteel());
+  skirt.position.y = -H / 2 - 0.75;
+  grp.add(skirt);
+
+  addNozzle(0, H / 2 + 0.2, 0, 'top', 0.5, 0.1, M.pipeSourGas(), grp);
+  addNozzle(0, -(H / 2 + 0.2), 0, 'bottom', 0.5, 0.1, M.pipeWater(), grp);
+  addNozzle(R + 0.3, 0.5, 0, 'right', 0.5, 0.08, M.pipeWater(), grp);
+
+  grp.position.set(10, H / 2 + 2.5, 5);
+  scene.add(grp);
+}
+
+/* ─── 4m. AIR COOLERS (2 fin-fan boxes) ─── */
+function buildAirCoolers() {
+  [0, 1].forEach(i => {
+    const grp = new THREE.Group();
+    grp.name = 'Air Cooler ' + (i + 1);
+
+    // Bundle box
+    const bundle = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 1.5), M.darkSteel());
+    bundle.position.y = 3;
+    grp.add(bundle);
+    // Fin tubes
+    for (let t = 0; t < 8; t++) {
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.8, 6), M.stainless());
+      tube.rotation.z = Math.PI / 2;
+      tube.position.set(0, 2.6, -0.5 + t * 0.14);
+      grp.add(tube);
+    }
+    // Fan housing
+    const housing = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.15, 16), M.darkSteel());
+    housing.position.set(0, 2.2, 0);
+    housing.rotation.x = Math.PI / 2;
+    grp.add(housing);
+    // Fan blades (represented as disc)
+    const blade = new THREE.Mesh(new THREE.CircleGeometry(0.6, 6), M.oshaYellow());
+    blade.material.transparent = true;
+    blade.material.opacity = 0.5;
+    blade.position.set(0, 2.15, 0);
+    blade.rotation.x = -Math.PI / 2;
+    grp.add(blade);
+    // Support structure
+    const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.5, 0.1), M.darkSteel());
+    leg1.position.set(-1.2, 1.25, 0.5);
+    grp.add(leg1);
+    const leg2 = leg1.clone();
+    leg2.position.set(1.2, 1.25, 0.5);
+    grp.add(leg2);
+    const leg3 = leg1.clone();
+    leg3.position.set(-1.2, 1.25, -0.5);
+    grp.add(leg3);
+    const leg4 = leg1.clone();
+    leg4.position.set(1.2, 1.25, -0.5);
+    grp.add(leg4);
+    // Plenum
+    const plenum = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.15, 1.7), M.darkSteel());
+    plenum.position.y = 3.5;
+    grp.add(plenum);
+
+    grp.position.set(8 + i * 4.5, 0, -5);
+    scene.add(grp);
+  });
+}
+
+/* ─── 4n. INTERCONNECTING PIPING ─── */
+function buildInterconnectingPiping() {
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+
+  // Feed → Exchanger
+  addPipe([V(-14, 2.5, 0), V(-11, 2.5, 0), V(-10.5, 2.5, 0)], 0.16, M.pipeKero());
+  // Exchanger → Heater
+  addPipe([V(-6, 2.5, 0), V(-5.5, 2.5, 0), V(-5, 2, 2), V(-5, 1, 5)], 0.16, M.pipeKero());
+  // Heater → Reactor
+  addPipe([V(-3.5, 1, 6), V(-2, 1, 4), V(0, 5, 2), V(0, 8, 0)], 0.16, M.pipeKero());
+  // Reactor → Separator
+  addPipe([V(1.8, 8, 0), V(3, 7, 0), V(5, 5, 0), V(6.5, 3, 0)], 0.16, M.pipeKero());
+  // Separator → Stripper
+  addPipe([V(9.5, 2.5, 0), V(11, 2.5, 0), V(13, 3, 0)], 0.14, M.pipeKero());
+  // Stripper → Salt Dryer
+  addPipe([V(14.8, 6, 0), V(16, 5, 0), V(18, 3, 0), V(19, 2, 0)], 0.12, M.pipeJet());
+  // Salt Dryer → Caustic Wash
+  addPipe([V(21, 2, 0), V(21.8, 2, 0)], 0.1, M.pipeJet());
+  // Caustic → Water Wash
+  addPipe([V(23.2, 2, 0), V(24.2, 2, 0)], 0.1, M.pipeCaustic());
+  // Water Wash → Product out
+  addPipe([V(25.4, 2, 0), V(28, 2, 0), V(30, 2.5, 0)], 0.12, M.pipeJet());
+
+  // H2 makeup → Exchanger (blue)
+  addPipe([V(-10, 6, 3), V(-9, 4, 2), V(-8.5, 3, 0)], 0.1, M.pipeH2());
+  // Recycle H2 (compressor → reactor)
+  addPipe([V(-1, 1.2, 6), V(0, 2, 4), V(-1, 7, 1), V(0, 9, 0)], 0.12, M.pipeH2());
+  // Quench H2 lines to reactor beds
+  addPipe([V(-2, 3, 4), V(-1.8, 6.5, 0)], 0.06, M.pipeH2());
+  addPipe([V(-1.5, 2.5, 4), V(-1.8, 4.5, 0)], 0.06, M.pipeH2());
+
+  // Separator gas → Amine scrubber
+  addPipe([V(8, 3.3, 0), V(9, 4, 2), V(10, 5, 4)], 0.1, M.pipeSourGas());
+  // Stripper overhead → condenser
+  addPipe([V(14, 10.5, 0), V(15, 8, -1), V(17, 7.5, -2)], 0.08, M.pipeKero());
+
+  // Separator liquid → Air coolers
+  addPipe([V(8, 2.2, 0), V(8, 1.5, -3), V(8, 1, -5)], 0.08, M.pipeKero());
+}
+
+/* ─── 4o. PLATFORMS / STRUCTURES ─── */
+function buildPlatforms() {
+  // Reactor platform (top)
+  const rPlat = new THREE.Group();
+  const rGrat = new THREE.Mesh(new THREE.BoxGeometry(5, 0.06, 5), M.grating());
+  rGrat.position.y = 0;
+  rPlat.add(rGrat);
+  // Handrails
+  [[-2.5, -2.5], [2.5, -2.5], [-2.5, 2.5], [2.5, 2.5]].forEach(([rx, rz]) => {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.1, 6), M.oshaYellow());
+    post.position.set(rx, 0.55, rz);
+    rPlat.add(post);
+  });
+  // Top rails
+  [-2.5, 2.5].forEach(zr => {
+    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 5, 6), M.oshaYellow());
+    rail.rotation.z = Math.PI / 2;
+    rail.position.set(0, 1.1, zr);
+    rPlat.add(rail);
+  });
+  [-2.5, 2.5].forEach(xr => {
+    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 5, 6), M.oshaYellow());
+    rail.position.set(xr, 1.1, 0);
+    rPlat.add(rail);
+  });
+  rPlat.position.set(0, 13.3, 0);
+  scene.add(rPlat);
+
+  // Stripper platform
+  const sPlat = new THREE.Group();
+  const sGrat = new THREE.Mesh(new THREE.BoxGeometry(3, 0.06, 3), M.grating());
+  sGrat.position.y = 0;
+  sPlat.add(sGrat);
+  [[-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5], [1.5, 1.5]].forEach(([rx, rz]) => {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.0, 6), M.oshaYellow());
+    post.position.set(rx, 0.5, rz);
+    sPlat.add(post);
+  });
+  sPlat.position.set(14, 10.8, 0);
+  scene.add(sPlat);
+}
+
+/* ═══════════════════════════════════════════════════════
+   5. PARTICLE SYSTEMS (8+)
+   ═══════════════════════════════════════════════════════ */
+const particleSystems = [];
+
+function createParticleSystem(name, color, count, opts) {
+  const points = [];
+  const velocities = [];
+  for (let i = 0; i < count; i++) {
+    const t = Math.random();
+    const p = opts.curve[0].clone().lerp(opts.curve[opts.curve.length - 1], t);
+    p.x += (Math.random() - 0.5) * 0.3;
+    p.y += (Math.random() - 0.5) * 0.3;
+    p.z += (Math.random() - 0.5) * 0.3;
+    points.push(p.x, p.y, p.z);
+    velocities.push({ offset: t, speedVar: 0.7 + Math.random() * 0.6, spread: (Math.random() - 0.5) * 0.2 });
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  const pMat = new THREE.PointsMaterial({
+    color, size: opts.size, transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+  });
+  const system = new THREE.Points(geo, pMat);
+  system.name = name;
+  system.userData = { curve: opts.curve, velocities, speed: opts.speed, count };
+  scene.add(system);
+  particleSystems.push(system);
+  return system;
+}
+
+function buildParticles() {
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+
+  // 1. Kero feed through exchanger (amber)
+  createParticleSystem('feedExchanger', 0xd4a020, 200, {
+    curve: [V(-14, 2.5, 0), V(-10, 2.5, 0), V(-8, 2.5, 0)], speed: 0.4, size: 0.09
+  });
+
+  // 2. Feed through heater (amber → hot)
+  createParticleSystem('feedHeater', 0xff8833, 180, {
+    curve: [V(-6, 2.5, 0), V(-5, 2, 2), V(-5, 1, 5), V(-3.5, 1, 6)], speed: 0.45, size: 0.08
+  });
+
+  // 3. Through reactor beds (amber, 3 passes)
+  createParticleSystem('reactorBeds', 0xd4a020, 250, {
+    curve: [V(0, 10, 0), V(0, 8, 0), V(0, 6, 0), V(0, 4, 0), V(0, 8, 0.5)], speed: 0.3, size: 0.07
+  });
+
+  // 4. Quench H2 (blue)
+  createParticleSystem('quenchH2', 0x3b82f6, 150, {
+    curve: [V(-2, 3, 4), V(-1.8, 6.5, 1), V(-1.8, 6.5, 0)], speed: 0.5, size: 0.05
+  });
+
+  // 5. Separator gas out (green)
+  createParticleSystem('separatorGas', 0x22c55e, 160, {
+    curve: [V(8, 3.3, 0), V(9, 4, 2), V(10, 5, 4), V(10, 6, 5)], speed: 0.4, size: 0.07
+  });
+
+  // 6. Separator liquid to stripper (amber)
+  createParticleSystem('separatorLiquid', 0xd4a020, 180, {
+    curve: [V(8, 2.2, 0), V(9.5, 2.5, 0), V(11, 2.5, 0), V(13, 3, 0)], speed: 0.35, size: 0.08
+  });
+
+  // 7. Through salt dryer (straw)
+  createParticleSystem('saltDryer', 0xc8b870, 150, {
+    curve: [V(19, 2, 0), V(20, 2, 0), V(21, 2, 0)], speed: 0.35, size: 0.06
+  });
+
+  // 8. Through wash drums (yellow/caustic)
+  createParticleSystem('washDrums', 0xeab308, 140, {
+    curve: [V(21.8, 2, 0), V(22.5, 2, 0), V(23.2, 2, 0), V(24.2, 2, 0), V(25.4, 2, 0)], speed: 0.3, size: 0.06
+  });
+
+  // 9. H2 recycle (blue)
+  createParticleSystem('h2Recycle', 0x3b82f6, 200, {
+    curve: [V(-1, 1.2, 6), V(0, 2, 4), V(-1, 7, 1), V(0, 9, 0)], speed: 0.4, size: 0.06
+  });
+
+  // 10. Jet fuel product out (straw)
+  createParticleSystem('jetFuelOut', 0xc8b870, 120, {
+    curve: [V(25.4, 2, 0), V(28, 2, 0), V(30, 2.5, 0), V(32, 2.5, 0)], speed: 0.5, size: 0.1
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   6. RAYCASTER INTERACTION
+   ═══════════════════════════════════════════════════════ */
+const tooltip = document.getElementById('tooltip');
+const interactiveObjects = [];
+
+function collectInteractive() {
+  // Reactor
+  if (reactorGroup) {
+    reactorGroup.traverse(child => {
+      if (child.isMesh) { child.userData.type = 'reactor'; interactiveObjects.push(child); }
+    });
+  }
+  // Heater
+  if (heaterGroup) {
+    heaterGroup.traverse(child => {
+      if (child.isMesh) { child.userData.type = 'heater'; interactiveObjects.push(child); }
+    });
+  }
+}
+
+function onClick(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && !obj.userData.type) obj = obj.parent;
+    if (!obj) return;
+    if (obj.userData.type === 'reactor') showBedPopup(event);
+    if (obj.userData.type === 'heater') toggleBurners();
+  }
+}
+
+function onMouseMove(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && !obj.userData.type) obj = obj.parent;
+    if (obj) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = event.clientX + 12 + 'px';
+      tooltip.style.top = event.clientY + 12 + 'px';
+      if (obj.userData.type === 'reactor')
+        tooltip.innerHTML = '<strong>R-650 Reactor</strong><br>Click for bed temperatures';
+      if (obj.userData.type === 'heater')
+        tooltip.innerHTML = '<strong>H-651 Heater</strong><br>Click to toggle burners';
+      return;
+    }
+  }
+  tooltip.style.display = 'none';
+}
+
+function showBedPopup(event) {
+  const popup = document.getElementById('bed-popup');
+  popup.style.display = 'block';
+  popup.style.left = Math.min(event.clientX + 15, window.innerWidth - 230) + 'px';
+  popup.style.top = Math.min(event.clientY + 15, window.innerHeight - 280) + 'px';
+  // Update values
+  document.getElementById('bp-inlet').textContent = (344 + Math.random() * 2).toFixed(1) + ' °C';
+  document.getElementById('bp-b1').textContent = (347 + Math.random() * 2).toFixed(1) + ' °C';
+  document.getElementById('bp-q1').textContent = '-' + (11 + Math.random() * 2).toFixed(1) + ' °C';
+  document.getElementById('bp-b2').textContent = (344 + Math.random() * 2).toFixed(1) + ' °C';
+  document.getElementById('bp-q2').textContent = '-' + (10 + Math.random() * 3).toFixed(1) + ' °C';
+  document.getElementById('bp-b3').textContent = (339 + Math.random() * 3).toFixed(1) + ' °C';
+  document.getElementById('bp-wabt').textContent = (341 + Math.random() * 3).toFixed(1) + ' °C';
+  document.getElementById('bp-dt').textContent = (17 + Math.random() * 3).toFixed(1) + ' °C';
+}
+
+function toggleBurners() {
+  burnersOn = !burnersOn;
+  burnerFlames.forEach(f => {
+    f.visible = burnersOn;
+    if (!burnersOn) f.material = mat(0x333333);
+    else f.material = M.flame();
+  });
+  burnerLights.forEach(l => { l.intensity = burnersOn ? 0.8 : 0; });
+}
+
+/* ═══════════════════════════════════════════════════════
+   7. VIEW MODES WITH ANIMATED CAMERA TRANSITIONS
+   ═══════════════════════════════════════════════════════ */
+function setupViewToggle() {
+  document.querySelectorAll('#view-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      if (view === currentView) return;
+      currentView = view;
+      document.querySelectorAll('#view-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      animateCamera(cameraPresets[view]);
+    });
+  });
+}
+
+function animateCamera(preset) {
+  const startPos = camera.position.clone();
+  const endPos = new THREE.Vector3(...preset.pos);
+  const startTarget = controls.target.clone();
+  const endTarget = new THREE.Vector3(...preset.target);
+  const duration = 1200;
+  const startTime = performance.now();
+  function step(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    camera.position.lerpVectors(startPos, endPos, ease);
+    controls.target.lerpVectors(startTarget, endTarget, ease);
+    controls.update();
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ═══════════════════════════════════════════════════════
+   8. LIVE ANIMATED HUD READINGS
+   ═══════════════════════════════════════════════════════ */
+function updateHUD(time) {
+  // WABT
+  const wabt = 342 + Math.sin(time * 0.3) * 2.5 + (Math.random() - 0.5) * 0.4;
+  document.getElementById('r-wabt').textContent = wabt.toFixed(1);
+  document.getElementById('bar-wabt').style.width = ((wabt / 500) * 100) + '%';
+
+  // Bed temps
+  const b1 = 348 + Math.sin(time * 0.25) * 2 + (Math.random() - 0.5) * 0.3;
+  const b2 = 345 + Math.sin(time * 0.28) * 1.8 + (Math.random() - 0.5) * 0.3;
+  const b3 = 340 + Math.sin(time * 0.22) * 2 + (Math.random() - 0.5) * 0.3;
+  document.getElementById('r-bed1').textContent = b1.toFixed(1);
+  document.getElementById('r-bed2').textContent = b2.toFixed(1);
+  document.getElementById('r-bed3').textContent = b3.toFixed(1);
+  document.getElementById('bar-bed1').style.width = ((b1 / 500) * 100) + '%';
+  document.getElementById('bar-bed2').style.width = ((b2 / 500) * 100) + '%';
+  document.getElementById('bar-bed3').style.width = ((b3 / 500) * 100) + '%';
+
+  // H2 consumption
+  const h2c = 52 + Math.sin(time * 0.15) * 3 + (Math.random() - 0.5) * 0.5;
+  document.getElementById('r-h2cons').textContent = h2c.toFixed(1);
+  document.getElementById('bar-h2cons').style.width = ((h2c / 100) * 100) + '%';
+
+  // Right panel: Live readings
+  const rxin = 345 + Math.sin(time * 0.2) * 2 + (Math.random() - 0.5) * 0.2;
+  document.getElementById('r-rxin').textContent = rxin.toFixed(1);
+  document.getElementById('bar-rxin').style.width = ((rxin / 500) * 100) + '%';
+
+  const rxpres = 48 + Math.sin(time * 0.18) * 1.5 + (Math.random() - 0.5) * 0.1;
+  document.getElementById('r-rxpres').textContent = rxpres.toFixed(1);
+  document.getElementById('bar-rxpres').style.width = ((rxpres / 60) * 100) + '%';
+
+  const fr = 84 + Math.sin(time * 0.12) * 2 + (Math.random() - 0.5) * 0.3;
+  document.getElementById('r-feedrate').textContent = fr.toFixed(1);
+  document.getElementById('bar-feedrate').style.width = ((fr / 120) * 100) + '%';
+
+  const h2oil = 356 + Math.sin(time * 0.1) * 12 + (Math.random() - 0.5) * 2;
+  document.getElementById('r-h2oil').textContent = Math.round(h2oil);
+  document.getElementById('bar-h2oil').style.width = ((h2oil / 500) * 100) + '%';
+
+  // Jet fuel quality
+  document.getElementById('q-sulfur').textContent = Math.round(10 + Math.random() * 4) + ' ppm';
+  document.getElementById('q-smoke').textContent = (27.5 + Math.sin(time * 0.08) * 1.2).toFixed(1) + ' mm';
+  document.getElementById('q-freeze').textContent = (-47 + Math.sin(time * 0.06) * 0.8).toFixed(1) + ' °C';
+  document.getElementById('q-flash').textContent = (43.5 + Math.sin(time * 0.07) * 0.6).toFixed(1) + ' °C';
+  document.getElementById('q-aro').textContent = (13.8 + Math.sin(time * 0.05) * 0.8).toFixed(1) + ' vol%';
+  document.getElementById('q-dens').textContent = (798 + Math.sin(time * 0.04) * 1.5).toFixed(1) + ' kg/m³';
+
+  // Catalyst status
+  document.getElementById('c-srem').textContent = (99.2 + Math.sin(time * 0.03) * 0.3).toFixed(1) + '%';
+  document.getElementById('c-merc').textContent = (99.6 + Math.sin(time * 0.04) * 0.2).toFixed(1) + '%';
+  document.getElementById('c-dt').textContent = (18 + Math.sin(time * 0.09) * 1.2).toFixed(1) + ' °C';
+
+  // Bottom panel
+  document.getElementById('b-feed').textContent = fr.toFixed(1);
+  document.getElementById('b-wabt').textContent = wabt.toFixed(1);
+  document.getElementById('b-pres').textContent = rxpres.toFixed(1);
+  document.getElementById('b-sin').textContent = Math.round(1800 + Math.random() * 100);
+  document.getElementById('b-sout').textContent = Math.round(10 + Math.random() * 4);
+  document.getElementById('b-smoke').textContent = (27.5 + Math.sin(time * 0.08) * 1.2).toFixed(1);
+
+  // Process streams
+  document.getElementById('s-feed').textContent = fr.toFixed(1) + ' m³/h';
+  document.getElementById('s-h2').textContent = (4800 + Math.sin(time * 0.1) * 100).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' Nm³/h';
+  document.getElementById('s-recycle').textContent = (38500 + Math.sin(time * 0.08) * 500).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' Nm³/h';
+  document.getElementById('s-jet').textContent = (fr * 0.975).toFixed(1) + ' m³/h';
+  document.getElementById('s-sour').textContent = (2200 + Math.sin(time * 0.11) * 80).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' Nm³/h';
+  document.getElementById('s-wash').textContent = (6.5 + Math.sin(time * 0.07) * 0.3).toFixed(1) + ' m³/h';
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATION LOOP
+   ═══════════════════════════════════════════════════════ */
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+
+  controls.update();
+
+  // ─── Animate particle systems ───
+  particleSystems.forEach(sys => {
+    const positions = sys.geometry.attributes.position.array;
+    const { curve, velocities, speed, count } = sys.userData;
+    for (let i = 0; i < count; i++) {
+      const v = velocities[i];
+      v.offset = (v.offset + delta * speed * v.speedVar) % 1;
+      const totalLen = curve.length - 1;
+      const segF = v.offset * totalLen;
+      const segI = Math.min(Math.floor(segF), totalLen - 1);
+      const segT = segF - segI;
+      const p = new THREE.Vector3().lerpVectors(curve[segI], curve[segI + 1], segT);
+      p.x += v.spread * Math.sin(elapsed * 2 + i);
+      p.y += v.spread * Math.cos(elapsed * 1.5 + i);
+      p.z += v.spread * Math.sin(elapsed * 1.8 + i * 0.5);
+      positions[i * 3] = p.x;
+      positions[i * 3 + 1] = p.y;
+      positions[i * 3 + 2] = p.z;
+    }
+    sys.geometry.attributes.position.needsUpdate = true;
+  });
+
+  // ─── Burner flame flickering ───
+  if (burnersOn) {
+    burnerFlames.forEach((flame, i) => {
+      flame.scale.y = 0.8 + 0.4 * Math.sin(elapsed * 8 + i * 2.1);
+      flame.scale.x = 0.9 + 0.2 * Math.sin(elapsed * 6 + i * 1.7);
+      flame.position.y = 0.8 + i * 0.05 + Math.sin(elapsed * 10 + i) * 0.05;
+    });
+    burnerLights.forEach((l, i) => {
+      l.intensity = 0.6 + 0.4 * Math.sin(elapsed * 7 + i * 1.5);
+    });
+  }
+
+  // ─── Salt dryer electrode glow pulsing ───
+  dryerGlows.forEach((glow, i) => {
+    glow.intensity = 0.3 + 0.3 * Math.sin(elapsed * 2.5 + i * 1.2);
+  });
+
+  // ─── Live HUD ───
+  updateHUD(elapsed);
+
+  // ─── Render with bloom ───
+  if (composer && camera) { composer.render(); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY FUNCTIONS
+   ═══════════════════════════════════════════════════════ */
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function simulateLoading() {
+  const fill = document.getElementById('loader-fill');
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 15 + 5;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+      setTimeout(() => {
+        document.getElementById('loading-screen').classList.add('hidden');
+        collectInteractive();
+      }, 400);
+    }
+    fill.style.width = progress + '%';
+  }, 200);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════ */
+init();
+animate();
+</script>
+</body>
+</html>
+

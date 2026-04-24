@@ -1,13 +1,14 @@
-// Catalog of all 10 chemical process units. Used by the landing grid.
-// Routes for non-FCC units will be added as they are converted.
+import { Factory, FlaskConical, Beaker, Droplet, Wind, Flame, GitBranch, Thermometer, Waves, Zap } from 'lucide-react';
+import type { ComponentType } from 'react';
+
 export type UnitInfo = {
-  id: string;
+  id: string;          // also used as the URL segment and the public/units file name (without .html)
   tag: string;
   name: string;
   subtitle: string;
   category: string;
-  accent: string; // hex
-  route?: string; // present when a TSX route exists
+  accent: string;      // hex, matches the unit's own theme accent
+  icon: ComponentType<{ className?: string }>;
 };
 
 export const UNITS: UnitInfo[] = [
@@ -15,10 +16,10 @@ export const UNITS: UnitInfo[] = [
     id: 'fcc-r400',
     tag: 'R-400',
     name: 'Fluid Catalytic Cracker',
-    subtitle: 'Heavy-to-light catalytic cracking unit',
+    subtitle: 'Heavy-to-light catalytic cracking',
     category: 'Conversion',
     accent: '#f0c040',
-    route: '/units/fcc-r400',
+    icon: Factory,
   },
   {
     id: 'hydrocracker-r450',
@@ -27,6 +28,7 @@ export const UNITS: UnitInfo[] = [
     subtitle: 'Heavy molecule hydrocracking',
     category: 'Conversion',
     accent: '#f0c040',
+    icon: GitBranch,
   },
   {
     id: 'isomerization-r350',
@@ -35,6 +37,7 @@ export const UNITS: UnitInfo[] = [
     subtitle: 'Light naphtha octane booster',
     category: 'Upgrading',
     accent: '#f0c040',
+    icon: FlaskConical,
   },
   {
     id: 'kero-hydrotreater-r650',
@@ -43,6 +46,7 @@ export const UNITS: UnitInfo[] = [
     subtitle: 'Jet fuel production',
     category: 'Treating',
     accent: '#f0c040',
+    icon: Droplet,
   },
   {
     id: 'lpg-recovery-t950',
@@ -51,6 +55,7 @@ export const UNITS: UnitInfo[] = [
     subtitle: 'Light end separation',
     category: 'Separation',
     accent: '#f0c040',
+    icon: Wind,
   },
   {
     id: 'merox-v980',
@@ -59,6 +64,7 @@ export const UNITS: UnitInfo[] = [
     subtitle: 'Mercaptan extraction / sweetening',
     category: 'Treating',
     accent: '#38bdf8',
+    icon: Beaker,
   },
   {
     id: 'naphtha-hydrotreater-r201',
@@ -67,6 +73,7 @@ export const UNITS: UnitInfo[] = [
     subtitle: 'Sulfur / nitrogen removal',
     category: 'Treating',
     accent: '#f0c040',
+    icon: Droplet,
   },
   {
     id: 'preheat-train-e100',
@@ -75,6 +82,7 @@ export const UNITS: UnitInfo[] = [
     subtitle: 'Primary heat exchange network',
     category: 'Utilities',
     accent: '#f0c040',
+    icon: Thermometer,
   },
   {
     id: 'sour-water-stripper-t900',
@@ -83,6 +91,7 @@ export const UNITS: UnitInfo[] = [
     subtitle: 'Effluent treatment',
     category: 'Utilities',
     accent: '#f0c040',
+    icon: Waves,
   },
   {
     id: 'sulfur-recovery-r850',
@@ -91,5 +100,16 @@ export const UNITS: UnitInfo[] = [
     subtitle: 'SRU — Claus process',
     category: 'Environmental',
     accent: '#f0c040',
+    icon: Flame,
   },
 ];
+
+export const UNIT_IDS = UNITS.map((u) => u.id);
+export type UnitId = (typeof UNITS)[number]['id'];
+
+export function getUnitById(id: string): UnitInfo | undefined {
+  return UNITS.find((u) => u.id === id);
+}
+
+// Re-export to satisfy unused-import lints in some setups.
+export const PlantIcon = Zap;
