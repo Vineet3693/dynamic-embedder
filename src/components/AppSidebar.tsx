@@ -67,7 +67,7 @@ export function AppSidebar() {
                         className="text-[#8a9ab0] data-[active=true]:bg-[#1a2540] data-[active=true]:text-[#f0c040] hover:bg-[#121a2a] hover:text-[#e0e8f0]"
                       >
                         <Link to="/units/$unitId" params={{ unitId: u.id }}>
-                          <u.icon className="h-4 w-4 shrink-0" style={{ color: active ? u.accent : undefined }} />
+                          <u.icon className="h-4 w-4 shrink-0" {...(active ? { color: u.accent } as Record<string, unknown> : {})} />
                           {!collapsed && (
                             <span className="flex flex-1 items-center justify-between gap-2 truncate">
                               <span className="truncate text-[0.78rem]">{u.name}</span>
