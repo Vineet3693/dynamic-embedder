@@ -1,0 +1,2217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- ═══════════════════════════════════════════════════════════════════
+     PREHEAT TRAIN E-100 — Primary Heat Exchange System
+     Standalone 3D Isolation Viewer
+     Three.js r147 | Dark Industrial Theme | Production-Ready
+     ═══════════════════════════════════════════════════════════════════ -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-100 | Preheat Train — Heat Exchange Network</title>
+  <style>
+    /* ─── 1. FULL CSS STYLING ─── */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow: hidden;
+      background: #0a0e17;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #c8d6e5;
+    }
+
+    /* ─── Loading Screen ─── */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #0a0e17;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.8s ease;
+    }
+
+    #loading-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #loading-screen h1 {
+      font-size: 1.4rem;
+      color: #f0c040;
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.08em;
+    }
+
+    .loader-bar {
+      width: 280px;
+      height: 4px;
+      background: #1a2035;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .loader-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #f0c040, #e8a020);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    #loading-screen p {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: #5a6a80;
+    }
+
+    /* ─── Topbar ─── */
+    #topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      z-index: 100;
+      background: Alinear-gradient(180deg, rgba(10, 14, 23, 0.95), rgba(10, 14, 23, 0.85));
+      border-bottom: 1px solid #1e2a3a;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      backdrop-filter: blur(8px);
+    }
+
+    #topbar .tag {
+      background: #f0c040;
+      color: #0a0e17;
+      font-weight: 700;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 12px;
+      letter-spacing: 0.06em;
+    }
+
+    #topbar h2 {
+      font-size: 0.95rem;
+      color: #e0e8f0;
+      font-weight: 600;
+    }
+
+    #topbar .unit-id {
+      color: #f0c040;
+      margin-left: 8px;
+    }
+
+    #topbar .status {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+    }
+
+    #topbar .status .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 6px #22c55e;
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* ─── View Toggle Buttons ─── */
+    #view-toggle {
+      position: fixed;
+      top: 60px;
+      right: 16px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    #view-toggle button {
+      background: rgba(20, 30, 50, 0.9);
+      color: #8a9ab0;
+      border: 1px solid #1e2a3a;
+      padding: 7px 14px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      letter-spacing: 0.04em;
+      font-weight: 500;
+    }
+
+    #view-toggle button:hover,
+    #view-toggle button.active {
+      background: rgba(240, 192, 64, 0.15);
+      color: #f0c040;
+      border-color: #f0c040;
+    }
+
+    /* ─── Left Panel ─── */
+    #left-panel {
+      position: fixed;
+      top: 60px;
+      left: 16px;
+      width: 232px;
+      z-index: 100;
+      background: rgba(12, 18, 30, 0.92);
+      border: 1px solid #1a2540;
+      border-radius: 6px;
+      padding: 12px;
+      backdrop-filter: blur(6px);
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+    }
+
+    #left-panel::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #left-panel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #left-panel::-webkit-scrollbar-thumb {
+      background: #1e2a3a;
+      border-radius: 2px;
+    }
+
+    .card {
+      margin-bottom: 12px;
+      padding: 10px;
+      background: rgba(20, 30, 50, 0.5);
+      border-radius: 4px;
+      border-left: 3px solid #f0c040;
+    }
+
+    .card h3 {
+      font-size: 0.65rem;
+      color: #f0c040;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    .card:last-child {
+      margin-bottom: 0;
+    }
+
+    .exchanger-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3px 0;
+      font-size: 0.7rem;
+      color: #a0b0c0;
+    }
+
+    .exchanger-row .tag-id {
+      color: #e0e8f0;
+      font-weight: 600;
+      font-size: 0.68rem;
+    }
+
+    .exchanger-row .val {
+      font-variant-numeric: tabular-nums;
+      color: #c8d6e5;
+      font-weight: 500;
+    }
+
+    .temp-gradient {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 3px 0;
+      font-size: 0.68rem;
+      color: #a0b0c0;
+    }
+
+    .temp-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0;
+      font-size: 0.72rem;
+      color: #a0b0c0;
+    }
+
+    .legend-swatch {
+      width: 14px;
+      height: 4px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ─── Right Panel ─── */
+    #right-panel {
+      position: fixed;
+      top: 60px;
+      right: 16px;
+      width: 228px;
+      z-index: 100;
+      background: rgba(12, 18, 30, 0.92);
+      border: 1px solid #1a2540;
+      border-radius: 6px;
+      padding: 12px;
+      backdrop-filter: blur(6px);
+      margin-top: 168px;
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+    }
+
+    #right-panel::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #right-panel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #right-panel::-webkit-scrollbar-thumb {
+      background: #1e2a3a;
+      border-radius: 2px;
+    }
+
+    .reading {
+      margin-bottom: 8px;
+    }
+
+    .reading label {
+      display: block;
+      font-size: 0.62rem;
+      color: #5a6a80;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 2px;
+    }
+
+    .reading .value {
+      font-size: 1.05rem;
+      color: #e0e8f0;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .reading .unit {
+      font-size: 0.65rem;
+      color: #5a6a80;
+      margin-left: 4px;
+    }
+
+    .reading .bar {
+      height: 3px;
+      background: #1a2540;
+      border-radius: 2px;
+      margin-top: 3px;
+      overflow: hidden;
+    }
+
+    .reading .bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    .eff-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0;
+      font-size: 0.7rem;
+    }
+
+    .eff-row .eff-label {
+      color: #a0b0c0;
+      width: 60px;
+      flex-shrink: 0;
+    }
+
+    .eff-row .eff-bar-bg {
+      flex: 1;
+      height: 6px;
+      background: #1a2540;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .eff-row .eff-bar-fg {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    .eff-row .eff-val {
+      width: 42px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: #c8d6e5;
+      font-weight: 500;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(30, 40, 60, 0.4);
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-row .info-label {
+      color: #5a6a80;
+    }
+
+    .info-row .info-val {
+      color: #c8d6e5;
+      font-weight: 500;
+    }
+
+    .foul-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0;
+      font-size: 0.68rem;
+    }
+
+    .foul-row .foul-label {
+      color: #a0b0c0;
+      width: 60px;
+      flex-shrink: 0;
+    }
+
+    .foul-row .foul-bar-bg {
+      flex: 1;
+      height: 5px;
+      background: #1a2540;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .foul-row .foul-bar-fg {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    .foul-row .foul-val {
+      width: 36px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 500;
+    }
+
+    /* ─── Bottom Panel (Process Summary) ─── */
+    #bottom-panel {
+      position: fixed;
+      bottom: 40px;
+      left: 16px;
+      right: 16px;
+      height: 80px;
+      z-index: 100;
+      background: rgba(12, 18, 30, 0.92);
+      border: 1px solid #1a2540;
+      border-radius: 6px;
+      padding: 12px 18px;
+      backdrop-filter: blur(6px);
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .process-stat {
+      text-align: center;
+      flex: 1;
+    }
+
+    .process-stat .num {
+      font-size: 1.15rem;
+      color: #e0e8f0;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .process-stat .desc {
+      font-size: 0.58rem;
+      color: #5a6a80;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+    }
+
+    /* ─── Alert Ticker Bar ─── */
+    #alert-ticker {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 32px;
+      z-index: 100;
+      background: rgba(15, 20, 35, 0.95);
+      border-top: 1px solid #1e2a3a;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    #alert-ticker .label {
+      background: #f0c040;
+      color: #0a0e17;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0 10px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    #ticker-content {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    #ticker-scroll {
+      display: inline-block;
+      animation: ticker-scroll 55s linear infinite;
+      font-size: 0.72rem;
+      color: #8a9ab0;
+      padding-left: 20px;
+    }
+
+    @keyframes ticker-scroll {
+      0% {
+        transform: translateX(100%);
+      }
+
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+
+    .ticker-item {
+      margin-right: 60px;
+    }
+
+    .ticker-item.warn {
+      color: #f59e0b;
+    }
+
+    .ticker-item.info {
+      color: #38bdf8;
+    }
+
+    .ticker-item.ok {
+      color: #22c55e;
+    }
+
+    /* ─── Canvas Container ─── */
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    /* ─── Tooltip ─── */
+    #tooltip {
+      position: fixed;
+      z-index: 200;
+      background: rgba(10, 14, 23, 0.95);
+      border: 1px solid #f0c040;
+      color: #e0e8f0;
+      font-size: 0.72rem;
+      padding: 6px 10px;
+      border-radius: 4px;
+      pointer-events: none;
+      display: none;
+      max-width: 240px;
+    }
+
+    /* ─── Highlight overlay for selected exchanger ─── */
+    #exchanger-detail {
+      position: fixed;
+      top: 56px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 150;
+      background: rgba(12, 18, 30, 0.95);
+      border: 1px solid #f0c040;
+      border-radius: 6px;
+      padding: 10px 18px;
+      backdrop-filter: blur(8px);
+      display: none;
+      font-size: 0.75rem;
+      color: #e0e8f0;
+      min-width: 260px;
+    }
+
+    #exchanger-detail .ed-title {
+      font-size: 0.7rem;
+      color: #f0c040;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    #exchanger-detail .ed-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+    }
+
+    #exchanger-detail .ed-label {
+      color: #5a6a80;
+    }
+
+    #exchanger-detail .ed-val {
+      color: #e0e8f0;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #exchanger-detail .ed-close {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      cursor: pointer;
+      color: #5a6a80;
+      font-size: 0.85rem;
+    }
+
+    #exchanger-detail .ed-close:hover {
+      color: #f0c040;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ─── Loading Screen ─── -->
+  <div id="loading-screen">
+    <h1>E-100 PREHEAT TRAIN</h1>
+    <div class="loader-bar">
+      <div class="loader-bar-fill" id="loader-fill"></div>
+    </div>
+    <p>Initializing 3D heat exchange network viewer...</p>
+  </div>
+
+  <!-- ─── Topbar ─── -->
+  <div id="topbar">
+    <span class="TAG">PROCESS UNIT</span>
+    <h2>Preheat Train<span class="unit-id">E-100</span></h2>
+    <div class="status">
+      <div class="dot"></div><span>ONLINE</span>
+    </div>
+  </div>
+
+  <!-- ─── View Toggle ─── -->
+  <div id="view-toggle">
+    <button class="active" data-view="external">External</button>
+    <button data-view="internal">Internal</button>
+    <button data-view="cutaway">Cutaway</button>
+    <button data-view="flow">Flow</button>
+  </div>
+
+  <!-- ─── Exchanger Detail Popup ─── -->
+  <div id="exchanger-detail">
+    <span class="ed-close" id="ed-close">&times;</span>
+    <div class="ed-title" id="ed-title">E-101A</div>
+    <div class="ed-row"><span class="ed-label">Duty</span><span class="ed-val" id="ed-duty">4,820 kW</span></div>
+    <div class="ed-row"><span class="ed-label">Effectiveness</span><span class="ed-val" id="ed-eff">78.4%</span></div>
+    <div class="ed-row"><span class="ed-label">LMTD</span><span class="ed-val" id="ed-lmtd">42.3 °C</span></div>
+    <div class="ed-row"><span class="ed-label">U-value</span><span class="ed-val" id="ed-u">385 W/m²K</span></div>
+    <div class="ed-row"><span class="ed-label">Tube ΔP</span><span class="ed-val" id="ed-dpt">0.85 bar</span></div>
+    <div class="ed-row"><span class="ed-label">Shell ΔP</span><span class="ed-val" id="ed-dps">0.42 bar</span></div>
+    <div class="ed-row"><span class="ed-label">Fouling</span><span class="ed-val" id="ed-foul">12%</span></div>
+  </div>
+
+  <!-- ─── Left Panel ─── -->
+  <div id="left-panel">
+    <!-- Card 1: Heat Exchange Network -->
+    <div class="card">
+      <h3>Heat Exchange Network</h3>
+      <div class="exchanger-row"><span class="tag-id">E-101A</span><span class="val" id="net-a">4,820 kW</span></div>
+      <div class="exchanger-row"><span class="tag-id">E-101B</span><span class="val" id="net-b">5,240 kW</span></div>
+      <div class="exchanger-row"><span class="tag-id">E-101C</span><span class="val" id="net-c">4,580 kW</span></div>
+      <div class="exchanger-row"><span class="tag-id">E-101D</span><span class="val" id="net-d">3,960 kW</span></div>
+      <div class="exchanger-row" style="margin-top:4px;border-top:1px solid rgba(30,40,60,0.5);padding-top:6px;">
+        <span class="tag-id" style="color:#f0c040;">Total</span><span class="val" id="net-total"
+          style="color:#f0c040;">18,600 kW</span>
+      </div>
+    </div>
+
+    <!-- Card 2: Stream Temperatures -->
+    <div class="card" style="border-left-color:#3b82f6;">
+      <h3>Stream Temperatures</h3>
+      <div class="temp-gradient">
+        <div class="temp-dot" style="background:#3b82f6;"></div><span>Inlet T₁</span><span class="val" id="st-t1">42
+          °C</span>
+      </div>
+      <div class="temp-gradient">
+        <div class="temp-dot" style="background:#8b5cf6;"></div><span>After E-101A T₂</span><span class="val"
+          id="st-t2">105 °C</span>
+      </div>
+      <div class="temp-gradient">
+        <div class="temp-dot" style="background:#c026d3;"></div><span>After E-101B T₃</span><span class="val"
+          id="st-t3">168 °C</span>
+      </div>
+      <div class="temp-gradient">
+        <div class="temp-dot" style="background:#e11d48;"></div><span>After E-101C T₄</span><span class="val"
+          id="st-t4">218 °C</span>
+      </div>
+      <div class="temp-gradient">
+        <div class="temp-dot" style="background:#ef4444;"></div><span>Outlet T₅</span><span class="val" id="st-t5">252
+          °C</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Fluid Legend -->
+    <div class="card" style="border-left-color:#22c55e;">
+      <h3>Fluid Legend</h3>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#3b82f6;"></div>Cold Crude (Tube Side)
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#f97316;"></div>Hot Products (Shell Side)
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#fbbf24;"></div>Shell Side Return Flow
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Right Panel ─── -->
+  <div id="right-panel">
+    <!-- Card 1: Live Readings -->
+    <div class="card">
+      <h3>Live Readings</h3>
+      <div class="reading">
+        <label>Overall Duty</label>
+        <div><span class="value" id="r-duty">18.42</span><span class="unit">MW</span></div>
+        <div class="bar">
+          <div class="bar-fill" id="bar-duty" style="width:74%;background:#ef4444;"></div>
+        </div>
+      </div>
+      <div class="reading">
+        <label>LMTD</label>
+        <div><span class="value" id="r-lmtd">38.6</span><span class="unit">°C</span></div>
+        <div class="bar">
+          <div class="bar-fill" id="bar-lmtd" style="width:55%;background:#38bdf8;"></div>
+        </div>
+      </div>
+      <div class="reading">
+        <label>Overall U-value</label>
+        <div><span class="value" id="r-uval">362</span><span class="unit">W/m²K</span></div>
+        <div class="bar">
+          <div class="bar-fill" id="bar-uval" style="width:72%;background:#22c55e;"></div>
+        </div>
+      </div>
+      <div class="reading">
+        <label>Tube ΔP</label>
+        <div><span class="value" id="r-dpt">2.85</span><span class="unit">bar</span></div>
+        <div class="bar">
+          <div class="bar-fill" id="bar-dpt" style="width:57%;background:#f59e0b;"></div>
+        </div>
+      </div>
+      <div class="reading">
+        <label>Shell ΔP</label>
+        <div><span class="value" id="r-dps">1.42</span><span class="unit">bar</span></div>
+        <div class="bar">
+          <div class="bar-fill" id="bar-dps" style="width:47%;background:#a78bfa;"></div>
+        </div>
+      </div>
+      <div class="reading">
+        <label>Crude Outlet Temp</label>
+        <div><span class="value" id="r-cout">252</span><span class="unit">°C</span></div>
+        <div class="bar">
+          <div class="bar-fill" id="bar-cout" style="width:84%;background:#ef4444;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Exchanger Efficiency -->
+    <div class="card" style="border-left-color:#a78bfa;">
+      <h3>Exchanger Efficiency</h3>
+      <div class="eff-row">
+        <span class="eff-label">E-101A</span>
+        <div class="eff-bar-bg">
+          <div class="eff-bar-fg" id="eff-a" style="width:78%;background:#22c55e;"></div>
+        </div>
+        <span class="eff-val" id="eff-a-v">78.4%</span>
+      </div>
+      <div class="eff-row">
+        <span class="eff-label">E-101B</span>
+        <div class="eff-bar-bg">
+          <div class="eff-bar-fg" id="eff-b" style="width:82%;background:#22c55e;"></div>
+        </div>
+        <span class="eff-val" id="eff-b-v">82.1%</span>
+      </div>
+      <div class="eff-row">
+        <span class="eff-label">E-101C</span>
+        <div class="eff-bar-bg">
+          <div class="eff-bar-fg" id="eff-c" style="width:74%;background:#f59e0b;"></div>
+        </div>
+        <span class="eff-val" id="eff-c-v">74.3%</span>
+      </div>
+      <div class="eff-row">
+        <span class="eff-label">E-101D</span>
+        <div class="eff-bar-bg">
+          <div class="eff-bar-fg" id="eff-d" style="width:68%;background:#f59e0b;"></div>
+        </div>
+        <span class="eff-val" id="eff-d-v">68.7%</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Unit Info -->
+    <div class="card" style="border-left-color:#06b6d4;">
+      <h3>Unit Info</h3>
+      <div class="info-row"><span class="info-label">Type</span><span class="info-val">Shell & Tube (BEM)</span></div>
+      <div class="info-row"><span class="info-label">Exchangers</span><span class="info-val">4 (Series)</span></div>
+      <div class="info-row"><span class="info-label">Total Surface</span><span class="info-val">2,480 m²</span></div>
+      <div class="info-row"><span class="info-label">Design Pressure</span><span class="info-val">25 barg</span></div>
+      <div class="info-row"><span class="info-label">Design Temp</span><span class="info-val">340 °C</span></div>
+      <div class="info-row"><span class="info-label">Tube Passes</span><span class="info-val">4 per shell</span></div>
+      <div class="info-row"><span class="info-label">Tube OD</span><span class="info-val">19.05 mm (3/4")</span></div>
+    </div>
+
+    <!-- Card 4: Fouling Status -->
+    <div class="card" style="border-left-color:#ef4444;">
+      <h3>Fouling Status</h3>
+      <div class="foul-row">
+        <span class="foul-label">E-101A</span>
+        <div class="foul-bar-bg">
+          <div class="foul-bar-fg" id="foul-a" style="width:12%;background:#22c55e;"></div>
+        </div>
+        <span class="foul-val" id="foul-a-v" style="color:#22c55e;">12%</span>
+      </div>
+      <div class="foul-row">
+        <span class="foul-label">E-101B</span>
+        <div class="foul-bar-bg">
+          <div class="foul-bar-fg" id="foul-b" style="width:18%;background:#22c55e;"></div>
+        </div>
+        <span class="foul-val" id="foul-b-v" style="color:#22c55e;">18%</span>
+      </div>
+      <div class="foul-row">
+        <span class="foul-label">E-101C</span>
+        <div class="foul-bar-bg">
+          <div class="foul-bar-fg" id="foul-c" style="width:45%;background:#f59e0b;"></div>
+        </div>
+        <span class="foul-val" id="foul-c-v" style="color:#f59e0b;">45%</span>
+      </div>
+      <div class="foul-row">
+        <span class="foul-label">E-101D</span>
+        <div class="foul-bar-bg">
+          <div class="foul-bar-fg" id="foul-d" style="width:62%;background:#ef4444;"></div>
+        </div>
+        <span class="foul-val" id="foul-d-v" style="color:#ef4444;">62%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Bottom Panel: Process Summary ─── -->
+  <div id="bottom-panel">
+    <div class="process-stat">
+      <div class="num" id="s-duty">18.42</div>
+      <div class="desc">Total Heat Duty (MW)</div>
+    </div>
+    <div class="process-stat">
+      <div class="num" id="s-tin">42</div>
+      <div class="desc">Crude Inlet Temp (°C)</div>
+    </div>
+    <div class="process-stat">
+      <div class="num" id="s-tout">252</div>
+      <div class="desc">Crude Outlet Temp (°C)</div>
+    </div>
+    <div class="process-stat">
+      <div class="num" id="s-tdp">2.85</div>
+      <div class="desc">Tube ΔP (bar)</div>
+    </div>
+    <div class="process-stat">
+      <div class="num" id="s-sdp">1.42</div>
+      <div class="desc">Shell ΔP (bar)</div>
+    </div>
+    <div class="process-stat">
+      <div class="num" id="s-active">4</div>
+      <div class="desc">Active Exchangers</div>
+    </div>
+  </div>
+
+  <!-- ─── Alert Ticker ─── -->
+  <div id="alert-ticker">
+    <div class="label">ALERTS</div>
+    <div id="ticker-content">
+      <div id="ticker-scroll">
+        <span class="ticker-item warn">&#9679; E-101D fouling resistance at 62% — schedule cleaning within 14
+          days</span>
+        <span class="ticker-item info">&#9679; Temperature approach on E-101C approaching minimum 15°C — monitor
+          trend</span>
+        <span class="ticker-item ok">&#9679; E-100 preheat train meeting crude outlet target of 250°C ± 3°C</span>
+        <span class="ticker-item warn">&#9679; Tube side ΔP trending up on E-101D — possible tube plugging</span>
+        <span class="ticker-item info">&#9679; Shell side product (AGO) flow rate adjusted +8% for E-101B at
+          10:15</span>
+        <span class="ticker-item ok">&#9679; E-101A/B operating at design effectiveness — no action required</span>
+        <span class="ticker-item warn">&#9679; Bypass valve BV-1001 partial opening detected — verify positioner</span>
+        <span class="ticker-item info">&#9679; Next scheduled hydrotest for E-101C per API 510 — Q4 2025</span>
+        <span class="ticker-item ok">&#9679; Overall U-value stable at 362 W/m²K — within acceptable range</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Tooltip ─── -->
+  <div id="tooltip"></div>
+
+  <!-- ─── Canvas Container ─── -->
+  <div id="canvas-container"></div>
+
+  <!-- ─── 2. THREE.JS r147 CDN SETUP ─── -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════════════
+       PREHEAT TRAIN E-100 — COMPLETE 3D SCENE
+       ═══════════════════════════════════════════════════════════════════ */
+
+    // ─── Global State ───
+    let scene, camera, renderer, controls, composer;
+    let raycaster, mouse, clock;
+    let exchangerGroups = [];    // 4 exchanger groups for click detection
+    let exchangerShells = [];    // Shell meshes for transparency toggling
+    let exchangerInternals = []; // Internal details (tube bundles, baffles)
+    let bypassValve = null;      // Bypass valve mesh
+    let bypassOpen = false;
+    let currentView = 'external';
+    let selectedExchanger = -1;
+    let highlightMeshes = [];
+    const particleSystems = [];
+
+    // ─── Exchanger Config ───
+    const EXCHANGERS = [
+      { id: 'E-101A', x: -12, y: 0, z: 0, duty: 4820, eff: 78.4, fouling: 12 },
+      { id: 'E-101B', x: -4, y: 3.5, z: 0, duty: 5240, eff: 82.1, fouling: 18 },
+      { id: 'E-101C', x: 4, y: 0, z: 0, duty: 4580, eff: 74.3, fouling: 45 },
+      { id: 'E-101D', x: 12, y: 3.5, z: 0, duty: 3960, eff: 68.7, fouling: 62 }
+    ];
+
+    // ─── Camera Presets ───
+    const cameraPresets = {
+      external: { pos: [28, 18, 28], target: [0, 2, 0] },
+      internal: { pos: [0, 4, 6], target: [0, 2, 0] },
+      cutaway: { pos: [18, 10, 14], target: [4, 2, 0] },
+      flow: { pos: [32, 14, 22], target: [0, 2, 0] }
+    };
+
+    /* ═══════════════════════════════════════════════════════
+       INITIALIZATION
+       ═══════════════════════════════════════════════════════ */
+    function init() {
+      const container = document.getElementById('canvas-container');
+      clock = new THREE.Clock();
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0a0e17);
+      scene.fog = new THREE.FogExp2(0x0a0e17, 0.008);
+
+      camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 300);
+      camera.position.set(28, 18, 28);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.1;
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.target.set(0, 2, 0);
+      controls.minDistance = 5;
+      controls.maxDistance = 80;
+
+      composer = new THREE.EffectComposer(renderer);
+      composer.addPass(new THREE.RenderPass(scene, camera));
+      const bloomPass = new THREE.UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight), 0.35, 0.5, 0.85
+      );
+      composer.addPass(bloomPass);
+
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      setupLights();
+      buildPreheatTrain();
+      buildParticles();
+
+      // Ground plane
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(160, 160),
+        new THREE.MeshStandardMaterial({ color: 0x0d1220, roughness: 0.95, metalness: 0.1 })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -3;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      window.addEventListener('resize', onResize);
+      renderer.domElement.addEventListener('click', onClick);
+      renderer.domElement.addEventListener('mousemove', onMouseMove);
+      setupViewToggle();
+
+      document.getElementById('ed-close').addEventListener('click', () => {
+        document.getElementById('exchanger-detail').style.display = 'none';
+        selectedExchanger = -1;
+        clearHighlights();
+      });
+
+      simulateLoading();
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       5-LIGHT SETUP
+       ═══════════════════════════════════════════════════════ */
+    function setupLights() {
+      const keyLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+      keyLight.position.set(20, 25, 15);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.set(2048, 2048);
+      keyLight.shadow.camera.left = -30; keyLight.shadow.camera.right = 30;
+      keyLight.shadow.camera.top = 30; keyLight.shadow.camera.bottom = -30;
+      scene.add(keyLight);
+
+      const fillLight = new THREE.DirectionalLight(0x8899cc, 0.4);
+      fillLight.position.set(-15, 10, -8);
+      scene.add(fillLight);
+
+      const rimLight = new THREE.DirectionalLight(0xffcc88, 0.35);
+      rimLight.position.set(-8, 12, -20);
+      scene.add(rimLight);
+
+      const ambientLight = new THREE.AmbientLight(0x303848, 0.5);
+      scene.add(ambientLight);
+
+      const underLight = new THREE.PointLight(0x2244aa, 0.3, 40);
+      underLight.position.set(0, -4, 0);
+      scene.add(underLight);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       MATERIALS
+       ═══════════════════════════════════════════════════════ */
+    function mat(color, opts = {}) {
+      return new THREE.MeshStandardMaterial({
+        color, metalness: opts.metalness ?? 0.85, roughness: opts.roughness ?? 0.25,
+        transparent: opts.transparent ?? false, opacity: opts.opacity ?? 1.0,
+        side: opts.side ?? THREE.FrontSide, emissive: opts.emissive ?? 0x000000,
+        emissiveIntensity: opts.emissiveIntensity ?? 0
+      });
+    }
+
+    const M = {
+      shell: () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2, transparent: true, opacity: 0.5 }),
+      shellSolid: () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2 }),
+      darkSteel: () => mat(0x383e45, { metalness: 0.9, roughness: 0.2 }),
+      stainless: () => mat(0xc0c8d0, { metalness: 0.95, roughness: 0.15 }),
+      oshaYellow: () => mat(0xf0c040, { metalness: 0.6, roughness: 0.35 }),
+      // RAL 5010 Gentian Blue (channel heads — cold side transitioning)
+      channelCold: () => mat(0x004e8c, { metalness: 0.75, roughness: 0.3 }),
+      channelHot: () => mat(0x1a237e, { metalness: 0.75, roughness: 0.3 }),
+      // ISO 14726 Pipe Colors
+      pipeCrude: () => mat(0x8B4513, { metalness: 0.5, roughness: 0.4 }),
+      pipeHotProd: () => mat(0xf97316, { metalness: 0.5, roughness: 0.4 }),
+      pipeShell: () => mat(0xfbbf24, { metalness: 0.5, roughness: 0.4 }),
+      pipeSteam: () => mat(0xd4d4d4, { metalness: 0.7, roughness: 0.3 }),
+      // Insulation aluminium cladding
+      insulation: () => mat(0xc0c8d4, { metalness: 0.3, roughness: 0.8, transparent: true, opacity: 0.3 }),
+      concrete: () => mat(0x606868, { metalness: 0.05, roughness: 0.95 }),
+      grating: () => mat(0x505a64, { metalness: 0.7, roughness: 0.5, transparent: true, opacity: 0.6 }),
+      // Tube bundle (copper/steel tint)
+      tubeBundle: () => mat(0xa0a8b0, { metalness: 0.9, roughness: 0.15 }),
+      // Baffle plates
+      baffle: () => mat(0x8898a8, { metalness: 0.85, roughness: 0.2 }),
+      // Tube sheet
+      tubeSheet: () => mat(0xb0b8c0, { metalness: 0.9, roughness: 0.15 }),
+      // Expansion joint bellows
+      bellows: () => mat(0x909aa0, { metalness: 0.85, roughness: 0.2 }),
+      // Highlight material for selected exchanger
+      highlight: () => mat(0xf0c040, { emissive: 0xf0c040, emissiveIntensity: 0.3, transparent: true, opacity: 0.25 }),
+      // Valve body
+      valveBody: () => mat(0x383e45, { metalness: 0.85, roughness: 0.25 }),
+      valveHand: () => mat(0xf0c040, { metalness: 0.6, roughness: 0.35 }),
+    };
+
+    /* ═══════════════════════════════════════════════════════
+       BUILD PREHEAT TRAIN E-100
+       ═══════════════════════════════════════════════════════ */
+    function buildPreheatTrain() {
+      const train = new THREE.Group();
+      train.name = 'E-100 Preheat Train';
+
+      // ─── Build 4 Shell-and-Tube Exchangers ───
+      EXCHANGERS.forEach((ex, idx) => {
+        const exGrp = buildExchanger(ex, idx);
+        exchangerGroups.push(exGrp);
+        train.add(exGrp);
+      });
+
+      // ─── Connecting Piping between exchangers ───
+      buildConnectingPiping(train);
+
+      // ─── Bypass Valve ───
+      bypassValve = buildBypassValve(train);
+
+      // ─── Platforms & Ladders ───
+      buildPlatforms(train);
+
+      // ─── Structural Support Frames ───
+      buildSupportStructure(train);
+
+      train.position.y = 2;
+      scene.add(train);
+    }
+
+    /* ─── Single Shell-and-Tube Heat Exchanger ─── */
+    function buildExchanger(ex, idx) {
+      const grp = new THREE.Group();
+      grp.name = ex.id;
+      grp.userData = { type: 'exchanger', index: idx, config: ex };
+
+      const L = 6;       // Shell length
+      const R = 0.8;     // Shell radius
+      const halfL = L / 2;
+
+      // ─── Shell (horizontal cylinder) ───
+      const shellGeo = new THREE.CylinderGeometry(R, R, L, 32, 1, true);
+      const shellMesh = new THREE.Mesh(shellGeo, M.shell());
+      shellMesh.rotation.z = Math.PI / 2;
+      shellMesh.castShadow = true;
+      shellMesh.name = 'shell';
+      grp.add(shellMesh);
+      exchangerShells.push(shellMesh);
+
+      // ─── Hemispherical End Caps (torospherical approximation) ───
+      const capGeo = new THREE.SphereGeometry(R, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+      const leftCap = new THREE.Mesh(capGeo, M.shellSolid());
+      leftCap.position.x = -halfL;
+      leftCap.rotation.z = Math.PI / 2;
+      leftCap.castShadow = true;
+      grp.add(leftCap);
+
+      const rightCap = new THREE.Mesh(capGeo, M.shellSolid());
+      rightCap.position.x = halfL;
+      rightCap.rotation.z = -Math.PI / 2;
+      rightCap.castShadow = true;
+      grp.add(rightCap);
+
+      // ─── Tube Sheets at each end ───
+      [-halfL, halfL].forEach(xPos => {
+        const ts = new THREE.Mesh(
+          new THREE.CylinderGeometry(R + 0.02, R + 0.02, 0.08, 32),
+          M.tubeSheet()
+        );
+        ts.rotation.z = Math.PI / 2;
+        ts.position.x = xPos;
+        grp.add(ts);
+      });
+
+      // ─── Channel Heads (dished-end covers) with flanges ───
+      // Left channel head (cold side — gentian blue)
+      const leftCH = new THREE.Group();
+      const chBodyL = new THREE.Mesh(
+        new THREE.SphereGeometry(R * 0.7, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.6),
+        M.channelCold()
+      );
+      chBodyL.position.x = -halfL - 0.35;
+      chBodyL.rotation.z = Math.PI / 2;
+      leftCH.add(chBodyL);
+      // Flange ring
+      const flangeL = new THREE.Mesh(
+        new THREE.TorusGeometry(R * 0.72, 0.06, 8, 32),
+        M.darkSteel()
+      );
+      flangeL.position.x = -halfL - 0.02;
+      flangeL.rotation.y = Math.PI / 2;
+      leftCH.add(flangeL);
+      grp.add(leftCH);
+
+      // Right channel head (hot side — darker blue)
+      const rightCH = new THREE.Group();
+      const chBodyR = new THREE.Mesh(
+        new THREE.SphereGeometry(R * 0.7, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.6),
+        M.channelHot()
+      );
+      chBodyR.position.x = halfL + 0.35;
+      chBodyR.rotation.z = -Math.PI / 2;
+      rightCH.add(chBodyR);
+      const flangeR = new THREE.Mesh(
+        new THREE.TorusGeometry(R * 0.72, 0.06, 8, 32),
+        M.darkSteel()
+      );
+      flangeR.position.x = halfL + 0.02;
+      flangeR.rotation.y = Math.PI / 2;
+      rightCH.add(flangeR);
+      grp.add(rightCH);
+
+      // ─── Internal: Tube Bundle (rows of small cylinders) ───
+      const internalGrp = new THREE.Group();
+      internalGrp.name = 'internals';
+      // Tube bundle: 4 passes × ~7 tubes in a triangular pattern
+      const tubeCount = 28;
+      const tubeR = 0.035;
+      for (let t = 0; t < tubeCount; t++) {
+        const row = Math.floor(t / 7);
+        const col = t % 7;
+        const angle = (col / 7) * Math.PI * 2;
+        const layerR = 0.15 + row * 0.12;
+        const tz = Math.cos(angle) * layerR;
+        const ty = Math.sin(angle) * layerR;
+        const tube = new THREE.Mesh(
+          new THREE.CylinderGeometry(tubeR, tubeR, L - 0.3, 6),
+          M.tubeBundle()
+        );
+        tube.rotation.z = Math.PI / 2;
+        tube.position.set(0, ty, tz);
+        internalGrp.add(tube);
+      }
+      // ─── Internal: Baffles (circular plates with gaps, spaced along length) ───
+      for (let bx = -halfL + 1; bx < halfL; bx += 1.5) {
+        const baffleGrp = new THREE.Group();
+        // Baffle disk (with gap at top — segment)
+        const baffle = new THREE.Mesh(
+          new THREE.RingGeometry(0.1, R * 0.92, 24, 1, 0.15, Math.PI * 1.7),
+          M.baffle()
+        );
+        baffle.rotation.y = Math.PI / 2;
+        baffle.position.x = bx;
+        baffleGrp.add(baffle);
+        // Baffle thickness representation
+        const baffleDisc = new THREE.Mesh(
+          new THREE.RingGeometry(0.1, R * 0.92, 24, 1, 0.15, Math.PI * 1.7),
+          mat(0x8090a0, { metalness: 0.85, roughness: 0.2, transparent: true, opacity: 0.7 })
+        );
+        baffleDisc.rotation.y = Math.PI / 2;
+        baffleDisc.position.x = bx + 0.02;
+        baffleGrp.add(baffleDisc);
+        internalGrp.add(baffleGrp);
+      }
+      grp.add(internalGrp);
+      exchangerInternals.push(internalGrp);
+
+      // ─── Nozzles: Tube inlet/outlet (bottom) and Shell inlet/outlet (top) ───
+      function addNozzle(x, y, z, dir, len, r, pipeMat) {
+        const ng = new THREE.Group();
+        const pipe = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 12), pipeMat);
+        pipe.position.set(x, y, z);
+        if (dir === 'top') { }
+        else if (dir === 'bottom') pipe.rotation.x = Math.PI;
+        else if (dir === 'left') pipe.rotation.z = Math.PI / 2;
+        else if (dir === 'right') pipe.rotation.z = -Math.PI / 2;
+        else if (dir === 'front') pipe.rotation.x = Math.PI / 2;
+        else if (dir === 'back') pipe.rotation.x = -Math.PI / 2;
+        ng.add(pipe);
+        const flange = new THREE.Mesh(
+          new THREE.CylinderGeometry(r * 1.8, r * 1.8, 0.06, 12), M.darkSteel()
+        );
+        const fOff = dir === 'top' ? len / 2 : dir === 'bottom' ? -len / 2 : len / 2;
+        if (dir === 'left' || dir === 'right') {
+          flange.position.set(x + (dir === 'left' ? -fOff : fOff), y, z);
+        } else {
+          flange.position.set(x, y + fOff, z);
+        }
+        ng.add(flange);
+        return ng;
+      }
+      // Tube side nozzles (bottom, left and right)
+      grp.add(addNozzle(-halfL - 0.5, -(R + 0.3), 0, 'left', 0.8, 0.18, M.pipeCrude()));
+      grp.add(addNozzle(halfL + 0.5, -(R + 0.3), 0, 'right', 0.8, 0.18, M.pipeCrude()));
+      // Shell side nozzles (top, right and left — countercurrent)
+      grp.add(addNozzle(halfL + 0.5, R + 0.3, 0, 'top', 0.8, 0.16, M.pipeHotProd()));
+      grp.add(addNozzle(-halfL - 0.5, R + 0.3, 0, 'top', 0.8, 0.16, M.pipeShell()));
+
+      // ─── Instrument Connections: Temperature indicators ───
+      [-halfL + 0.5, halfL - 0.5].forEach(tx => {
+        const tiGrp = new THREE.Group();
+        const thermowell = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.03, 0.03, 0.5, 6), M.stainless()
+        );
+        thermowell.rotation.z = Math.PI / 6;
+        thermowell.position.set(tx, -(R + 0.15), 0);
+        tiGrp.add(thermowell);
+        // Indicator head
+        const tiHead = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.08, 0.08, 0.12, 8), M.darkSteel()
+        );
+        tiHead.position.set(tx, -(R + 0.35), 0);
+        tiGrp.add(tiHead);
+        // Small display
+        const tiDisp = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.1, 0.06),
+          new THREE.MeshBasicMaterial({ color: 0x00ff88 })
+        );
+        tiDisp.position.set(tx, -(R + 0.35), -0.06);
+        tiGrp.add(tiDisp);
+        grp.add(tiGrp);
+      });
+
+      // ─── Differential Pressure Gauge ───
+      const dpGrp = new THREE.Group();
+      const dpBody = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.12, 0.15, 12), M.darkSteel()
+      );
+      dpBody.position.set(0, R + 0.5, 0.3);
+      dpGrp.add(dpBody);
+      const dpFace = new THREE.Mesh(
+        new THREE.CircleGeometry(0.1, 16),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+      );
+      dpFace.rotation.x = -Math.PI / 2;
+      dpFace.position.set(0, R + 0.6, 0.3);
+      dpGrp.add(dpFace);
+      grp.add(dpGrp);
+
+      // ─── Support Saddles (2 per exchanger) ───
+      [-1.8, 1.8].forEach(sx => {
+        const saddle = new THREE.Group();
+        const cradle = new THREE.Mesh(
+          new THREE.CylinderGeometry(R + 0.04, R + 0.04, 0.3, 24, 1, true, -Math.PI / 3, Math.PI * 2 / 3),
+          M.darkSteel()
+        );
+        cradle.rotation.z = Math.PI / 2;
+        saddle.add(cradle);
+        // Web plates
+        [-0.2, 0.2].forEach(zOff => {
+          const rib = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, R * 1.2, 0.06), M.darkSteel()
+          );
+          rib.position.set(0, -(R * 0.5), zOff);
+          saddle.add(rib);
+        });
+        // Base
+        const base = new THREE.Mesh(
+          new THREE.BoxGeometry(0.8, 0.15, 1.2), M.darkSteel()
+        );
+        base.position.y = -(R + 0.7);
+        saddle.add(base);
+        saddle.position.x = sx;
+        saddle.castShadow = true;
+        grp.add(saddle);
+      });
+
+      // ─── Insulation Cladding ───
+      const insMat = M.insulation();
+      for (let ix = -halfL + 0.5; ix < halfL; ix += 2) {
+        const insSec = new THREE.Mesh(
+          new THREE.CylinderGeometry(R + 0.06, R + 0.06, 1.8, 32, 1, true),
+          insMat
+        );
+        insSec.rotation.z = Math.PI / 2;
+        insSec.position.x = ix;
+        grp.add(insSec);
+      }
+
+      // ─── Weld Seam Rings ───
+      const weldMat = mat(0xb0b8c0, { metalness: 0.9, roughness: 0.15 });
+      [-1.5, 0, 1.5].forEach(wx => {
+        const weld = new THREE.Mesh(
+          new THREE.TorusGeometry(R + 0.015, 0.025, 6, 32), weldMat
+        );
+        weld.position.x = wx;
+        weld.rotation.y = Math.PI / 2;
+        grp.add(weld);
+      });
+
+      // Position the exchanger
+      grp.position.set(ex.x, ex.y, ex.z);
+      return grp;
+    }
+
+    /* ─── Connecting Piping between exchangers ─── */
+    function buildConnectingPiping(parent) {
+      function addPipe(points, radius, pipeMat) {
+        const curve = new THREE.CatmullRomCurve3(points);
+        const tubeGeo = new THREE.TubeGeometry(curve, 24, radius, 8, false);
+        const pipe = new THREE.Mesh(tubeGeo, pipeMat);
+        pipe.castShadow = true;
+        parent.add(pipe);
+        return pipe;
+      }
+
+      const configs = EXCHANGERS;
+      for (let i = 0; i < configs.length - 1; i++) {
+        const cur = configs[i];
+        const nxt = configs[i + 1];
+        const L = 6, R = 0.8;
+        const halfL = L / 2;
+
+        // Tube side piping: crude flows from right of current to left of next
+        const tubeStart = new THREE.Vector3(cur.x + halfL + 0.5 + 0.5, cur.y - (R + 0.3), 0);
+        const tubeEnd = new THREE.Vector3(nxt.x - halfL - 0.5 - 0.5, nxt.y - (R + 0.3), 0);
+        addPipe([
+          tubeStart,
+          new THREE.Vector3(cur.x + halfL + 1.5, cur.y - (R + 0.3), 0),
+          new THREE.Vector3((cur.x + nxt.x) / 2, Math.min(cur.y, nxt.y) - (R + 1.2), 0),
+          new THREE.Vector3(nxt.x - halfL - 1.5, nxt.y - (R + 0.3), 0),
+          tubeEnd
+        ], 0.16, M.pipeCrude());
+
+        // Shell side piping: hot product flows countercurrent
+        const shellStart = new THREE.Vector3(cur.x - halfL - 0.5, cur.y + R + 0.3 + 0.5, 0);
+        const shellEnd = new THREE.Vector3(nxt.x + halfL + 0.5, nxt.y + R + 0.3 + 0.5, 0);
+        addPipe([
+          shellStart,
+          new THREE.Vector3(cur.x - halfL - 1.5, cur.y + R + 1.5, 0),
+          new THREE.Vector3((cur.x + nxt.x) / 2, Math.max(cur.y, nxt.y) + R + 2.5, 0),
+          new THREE.Vector3(nxt.x + halfL + 1.5, nxt.y + R + 1.5, 0),
+          shellEnd
+        ], 0.14, M.pipeHotProd());
+      }
+
+      // Crude inlet pipe (to first exchanger)
+      const first = configs[0];
+      addPipe([
+        new THREE.Vector3(first.x - 10, first.y - (0.8 + 0.3), 0),
+        new THREE.Vector3(first.x - 8, first.y - (0.8 + 0.3), 0),
+        new THREE.Vector3(first.x - 3 - 0.5 - 0.5, first.y - (0.8 + 0.3), 0)
+      ], 0.2, M.pipeCrude());
+
+      // Crude outlet pipe (from last exchanger to furnace)
+      const last = configs[configs.length - 1];
+      addPipe([
+        new THREE.Vector3(last.x + 3 + 0.5 + 0.5, last.y - (0.8 + 0.3), 0),
+        new THREE.Vector3(last.x + 6, last.y - (0.8 + 0.3), 0),
+        new THREE.Vector3(last.x + 8, last.y - (0.8 + 0.5), 0),
+        new THREE.Vector3(last.x + 10, last.y - (0.8 + 0.8), 0)
+      ], 0.2, M.pipeCrude());
+
+      // Shell side product return piping
+      addPipe([
+        new THREE.Vector3(last.x + 3 + 0.5, last.y + 0.8 + 0.3 + 0.5, 0),
+        new THREE.Vector3(last.x + 5, last.y + 0.8 + 2.5, 0),
+        new THREE.Vector3(last.x + 7, last.y + 0.8 + 2.5, 0),
+        new THREE.Vector3(last.x + 9, last.y + 0.8 + 1.5, 0)
+      ], 0.14, M.pipeShell());
+
+      // ─── Expansion Joints (bellows) between some exchangers ───
+      for (let i = 0; i < configs.length - 1; i++) {
+        const cur = configs[i];
+        const nxt = configs[i + 1];
+        const midX = (cur.x + nxt.x) / 2;
+        const midY = Math.min(cur.y, nxt.y) - (0.8 + 1.2);
+        buildExpansionJoint(parent, midX, midY, 0);
+      }
+    }
+
+    /* ─── Expansion Joint (Bellows) ─── */
+    function buildExpansionJoint(parent, x, y, z) {
+      const bellowsGrp = new THREE.Group();
+      const bellowsR = 0.22;
+      const bellowsLen = 0.6;
+      const convolutions = 4;
+      for (let c = 0; c < convolutions; c++) {
+        const conv = new THREE.Mesh(
+          new THREE.TorusGeometry(bellowsR, 0.025, 8, 24),
+          M.bellows()
+        );
+        conv.position.set(x, y, z);
+        conv.position.x += -bellowsLen / 2 + c * (bellowsLen / (convolutions - 1));
+        conv.rotation.y = Math.PI / 2;
+        bellowsGrp.add(conv);
+      }
+      // End flanges
+      [-bellowsLen / 2 - 0.03, bellowsLen / 2 + 0.03].forEach(fx => {
+        const f = new THREE.Mesh(
+          new THREE.CylinderGeometry(bellowsR + 0.04, bellowsR + 0.04, 0.04, 16),
+          M.darkSteel()
+        );
+        f.rotation.z = Math.PI / 2;
+        f.position.set(x + fx, y, z);
+        bellowsGrp.add(f);
+      });
+      parent.add(bellowsGrp);
+    }
+
+    /* ─── Bypass Valve ─── */
+    function buildBypassValve(parent) {
+      const bvGrp = new THREE.Group();
+      bvGrp.name = 'bypassValve';
+      bvGrp.userData = { type: 'bypass' };
+
+      // Valve body (gate valve shape)
+      const valveBody = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 0.5, 0.5),
+        M.valveBody()
+      );
+      valveBody.position.set(0, -0.5, 2);
+      bvGrp.add(valveBody);
+
+      // Valve handwheel
+      const handwheel = new THREE.Mesh(
+        new THREE.TorusGeometry(0.22, 0.03, 8, 24),
+        M.valveHand()
+      );
+      handwheel.position.set(0, -0.1, 2);
+      handwheel.rotation.x = Math.PI / 2;
+      bvGrp.add(handwheel);
+
+      // Valve stem
+      const stem = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8),
+        M.stainless()
+      );
+      stem.position.set(0, -0.3, 2);
+      bvGrp.add(stem);
+
+      // Bypass pipe (runs along Z axis, bypassing all exchangers)
+      const bypassPipe = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.12, 28, 12),
+        M.pipeCrude()
+      );
+      bypassPipe.rotation.x = Math.PI / 2;
+      bypassPipe.position.set(0, -0.5, 2);
+      bvGrp.add(bypassPipe);
+
+      // Label
+      const labelPlate = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.5, 0.15),
+        new THREE.MeshBasicMaterial({ color: 0xf0c040, side: THREE.DoubleSide })
+      );
+      labelPlate.position.set(0.3, -0.1, 2);
+      bvGrp.add(labelPlate);
+
+      parent.add(bvGrp);
+      return bvGrp;
+    }
+
+    /* ─── Platforms & Ladders ─── */
+    function buildPlatforms(parent) {
+      // Platform at each exchanger elevation pair
+      [0, 3.5].forEach((elev, ei) => {
+        const platGrp = new THREE.Group();
+        const platW = 8, platD = 3, platY = elev + 0.8 + 0.08;
+
+        // Grating deck
+        const grating = new THREE.Mesh(
+          new THREE.BoxGeometry(platW, 0.06, platD),
+          M.grating()
+        );
+        grating.position.set(0, platY, 0);
+        platGrp.add(grating);
+
+        // Support beams
+        const centerX = ei === 0 ? -4 : 4;
+        [-1, 0, 1].forEach(zOff => {
+          const beam = new THREE.Mesh(
+            new THREE.BoxGeometry(platW, 0.1, 0.08),
+            M.darkSteel()
+          );
+          beam.position.set(centerX, platY - 0.08, zOff);
+          platGrp.add(beam);
+        });
+
+        // Handrail posts
+        const railH = 1.05;
+        for (let x = -platW / 2; x <= platW / 2; x += 2) {
+          [platD / 2, -platD / 2].forEach(zSide => {
+            const post = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.03, 0.03, railH, 6),
+              M.oshaYellow()
+            );
+            post.position.set(centerX + x, platY + railH / 2, zSide);
+            platGrp.add(post);
+          });
+        }
+
+        // Top rail
+        [platD / 2, -platD / 2].forEach(zRail => {
+          const rail = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02, 0.02, platW, 6),
+            M.oshaYellow()
+          );
+          rail.rotation.z = Math.PI / 2;
+          rail.position.set(centerX, platY + railH, zRail);
+          platGrp.add(rail);
+        });
+
+        // Mid rail
+        [platD / 2, -platD / 2].forEach(zRail => {
+          const midRail = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.018, 0.018, platW, 6),
+            M.oshaYellow()
+          );
+          midRail.rotation.z = Math.PI / 2;
+          midRail.position.set(centerX, platY + railH * 0.5, zRail);
+          platGrp.add(midRail);
+        });
+
+        // Toe board
+        [platD / 2, -platD / 2].forEach(zRail => {
+          const toe = new THREE.Mesh(
+            new THREE.BoxGeometry(platW, 0.08, 0.03),
+            M.oshaYellow()
+          );
+          toe.position.set(centerX, platY + 0.07, zRail);
+          platGrp.add(toe);
+        });
+
+        parent.add(platGrp);
+
+        // Ladder between elevations (connecting the two levels)
+        if (ei === 0) {
+          const ladderGrp = new THREE.Group();
+          const ladderH = 3.5 + 1.6;
+          const ladderX = -12;
+
+          // Side rails
+          [-0.25, 0.25].forEach(zOff => {
+            const rail = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.03, 0.03, ladderH, 6),
+              M.oshaYellow()
+            );
+            rail.position.set(ladderX, ladderH / 2 + 0.8 - 1, zOff);
+            ladderGrp.add(rail);
+          });
+
+          // Rungs
+          for (let r = 0; r < 12; r++) {
+            const rung = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.02, 0.02, 0.5, 6),
+              M.oshaYellow()
+            );
+            rung.rotation.x = Math.PI / 2;
+            rung.position.set(ladderX, 0.8 - 1 + r * (ladderH / 12) + 0.2, 0);
+            ladderGrp.add(rung);
+          }
+
+          // Safety cage (back guard)
+          const cageR = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.03, 0.03, ladderH * 0.6, 6),
+            M.oshaYellow()
+          );
+          cageR.position.set(ladderX, ladderH * 0.7, -0.35);
+          cageR.rotation.z = 0.15;
+          ladderGrp.add(cageR);
+
+          parent.add(ladderGrp);
+
+          // Second ladder on the other end
+          const ladder2 = ladderGrp.clone();
+          ladder2.position.x = 24;
+          parent.add(ladder2);
+        }
+      });
+    }
+
+    /* ─── Structural Support Frames ─── */
+    function buildSupportStructure(parent) {
+      // Vertical columns at each exchanger
+      EXCHANGERS.forEach(ex => {
+        [-2, 2].forEach(xOff => {
+          const col = new THREE.Mesh(
+            new THREE.BoxGeometry(0.2, ex.y + 0.8 + 1.5, 0.2),
+            M.darkSteel()
+          );
+          col.position.set(ex.x + xOff, (ex.y + 0.8 + 1.5) / 2 - 1, -1.5);
+          col.castShadow = true;
+          parent.add(col);
+        });
+      });
+
+      // Horizontal cross beams at lower level
+      for (let bx = -14; bx <= 14; bx += 4) {
+        const beam = new THREE.Mesh(
+          new THREE.BoxGeometry(0.12, 0.12, 5),
+          M.darkSteel()
+        );
+        beam.position.set(bx, -0.5, -1.5);
+        parent.add(beam);
+      }
+
+      // Foundation concrete pedestals
+      EXCHANGERS.forEach(ex => {
+        [-2, 2].forEach(xOff => {
+          const ped = new THREE.Mesh(
+            new THREE.BoxGeometry(0.8, 0.4, 0.8),
+            M.concrete()
+          );
+          ped.position.set(ex.x + xOff, -1.3, -1.5);
+          parent.add(ped);
+        });
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       PARTICLE SYSTEMS
+       ═══════════════════════════════════════════════════════ */
+    function buildParticles() {
+      const configs = EXCHANGERS;
+      const L = 6, R = 0.8;
+
+      // ─── Crude oil particles through tube side ───
+      // Through each exchanger: left to right
+      configs.forEach((ex, i) => {
+        const yPos = ex.y - (R + 0.3);
+        createParticleSystem('crude_' + i, 0x3b82f6, 120, {
+          curve: [
+            new THREE.Vector3(ex.x - 3.5, yPos, 0),
+            new THREE.Vector3(ex.x - 1.5, yPos, 0),
+            new THREE.Vector3(ex.x, yPos + 0.1, 0),
+            new THREE.Vector3(ex.x + 1.5, yPos, 0),
+            new THREE.Vector3(ex.x + 3.5, yPos, 0)
+          ],
+          speed: 0.35, size: 0.09
+        });
+      });
+
+      // Crude connecting pipes between exchangers
+      for (let i = 0; i < configs.length - 1; i++) {
+        const cur = configs[i];
+        const nxt = configs[i + 1];
+        const yBot = Math.min(cur.y, nxt.y) - (R + 1.2);
+        createParticleSystem('crude_pipe_' + i, 0x3b82f6, 60, {
+          curve: [
+            new THREE.Vector3(cur.x + 3.5, cur.y - (R + 0.3), 0),
+            new THREE.Vector3(cur.x + 4.5, cur.y - (R + 0.3), 0),
+            new THREE.Vector3((cur.x + nxt.x) / 2, yBot, 0),
+            new THREE.Vector3(nxt.x - 4.5, nxt.y - (R + 0.3), 0),
+            new THREE.Vector3(nxt.x - 3.5, nxt.y - (R + 0.3), 0)
+          ],
+          speed: 0.3, size: 0.08
+        });
+      }
+
+      // ─── Hot product particles through shell side (countercurrent) ───
+      configs.forEach((ex, i) => {
+        const yPos = ex.y + R + 0.3;
+        createParticleSystem('product_' + i, 0xf97316, 100, {
+          curve: [
+            new THREE.Vector3(ex.x + 3.5, yPos, 0),
+            new THREE.Vector3(ex.x + 1.5, yPos, 0),
+            new THREE.Vector3(ex.x, yPos - 0.1, 0),
+            new THREE.Vector3(ex.x - 1.5, yPos, 0),
+            new THREE.Vector3(ex.x - 3.5, yPos, 0)
+          ],
+          speed: 0.3, size: 0.08
+        });
+      });
+
+      // Hot product connecting pipes
+      for (let i = 0; i < configs.length - 1; i++) {
+        const cur = configs[i];
+        const nxt = configs[i + 1];
+        const yTop = Math.max(cur.y, nxt.y) + R + 2.5;
+        createParticleSystem('prod_pipe_' + i, 0xf97316, 50, {
+          curve: [
+            new THREE.Vector3(cur.x - 3.5, cur.y + R + 0.3, 0),
+            new THREE.Vector3(cur.x - 4.5, cur.y + R + 1.5, 0),
+            new THREE.Vector3((cur.x + nxt.x) / 2, yTop, 0),
+            new THREE.Vector3(nxt.x + 4.5, nxt.y + R + 1.5, 0),
+            new THREE.Vector3(nxt.x + 3.5, nxt.y + R + 0.3, 0)
+          ],
+          speed: 0.28, size: 0.07
+        });
+      }
+
+      // ─── Main crude inlet stream ───
+      createParticleSystem('crude_inlet', 0x3b82f6, 80, {
+        curve: [
+          new THREE.Vector3(-22, 2 - (R + 0.3), 0),
+          new THREE.Vector3(-18, 2 - (R + 0.3), 0),
+          new THREE.Vector3(-15.5, 2 - (R + 0.3), 0)
+        ],
+        speed: 0.4, size: 0.1
+      });
+
+      // ─── Main crude outlet stream ───
+      createParticleSystem('crude_outlet', 0xef4444, 80, {
+        curve: [
+          new THREE.Vector3(15.5, 3.5 - (R + 0.3), 0),
+          new THREE.Vector3(18, 3.5 - (R + 0.5), 0),
+          new THREE.Vector3(22, 3.5 - (R + 0.8), 0)
+        ],
+        speed: 0.4, size: 0.1
+      });
+
+      // ─── Shell side product return ───
+      createParticleSystem('product_return', 0xfbbf24, 60, {
+        curve: [
+          new THREE.Vector3(15.5, 3.5 + R + 2.5, 0),
+          new THREE.Vector3(18, 3.5 + R + 2.5, 0),
+          new THREE.Vector3(21, 3.5 + R + 1.5, 0)
+        ],
+        speed: 0.35, size: 0.08
+      });
+    }
+
+    /* ─── Reusable Particle System Builder ─── */
+    function createParticleSystem(name, color, count, opts) {
+      const points = [];
+      const velocities = [];
+      for (let i = 0; i < count; i++) {
+        const t = Math.random();
+        const p = opts.curve[0].clone().lerp(opts.curve[opts.curve.length - 1], t);
+        p.x += (Math.random() - 0.5) * 0.25;
+        p.y += (Math.random() - 0.5) * 0.25;
+        p.z += (Math.random() - 0.5) * 0.25;
+        points.push(p.x, p.y, p.z);
+        velocities.push({
+          offset: t,
+          speedVar: 0.7 + Math.random() * 0.6,
+          spread: (Math.random() - 0.5) * 0.15
+        });
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+      const pMat = new THREE.PointsMaterial({
+        color, size: opts.size, transparent: true, opacity: 0.75,
+        blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+      });
+      const system = new THREE.Points(geo, pMat);
+      system.name = name;
+      system.userData = { curve: opts.curve, velocities, speed: opts.speed, count };
+      scene.add(system);
+      particleSystems.push(system);
+      return system;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       RAYCASTER INTERACTION
+       ═══════════════════════════════════════════════════════ */
+    const tooltip = document.getElementById('tooltip');
+    const interactiveObjects = [];
+
+    function collectInteractive() {
+      exchangerGroups.forEach(grp => {
+        grp.traverse(child => {
+          if (child.isMesh) {
+            child.userData.type = 'exchanger';
+            child.userData.parentGroup = grp;
+            interactiveObjects.push(child);
+          }
+        });
+      });
+      if (bypassValve) {
+        bypassValve.traverse(child => {
+          if (child.isMesh) {
+            child.userData.type = 'bypass';
+            child.userData.parentGroup = bypassValve;
+            interactiveObjects.push(child);
+          }
+        });
+      }
+    }
+
+    function clearHighlights() {
+      highlightMeshes.forEach(m => {
+        if (m.parent) m.parent.remove(m);
+      });
+      highlightMeshes = [];
+    }
+
+    function highlightExchanger(grp) {
+      clearHighlights();
+      const hlGeo = new THREE.CylinderGeometry(0.95, 0.95, 6.6, 32, 1, true);
+      const hlMesh = new THREE.Mesh(hlGeo, M.highlight());
+      hlMesh.rotation.z = Math.PI / 2;
+      hlMesh.position.copy(grp.position);
+      grp.parent.add(hlMesh);
+      highlightMeshes.push(hlMesh);
+    }
+
+    function onClick(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(interactiveObjects, true);
+      if (hits.length > 0) {
+        let obj = hits[0].object;
+        while (obj && !obj.userData.type) obj = obj.parent;
+        if (!obj) return;
+
+        if (obj.userData.type === 'exchanger') {
+          const grp = obj.userData.parentGroup || obj;
+          const idx = grp.userData.index;
+          const cfg = grp.userData.config;
+          selectedExchanger = idx;
+          highlightExchanger(grp);
+
+          // Show detail popup
+          const ed = document.getElementById('exchanger-detail');
+          document.getElementById('ed-title').textContent = cfg.id;
+          document.getElementById('ed-duty').textContent = cfg.duty.toLocaleString() + ' kW';
+          document.getElementById('ed-eff').textContent = cfg.eff.toFixed(1) + '%';
+          document.getElementById('ed-lmtd').textContent = (35 + Math.random() * 15).toFixed(1) + ' °C';
+          document.getElementById('ed-u').textContent = (340 + Math.random() * 80).toFixed(0) + ' W/m²K';
+          document.getElementById('ed-dpt').textContent = (0.6 + Math.random() * 0.5).toFixed(2) + ' bar';
+          document.getElementById('ed-dps').textContent = (0.3 + Math.random() * 0.3).toFixed(2) + ' bar';
+          document.getElementById('ed-foul').textContent = cfg.fouling + '%';
+          ed.style.display = 'block';
+        }
+
+        if (obj.userData.type === 'bypass') {
+          bypassOpen = !bypassOpen;
+          // Visual feedback on bypass
+          if (bypassValve) {
+            const handwheel = bypassValve.children.find(c => c.geometry && c.geometry.type === 'TorusGeometry');
+            if (handwheel) {
+              handwheel.rotation.x = bypassOpen ? Math.PI / 2 + Math.PI / 4 : Math.PI / 2;
+            }
+          }
+        }
+      }
+    }
+
+    function onMouseMove(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(interactiveObjects, true);
+      if (hits.length > 0) {
+        let obj = hits[0].object;
+        while (obj && !obj.userData.type) obj = obj.parent;
+        if (obj) {
+          tooltip.style.display = 'block';
+          tooltip.style.left = event.clientX + 12 + 'px';
+          tooltip.style.top = event.clientY + 12 + 'px';
+          if (obj.userData.type === 'exchanger') {
+            const cfg = obj.userData.config;
+            tooltip.textContent = cfg.id + ' — Click for details | Duty: ' + cfg.duty.toLocaleString() + ' kW | Eff: ' + cfg.eff + '%';
+          }
+          if (obj.userData.type === 'bypass') {
+            tooltip.textContent = 'Bypass Valve BV-1001 — Click to toggle (currently ' + (bypassOpen ? 'OPEN' : 'CLOSED') + ')';
+          }
+          renderer.domElement.style.cursor = 'pointer';
+          return;
+        }
+      }
+      tooltip.style.display = 'none';
+      renderer.domElement.style.cursor = 'default';
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       VIEW MODES
+       ═══════════════════════════════════════════════════════ */
+    function setupViewToggle() {
+      document.querySelectorAll('#view-toggle button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const view = btn.dataset.view;
+          if (view === currentView) return;
+          currentView = view;
+          document.querySelectorAll('#view-toggle button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          animateCamera(cameraPresets[view]);
+          applyViewMode(view);
+        });
+      });
+    }
+
+    function applyViewMode(view) {
+      if (view === 'external') {
+        // Opaque shells, hide internals
+        exchangerShells.forEach(s => {
+          s.material = M.shell();
+          s.visible = true;
+        });
+        exchangerInternals.forEach(int => { int.visible = false; });
+      } else if (view === 'internal') {
+        // Transparent shells, show internals
+        exchangerShells.forEach(s => {
+          s.material = mat(0xd5dce0, {
+            metalness: 0.8, roughness: 0.2, transparent: true, opacity: 0.12,
+            side: THREE.DoubleSide
+          });
+          s.visible = true;
+        });
+        exchangerInternals.forEach(int => { int.visible = true; });
+      } else if (view === 'cutaway') {
+        // Show internals, half-transparent shells
+        exchangerShells.forEach((s, i) => {
+          s.material = mat(0xd5dce0, {
+            metalness: 0.8, roughness: 0.2, transparent: true, opacity: i === 2 ? 0.12 : 0.5,
+            side: i === 2 ? THREE.DoubleSide : THREE.FrontSide
+          });
+          s.visible = true;
+        });
+        exchangerInternals.forEach((int, i) => { int.visible = i === 2; });
+      } else if (view === 'flow') {
+        // Slightly transparent shells, show particle emphasis
+        exchangerShells.forEach(s => {
+          s.material = mat(0xd5dce0, {
+            metalness: 0.8, roughness: 0.2, transparent: true, opacity: 0.3,
+            side: THREE.DoubleSide
+          });
+          s.visible = true;
+        });
+        exchangerInternals.forEach(int => { int.visible = true; });
+      }
+    }
+
+    function animateCamera(preset) {
+      const startPos = camera.position.clone();
+      const endPos = new THREE.Vector3(...preset.pos);
+      const startTarget = controls.target.clone();
+      const endTarget = new THREE.Vector3(...preset.target);
+      const duration = 1200;
+      const startTime = performance.now();
+
+      function step(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        camera.position.lerpVectors(startPos, endPos, ease);
+        controls.target.lerpVectors(startTarget, endTarget, ease);
+        controls.update();
+        if (t < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       LIVE ANIMATED HUD
+       ═══════════════════════════════════════════════════════ */
+    function updateHUD(time) {
+      // Overall duty
+      const duty = 18.42 + Math.sin(time * 0.15) * 0.4 + (Math.random() - 0.5) * 0.1;
+      document.getElementById('r-duty').textContent = duty.toFixed(2);
+      document.getElementById('bar-duty').style.width = ((duty / 25) * 100) + '%';
+      document.getElementById('s-duty').textContent = duty.toFixed(2);
+
+      // LMTD
+      const lmtd = 38.6 + Math.sin(time * 0.2) * 1.5 + (Math.random() - 0.5) * 0.2;
+      document.getElementById('r-lmtd').textContent = lmtd.toFixed(1);
+      document.getElementById('bar-lmtd').style.width = ((lmtd / 70) * 100) + '%';
+
+      // U-value
+      const uval = 362 + Math.sin(time * 0.12) * 8;
+      document.getElementById('r-uval').textContent = Math.round(uval);
+      document.getElementById('bar-uval').style.width = ((uval / 500) * 100) + '%';
+
+      // Tube ΔP
+      const dpt = 2.85 + Math.sin(time * 0.18) * 0.15 + (Math.random() - 0.5) * 0.02;
+      document.getElementById('r-dpt').textContent = dpt.toFixed(2);
+      document.getElementById('bar-dpt').style.width = ((dpt / 5) * 100) + '%';
+      document.getElementById('s-tdp').textContent = dpt.toFixed(2);
+
+      // Shell ΔP
+      const dps = 1.42 + Math.sin(time * 0.14) * 0.08 + (Math.random() - 0.5) * 0.02;
+      document.getElementById('r-dps').textContent = dps.toFixed(2);
+      document.getElementById('bar-dps').style.width = ((dps / 3) * 100) + '%';
+      document.getElementById('s-sdp').textContent = dps.toFixed(2);
+
+      // Crude outlet temp
+      const cout = 252 + Math.sin(time * 0.1) * 2.5 + (Math.random() - 0.5) * 0.3;
+      document.getElementById('r-cout').textContent = Math.round(cout);
+      document.getElementById('bar-cout').style.width = ((cout / 300) * 100) + '%';
+      document.getElementById('s-tout').textContent = Math.round(cout);
+
+      // Crude inlet temp
+      const cin = 42 + Math.sin(time * 0.08) * 1.2 + (Math.random() - 0.5) * 0.2;
+      document.getElementById('s-tin').textContent = Math.round(cin);
+
+      // Active exchangers
+      document.getElementById('s-active').textContent = bypassOpen ? '3' : '4';
+
+      // ─── Stream Temperatures (color gradient) ───
+      const t1 = cin;
+      const t2 = 105 + Math.sin(time * 0.11) * 2;
+      const t3 = 168 + Math.sin(time * 0.13) * 1.8;
+      const t4 = 218 + Math.sin(time * 0.09) * 1.5;
+      const t5 = cout;
+      document.getElementById('st-t1').textContent = Math.round(t1) + ' °C';
+      document.getElementById('st-t2').textContent = Math.round(t2) + ' °C';
+      document.getElementById('st-t3').textContent = Math.round(t3) + ' °C';
+      document.getElementById('st-t4').textContent = Math.round(t4) + ' °C';
+      document.getElementById('st-t5').textContent = Math.round(t5) + ' °C';
+
+      // ─── Network duties ───
+      const duties = [4820, 5240, 4580, 3960];
+      duties.forEach((d, i) => {
+        const val = d + Math.sin(time * 0.1 + i * 0.5) * 40;
+        const ids = ['net-a', 'net-b', 'net-c', 'net-d'];
+        document.getElementById(ids[i]).textContent = Math.round(val).toLocaleString() + ' kW';
+      });
+      const total = duties.reduce((a, b) => a + b, 0) + Math.sin(time * 0.1) * 120;
+      document.getElementById('net-total').textContent = Math.round(total).toLocaleString() + ' kW';
+
+      // ─── Efficiency bars ───
+      const effs = [78.4, 82.1, 74.3, 68.7];
+      const effIds = ['eff-a', 'eff-b', 'eff-c', 'eff-d'];
+      const effValIds = ['eff-a-v', 'eff-b-v', 'eff-c-v', 'eff-d-v'];
+      effs.forEach((e, i) => {
+        const val = e + Math.sin(time * 0.08 + i) * 1.5;
+        document.getElementById(effIds[i]).style.width = val + '%';
+        document.getElementById(effValIds[i]).textContent = val.toFixed(1) + '%';
+        // Color based on value
+        const bar = document.getElementById(effIds[i]);
+        if (val >= 75) bar.style.background = '#22c55e';
+        else if (val >= 65) bar.style.background = '#f59e0b';
+        else bar.style.background = '#ef4444';
+      });
+
+      // ─── Fouling bars ───
+      const fouls = [12, 18, 45, 62];
+      const foulIds = ['foul-a', 'foul-b', 'foul-c', 'foul-d'];
+      const foulValIds = ['foul-a-v', 'foul-b-v', 'foul-c-v', 'foul-d-v'];
+      fouls.forEach((f, i) => {
+        const val = f + Math.sin(time * 0.05 + i * 0.7) * 2;
+        const pct = Math.max(0, Math.min(100, val));
+        document.getElementById(foulIds[i]).style.width = pct + '%';
+        document.getElementById(foulValIds[i]).textContent = Math.round(pct) + '%';
+        const bar = document.getElementById(foulIds[i]);
+        const valEl = document.getElementById(foulValIds[i]);
+        if (pct < 30) { bar.style.background = '#22c55e'; valEl.style.color = '#22c55e'; }
+        else if (pct < 55) { bar.style.background = '#f59e0b'; valEl.style.color = '#f59e0b'; }
+        else { bar.style.background = '#ef4444'; valEl.style.color = '#ef4444'; }
+      });
+
+      // Update selected exchanger detail if shown
+      if (selectedExchanger >= 0) {
+        const cfg = EXCHANGERS[selectedExchanger];
+        const effVal = cfg.eff + Math.sin(time * 0.08 + selectedExchanger) * 1.5;
+        const foulVal = cfg.fouling + Math.sin(time * 0.05 + selectedExchanger * 0.7) * 2;
+        document.getElementById('ed-eff').textContent = effVal.toFixed(1) + '%';
+        document.getElementById('ed-foul').textContent = Math.round(Math.max(0, foulVal)) + '%';
+        document.getElementById('ed-duty').textContent = (cfg.duty + Math.sin(time * 0.1 + selectedExchanger * 0.5) * 40).toLocaleString() + ' kW';
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       ANIMATION LOOP
+       ═══════════════════════════════════════════════════════ */
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      const elapsed = clock.getElapsedTime();
+
+      controls.update();
+
+      // ─── Animate particle systems ───
+      particleSystems.forEach(sys => {
+        // Hide particle systems if bypass is open and system is crude-related
+        if (bypassOpen && sys.name.startsWith('crude_')) {
+          sys.visible = false;
+        } else if (bypassOpen && sys.name === 'crude_inlet') {
+          sys.visible = false;
+        } else {
+          sys.visible = true;
+        }
+
+        const positions = sys.geometry.attributes.position.array;
+        const { curve, velocities, speed, count } = sys.userData;
+        for (let i = 0; i < count; i++) {
+          const v = velocities[i];
+          v.offset = (v.offset + delta * speed * v.speedVar) % 1;
+          const totalLen = curve.length - 1;
+          const segF = v.offset * totalLen;
+          const segI = Math.min(Math.floor(segF), totalLen - 1);
+          const segT = segF - segI;
+          const p = new THREE.Vector3().lerpVectors(curve[segI], curve[segI + 1], segT);
+          p.x += v.spread * Math.sin(elapsed * 2 + i);
+          p.y += v.spread * Math.cos(elapsed * 1.5 + i);
+          p.z += v.spread * Math.sin(elapsed * 1.8 + i * 0.5);
+          positions[i * 3] = p.x;
+          positions[i * 3 + 1] = p.y;
+          positions[i * 3 + 2] = p.z;
+        }
+        sys.geometry.attributes.position.needsUpdate = true;
+      });
+
+      // ─── Highlight pulse animation ───
+      highlightMeshes.forEach(hm => {
+        if (hm.material) {
+          hm.material.opacity = 0.15 + 0.1 * Math.sin(elapsed * 3);
+        }
+      });
+
+      // ─── Live HUD ───
+      updateHUD(elapsed);
+
+      if (composer && camera) {
+        if (composer && camera) { composer.render(); }
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       UTILITY
+       ═══════════════════════════════════════════════════════ */
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function simulateLoading() {
+      const fill = document.getElementById('loader-fill');
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 12 + 4;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          setTimeout(() => {
+            document.getElementById('loading-screen').classList.add('hidden');
+            collectInteractive();
+            applyViewMode('external');
+          }, 400);
+        }
+        fill.style.width = progress + '%';
+      }, 200);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       BOOT
+       ═══════════════════════════════════════════════════════ */
+    init();
+    animate();
+  </script>
+</body>
+
+</html>
