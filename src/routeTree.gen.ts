@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppUnitsUnitIdRouteImport } from './routes/_app.units.$unitId'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppUnitsUnitIdRoute = AppUnitsUnitIdRouteImport.update({
   id: '/units/$unitId',
@@ -23,16 +29,17 @@ const AppUnitsUnitIdRoute = AppUnitsUnitIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AppRouteWithChildren
+  '/': typeof AppIndexRoute
   '/units/$unitId': typeof AppUnitsUnitIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof AppRouteWithChildren
+  '/': typeof AppIndexRoute
   '/units/$unitId': typeof AppUnitsUnitIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/_app/': typeof AppIndexRoute
   '/_app/units/$unitId': typeof AppUnitsUnitIdRoute
 }
 export interface FileRouteTypes {
@@ -40,7 +47,7 @@ export interface FileRouteTypes {
   fullPaths: '/' | '/units/$unitId'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/units/$unitId'
-  id: '__root__' | '/_app' | '/_app/units/$unitId'
+  id: '__root__' | '/_app' | '/_app/' | '/_app/units/$unitId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -56,6 +63,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/': {
+      id: '/_app/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/units/$unitId': {
       id: '/_app/units/$unitId'
       path: '/units/$unitId'
@@ -67,10 +81,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppIndexRoute: typeof AppIndexRoute
   AppUnitsUnitIdRoute: typeof AppUnitsUnitIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppIndexRoute: AppIndexRoute,
   AppUnitsUnitIdRoute: AppUnitsUnitIdRoute,
 }
 
