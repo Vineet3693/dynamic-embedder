@@ -9,12 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppUnitsUnitIdRouteImport } from './routes/_app.units.$unitId'
 
-const AppIndexRoute = AppIndexRouteImport.update({
-  id: '/_app/',
-  path: '/',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppUnitsUnitIdRoute = AppUnitsUnitIdRouteImport.update({
@@ -24,16 +23,16 @@ const AppUnitsUnitIdRoute = AppUnitsUnitIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AppIndexRoute
+  '/': typeof AppRouteWithChildren
   '/units/$unitId': typeof AppUnitsUnitIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof AppIndexRoute
+  '/': typeof AppRouteWithChildren
   '/units/$unitId': typeof AppUnitsUnitIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/_app/': typeof AppIndexRoute
+  '/_app': typeof AppRouteWithChildren
   '/_app/units/$unitId': typeof AppUnitsUnitIdRoute
 }
 export interface FileRouteTypes {
@@ -41,20 +40,20 @@ export interface FileRouteTypes {
   fullPaths: '/' | '/units/$unitId'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/units/$unitId'
-  id: '__root__' | '/_app/' | '/_app/units/$unitId'
+  id: '__root__' | '/_app' | '/_app/units/$unitId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AppIndexRoute: typeof AppIndexRoute
+  AppRoute: typeof AppRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_app/': {
-      id: '/_app/'
-      path: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof AppIndexRouteImport
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/units/$unitId': {
@@ -67,8 +66,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppRouteChildren {
+  AppUnitsUnitIdRoute: typeof AppUnitsUnitIdRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppUnitsUnitIdRoute: AppUnitsUnitIdRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  AppIndexRoute: AppIndexRoute,
+  AppRoute: AppRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
