@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ═══════════════════════════════════════════════════════════════════
+     DESALTER V-101 — Electrostatic Desalting Unit
+     Standalone 3D Isolation Viewer (Reference Template)
+     Three.js r147 | Dark Industrial Theme | Production-Ready
+     ═══════════════════════════════════════════════════════════════════ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V-101 | Electrostatic Desalter</title>
+<style>
+/* ─── 1. FULL CSS STYLING ─── */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{overflow:hidden;background:#0a0e17;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#c8d6e5;}
+
+/* ─── Loading Screen ─── */
+#loading-screen{position:fixed;inset:0;z-index:9999;background:#0a0e17;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.8s ease;}
+#loading-screen.hidden{opacity:0;pointer-events:none;}
+#loading-screen h1{font-size:1.4rem;color:#f0c040;margin-bottom:1.2rem;letter-spacing:0.08em;}
+.loader-bar{width:280px;height:4px;background:#1a2035;border-radius:2px;overflow:hidden;}
+.loader-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#f0c040,#e8a020);
+  border-radius:2px;transition:width 0.3s ease;}
+#loading-screen p{margin-top:1rem;font-size:0.8rem;color:#5a6a80;}
+
+/* ─── Topbar ─── */
+#topbar{position:fixed;top:0;left:0;right:0;height:48px;z-index:100;
+  background:linear-gradient(180deg,rgba(10,14,23,0.95),rgba(10,14,23,0.85));
+  border-bottom:1px solid #1e2a3a;display:flex;align-items:center;padding:0 16px;
+  backdrop-filter:blur(8px);}
+#topbar .tag{background:#f0c040;color:#0a0e17;font-weight:700;font-size:0.7rem;
+  padding:2px 8px;border-radius:3px;margin-right:12px;letter-spacing:0.06em;}
+#topbar h2{font-size:0.95rem;color:#e0e8f0;font-weight:600;}
+#topbar .unit-id{color:#f0c040;margin-left:8px;}
+#topbar .status{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:0.75rem;}
+#topbar .status .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;
+  box-shadow:0 0 6px #22c55e;animation:pulse-dot 2s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+/* ─── View Toggle Buttons ─── */
+#view-toggle{position:fixed;top:60px;right:16px;z-index:100;display:flex;flex-direction:column;gap:6px;}
+#view-toggle button{background:rgba(20,30,50,0.9);color:#8a9ab0;border:1px solid #1e2a3a;
+  padding:7px 14px;border-radius:4px;font-size:0.72rem;cursor:pointer;
+  transition:all 0.25s ease;letter-spacing:0.04em;font-weight:500;}
+#view-toggle button:hover,#view-toggle button.active{
+  background:rgba(240,192,64,0.15);color:#f0c040;border-color:#f0c040;}
+
+/* ─── Left Panel (Instrumentation) ─── */
+#left-panel{position:fixed;top:60px;left:16px;width:220px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:14px;backdrop-filter:blur(6px);}
+#left-panel h3{font-size:0.7rem;color:#f0c040;text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:10px;}
+.reading{margin-bottom:10px;}
+.reading label{display:block;font-size:0.65rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:2px;}
+.reading .value{font-size:1.1rem;color:#e0e8f0;font-weight:600;
+  font-variant-numeric:tabular-nums;}
+.reading .unit{font-size:0.7rem;color:#5a6a80;margin-left:4px;}
+.reading .bar{height:3px;background:#1a2540;border-radius:2px;margin-top:3px;overflow:hidden;}
+.reading .bar-fill{height:100%;border-radius:2px;transition:width 0.5s ease;}
+
+/* ─── Right Panel (Electrode Controls) ─── */
+#right-panel{position:fixed;top:60px;right:16px;width:200px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:14px;backdrop-filter:blur(6px);margin-top:168px;}
+#right-panel h3{font-size:0.7rem;color:#f0c040;text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:10px;}
+.electrode-status{display:flex;align-items:center;gap:8px;margin-bottom:8px;
+  padding:6px 8px;background:rgba(30,40,60,0.5);border-radius:4px;}
+.electrode-status .indicator{width:10px;height:10px;border-radius:50%;
+  background:#ef4444;box-shadow:0 0 6px #ef4444;transition:all 0.3s;}
+.electrode-status .indicator.on{background:#22c55e;box-shadow:0 0 8px #22c55e;}
+.electrode-status span{font-size:0.75rem;color:#a0b0c0;}
+.hv-reading{font-size:0.85rem;color:#f0c040;font-weight:600;margin-left:auto;}
+.transformer-info{margin-top:10px;padding:8px;background:rgba(30,40,60,0.4);border-radius:4px;
+  border-left:3px solid #ef4444;}
+.transformer-info p{font-size:0.7rem;color:#8a9ab0;margin-bottom:3px;}
+.transformer-info .label{color:#5a6a80;}
+
+/* ─── Bottom Panel (Process Summary) ─── */
+#bottom-panel{position:fixed;bottom:40px;left:16px;right:16px;height:80px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:12px 18px;backdrop-filter:blur(6px);display:flex;gap:24px;align-items:center;}
+.process-stat{text-align:center;flex:1;}
+.process-stat .num{font-size:1.2rem;color:#e0e8f0;font-weight:700;
+  font-variant-numeric:tabular-nums;}
+.process-stat .desc{font-size:0.6rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-top:2px;}
+
+/* ─── Alert Ticker Bar ─── */
+#alert-ticker{position:fixed;bottom:0;left:0;right:0;height:32px;z-index:100;
+  background:rgba(15,20,35,0.95);border-top:1px solid #1e2a3a;overflow:hidden;
+  display:flex;align-items:center;}
+#alert-ticker .label{background:#f0c040;color:#0a0e17;font-size:0.65rem;
+  font-weight:700;padding:0 10px;height:100%;display:flex;align-items:center;
+  letter-spacing:0.08em;white-space:nowrap;}
+#ticker-content{flex:1;overflow:hidden;white-space:nowrap;}
+#ticker-scroll{display:inline-block;animation:ticker-scroll 45s linear infinite;
+  font-size:0.72rem;color:#8a9ab0;padding-left:20px;}
+@keyframes ticker-scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+.ticker-item{margin-right:60px;}
+.ticker-item.warn{color:#f59e0b;}
+.ticker-item.info{color:#38bdf8;}
+.ticker-item.ok{color:#22c55e;}
+
+/* ─── Canvas Container ─── */
+#canvas-container{position:fixed;inset:0;z-index:1;}
+canvas{display:block;}
+
+/* ─── Tooltip ─── */
+#tooltip{position:fixed;z-index:200;background:rgba(10,14,23,0.95);border:1px solid #f0c040;
+  color:#e0e8f0;font-size:0.72rem;padding:6px 10px;border-radius:4px;pointer-events:none;
+  display:none;max-width:200px;}
+</style>
+</head>
+<body>
+
+<!-- ─── Loading Screen ─── -->
+<div id="loading-screen">
+  <h1>V-101 DESALTER</h1>
+  <div class="loader-bar"><div class="loader-bar-fill" id="loader-fill"></div></div>
+  <p>Initializing 3D isolation viewer...</p>
+</div>
+
+<!-- ─── Topbar ─── -->
+<div id="topbar">
+  <span class="TAG">PROCESS UNIT</span>
+  <h2>Electrostatic Desalter<span class="unit-id">V-101</span></h2>
+  <div class="status"><div class="dot"></div><span>ONLINE</span></div>
+</div>
+
+<!-- ─── View Toggle ─── -->
+<div id="view-toggle">
+  <button class="active" data-view="external">External</button>
+  <button data-view="internal">Internal</button>
+  <button data-view="cutaway">Cutaway</button>
+  <button data-view="flow">Flow</button>
+</div>
+
+<!-- ─── Left Panel: Live Instrumentation ─── -->
+<div id="left-panel">
+  <h3>Live Readings</h3>
+  <div class="reading">
+    <label>Operating Temperature</label>
+    <div><span class="value" id="r-temp">128.4</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-temp" style="width:64%;background:#ef4444;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Operating Pressure</label>
+    <div><span class="value" id="r-pres">12.8</span><span class="unit">barg</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-pres" style="width:51%;background:#38bdf8;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Crude Throughput</label>
+    <div><span class="value" id="r-flow">842</span><span class="unit">m³/h</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-flow" style="width:70%;background:#22c55e;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Separation Efficiency</label>
+    <div><span class="value" id="r-eff">97.2</span><span class="unit">%</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-eff" style="width:97%;background:#a78bfa;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Interface Level (BS&W)</label>
+    <div><span class="value" id="r-interface">42</span><span class="unit">%</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-interface" style="width:42%;background:#f59e0b;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Wash Water Rate</label>
+    <div><span class="value" id="r-wash">58.3</span><span class="unit">m³/h</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-wash" style="width:49%;background:#06b6d4;"></div></div>
+  </div>
+</div>
+
+<!-- ─── Right Panel: Electrode / Transformer Status ─── -->
+<div id="right-panel">
+  <h3>HV Electrode Grids</h3>
+  <div class="electrode-status"><div class="indicator on"></div><span>Grid 1</span><span class="hv-reading">18.2 kV</span></div>
+  <div class="electrode-status"><div class="indicator on"></div><span>Grid 2</span><span class="hv-reading">17.8 kV</span></div>
+  <div class="electrode-status"><div class="indicator on"></div><span>Grid 3</span><span class="hv-reading">18.0 kV</span></div>
+  <div class="electrode-status"><div class="indicator on"></div><span>Grid 4</span><span class="hv-reading">17.6 kV</span></div>
+  <div class="transformer-info">
+    <p><span class="label">Transformer:</span> T-101A/B</p>
+    <p><span class="label">Rating:</span> 2 × 75 kVA</p>
+    <p><span class="label">Frequency:</span> 60 Hz</p>
+    <p><span class="label">Cooling:</span> ONAN</p>
+    <p><span class="label">Status:</span> <span style="color:#22c55e;">RUNNING</span></p>
+  </div>
+</div>
+
+<!-- ─── Bottom Panel: Process Summary ─── -->
+<div id="bottom-panel">
+  <div class="process-stat"><div class="num" id="s-salt">0.5</div><div class="desc">Salt in crude (PTB)</div></div>
+  <div class="process-stat"><div class="num" id="s-bsw">0.15</div><div class="desc">BS&W outlet %</div></div>
+  <div class="process-stat"><div class="num" id="s-dehyd">4.2</div><div class="desc">Dehydrator dose (ppm)</div></div>
+  <div class="process-stat"><div class="num" id="s-mix">320</div><div class="desc">Mixing valve ΔP (kPa)</div></div>
+  <div class="process-stat"><div class="num" id="s-uptime">2847</div><div class="desc">Run hours</div></div>
+  <div class="process-stat"><div class="num" id="s-psv">Set 15.0</div><div class="desc">PSV setpoint (barg)</div></div>
+</div>
+
+<!-- ─── Alert Ticker ─── -->
+<div id="alert-ticker">
+  <div class="label">ALERTS</div>
+  <div id="ticker-content">
+    <div id="ticker-scroll">
+      <span class="ticker-item ok">&#9679; V-101 operating normally — all parameters within limits</span>
+      <span class="ticker-item info">&#9679; Scheduled wash water injection rate adjusted +5% at 14:30</span>
+      <span class="ticker-item warn">&#9679; Interface level approaching high alarm — monitor closely</span>
+      <span class="ticker-item info">&#9679; Dehydrator chemical injection tank at 62% — reorder scheduled</span>
+      <span class="ticker-item ok">&#9679; T-101A transformer oil temperature 54°C — normal range</span>
+      <span class="ticker-item warn">&#9679; Crude charge temperature trending down — check preheat exchanger</span>
+      <span class="ticker-item ok">&#9679; Electrode Grid 3 voltage stabilized after minor fluctuation</span>
+      <span class="ticker-item info">&#9679; Next PSV testing due per API 576 schedule — Q3 2025</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Tooltip ─── -->
+<div id="tooltip"></div>
+
+<!-- ─── Canvas Container ─── -->
+<div id="canvas-container"></div>
+
+<!-- ─── 2. THREE.JS r147 CDN SETUP ─── -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   DESALTER V-101 — COMPLETE 3D SCENE
+   ═══════════════════════════════════════════════════════════════════ */
+
+// ─── Global State ───
+let scene, camera, renderer, controls, composer;
+let raycaster, mouse, clock;
+let electrodeGrids = [];       // Grid meshes for HV toggle
+let electrodeGlows = [];       // Glow lights on electrodes
+let hvTransformers = [];       // Transformer box meshes (clickable)
+let psvMesh = null;            // PSV mesh (clickable to vent)
+let steamParticles = null;     // Steam particle system
+let isPSVVenting = false;
+let electrodesOn = true;
+let currentView = 'external';
+let audioCtx = null;
+let humGain = null;
+let hissGain = null;
+
+// ─── Camera Presets for 4 View Modes ───
+const cameraPresets = {
+  external: { pos: [22, 12, 22], target: [0, 0, 0] },
+  internal: { pos: [2, 0.5, 0], target: [0, 0, 0] },
+  cutaway:  { pos: [18, 6, 18], target: [0, -1, 0] },
+  flow:     { pos: [14, 8, 14], target: [0, 0, 0] }
+};
+
+/* ═══════════════════════════════════════════════════════
+   INITIALIZATION
+   ═══════════════════════════════════════════════════════ */
+function init() {
+  const container = document.getElementById('canvas-container');
+  clock = new THREE.Clock();
+
+  // ─── Scene ───
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0e17);
+  scene.fog = new THREE.FogExp2(0x0a0e17, 0.012);
+
+  // ─── Camera ───
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(22, 12, 22);
+
+  // ─── Renderer ───
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+  container.appendChild(renderer.domElement);
+
+  // ─── Controls ───
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(0, 0, 0);
+  controls.minDistance = 3;
+  controls.maxDistance = 60;
+
+  // ─── Post-processing (UnrealBloomPass) ───
+  composer = new THREE.EffectComposer(renderer);
+  composer.addPass(new THREE.RenderPass(scene, camera));
+  const bloomPass = new THREE.UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.4, 0.5, 0.85
+  );
+  composer.addPass(bloomPass);
+
+  // ─── Raycaster ───
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  // ─── 5-Light Setup ───
+  setupLights();
+
+  // ─── Build 3D Model ───
+  buildDesalter();
+
+  // ─── Particle Systems ───
+  buildParticles();
+
+  // ─── Ground Plane ───
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(120, 120),
+    new THREE.MeshStandardMaterial({ color: 0x0d1220, roughness: 0.95, metalness: 0.1 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -4.2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // ─── Events ───
+  window.addEventListener('resize', onResize);
+  renderer.domElement.addEventListener('click', onClick);
+  renderer.domElement.addEventListener('mousemove', onMouseMove);
+  setupViewToggle();
+  initAudio();
+
+  // ─── Hide Loading Screen ───
+  simulateLoading();
+}
+
+/* ═══════════════════════════════════════════════════════
+   5-LIGHT SETUP
+   ═══════════════════════════════════════════════════════ */
+function setupLights() {
+  // 1) Key light — warm directional from upper-right
+  const keyLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+  keyLight.position.set(15, 20, 10);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.set(2048, 2048);
+  keyLight.shadow.camera.left = -20; keyLight.shadow.camera.right = 20;
+  keyLight.shadow.camera.top = 20; keyLight.shadow.camera.bottom = -20;
+  scene.add(keyLight);
+
+  // 2) Fill light — cool blue from left
+  const fillLight = new THREE.DirectionalLight(0x8899cc, 0.4);
+  fillLight.position.set(-12, 8, -6);
+  scene.add(fillLight);
+
+  // 3) Back rim light — amber from behind
+  const rimLight = new THREE.DirectionalLight(0xffcc88, 0.35);
+  rimLight.position.set(-5, 10, -15);
+  scene.add(rimLight);
+
+  // 4) Ambient light — low-intensity
+  const ambientLight = new THREE.AmbientLight(0x303848, 0.5);
+  scene.add(ambientLight);
+
+  // 5) Point light under vessel for under-lighting effect
+  const underLight = new THREE.PointLight(0x2244aa, 0.3, 30);
+  underLight.position.set(0, -5, 0);
+  scene.add(underLight);
+}
+
+/* ═══════════════════════════════════════════════════════
+   3. MATERIALS (RAL Colors & ISO Pipe Colors)
+   ═══════════════════════════════════════════════════════ */
+function mat(color, opts = {}) {
+  return new THREE.MeshStandardMaterial({
+    color, metalness: opts.metalness ?? 0.85, roughness: opts.roughness ?? 0.25,
+    transparent: opts.transparent ?? false, opacity: opts.opacity ?? 1.0,
+    side: opts.side ?? THREE.FrontSide, emissive: opts.emissive ?? 0x000000,
+    emissiveIntensity: opts.emissiveIntensity ?? 0
+  });
+}
+
+const M = {
+  // RAL 7035 — Light grey (vessel shell)
+  shell:    () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2, transparent: true, opacity: 0.55 }),
+  shellSolid: () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2 }),
+  // RAL 7016 — Anthracite grey (structural steel, saddles)
+  darkSteel: () => mat(0x383e45, { metalness: 0.9, roughness: 0.2 }),
+  // Stainless steel (electrodes, internals)
+  stainless: () => mat(0xc0c8d0, { metalness: 0.95, roughness: 0.15 }),
+  // OSHA Yellow (handrails, safety items)
+  oshaYellow: () => mat(0xf0c040, { metalness: 0.6, roughness: 0.35 }),
+  // ISO 14726 Pipe Colors
+  pipeCrude:  () => mat(0x8B4513, { metalness: 0.5, roughness: 0.4 }),   // Brown
+  pipeOil:    () => mat(0x3b82f6, { metalness: 0.5, roughness: 0.4 }),   // Blue
+  pipeBrine:  () => mat(0x22c55e, { metalness: 0.5, roughness: 0.4 }),   // Green
+  pipeWater:  () => mat(0x38bdf8, { metalness: 0.5, roughness: 0.4 }),   // Light blue
+  pipeSteam:  () => mat(0xd4d4d4, { metalness: 0.7, roughness: 0.3 }),   // Silver/grey
+  // Glass (transparent vessel, sight glasses)
+  glass: () => new THREE.MeshPhysicalMaterial({
+    color: 0xaaccff, metalness: 0.05, roughness: 0.05,
+    transmission: 0.92, thickness: 0.5, transparent: true, opacity: 0.45
+  }),
+  // Fluids
+  brine:    () => mat(0x1a6b3c, { emissive: 0x0d4a25, emissiveIntensity: 0.4, transparent: true, opacity: 0.6 }),
+  emulsion: () => mat(0x8B6914, { emissive: 0x6b4f10, emissiveIntensity: 0.3, transparent: true, opacity: 0.5 }),
+  crude:    () => mat(0x1a1a2e, { emissive: 0x0d0d1e, emissiveIntensity: 0.3, transparent: true, opacity: 0.7 }),
+  // Insulation cladding
+  insulation: () => mat(0xd4c4a8, { metalness: 0.1, roughness: 0.9, transparent: true, opacity: 0.35 }),
+  // Ceramic (insulators)
+  ceramic: () => mat(0xf5e6c8, { metalness: 0.05, roughness: 0.8 }),
+  // Warning red (HV transformers)
+  warningRed: () => mat(0xcc2222, { metalness: 0.5, roughness: 0.4 }),
+  // Concrete foundation
+  concrete: () => mat(0x606868, { metalness: 0.05, roughness: 0.95 }),
+  // Grating
+  grating: () => mat(0x505a64, { metalness: 0.7, roughness: 0.5, transparent: true, opacity: 0.6 }),
+};
+
+/* ═══════════════════════════════════════════════════════
+   3. DESALTER V-101 — COMPLETE 3D MODEL
+   ═══════════════════════════════════════════════════════ */
+function buildDesalter() {
+  const vessel = new THREE.Group();
+  vessel.name = 'V-101 Desalter';
+
+  const R = 1.75;    // Shell radius
+  const L = 16;      // Shell length (cylinder only)
+  const capR = R;    // Hemispherical end cap radius
+
+  // ─── 3a. Main Horizontal Cylinder Shell ───
+  const shellGeo = new THREE.CylinderGeometry(R, R, L, 48, 1, true);
+  const shellMesh = new THREE.Mesh(shellGeo, M.shell());
+  shellMesh.rotation.z = Math.PI / 2;
+  shellMesh.castShadow = true;
+  vessel.add(shellMesh);
+
+  // ─── 3a. Hemispherical End Caps ───
+  const capGeo = new THREE.SphereGeometry(capR, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2);
+  const leftCap = new THREE.Mesh(capGeo, M.shellSolid());
+  leftCap.position.x = -L / 2;
+  leftCap.rotation.z = Math.PI / 2;
+  leftCap.castShadow = true;
+  vessel.add(leftCap);
+
+  const rightCap = new THREE.Mesh(capGeo, M.shellSolid());
+  rightCap.position.x = L / 2;
+  rightCap.rotation.z = -Math.PI / 2;
+  rightCap.castShadow = true;
+  vessel.add(rightCap);
+
+  // ─── 3a. Weld Seam Rings (every 3m) ───
+  const weldMat = mat(0xb0b8c0, { metalness: 0.9, roughness: 0.15 });
+  for (let x = -6; x <= 6; x += 3) {
+    const weldRing = new THREE.Mesh(
+      new THREE.TorusGeometry(R + 0.02, 0.035, 8, 48),
+      weldMat
+    );
+    weldRing.position.x = x;
+    weldRing.rotation.y = Math.PI / 2;
+    vessel.add(weldRing);
+  }
+
+  // ─── 3a. Insulation Cladding Sections ───
+  const insMat = M.insulation();
+  for (let x = -7; x <= 7; x += 3.5) {
+    const insSection = new THREE.Mesh(
+      new THREE.CylinderGeometry(R + 0.08, R + 0.08, 3.3, 48, 1, true),
+      insMat
+    );
+    insSection.rotation.z = Math.PI / 2;
+    insSection.position.x = x;
+    vessel.add(insSection);
+  }
+
+  // ─── 3a. Foundation Saddles (2) ───
+  [-4.5, 4.5].forEach((xPos, idx) => {
+    const saddle = new THREE.Group();
+    // Saddle cradle (curved top)
+    const cradle = new THREE.Mesh(
+      new THREE.CylinderGeometry(R + 0.05, R + 0.05, 0.5, 48, 1, true, -Math.PI / 3, Math.PI * 2 / 3),
+      M.darkSteel()
+    );
+    cradle.rotation.z = Math.PI / 2;
+    saddle.add(cradle);
+    // Saddle web plates (vertical ribs)
+    [-0.8, 0, 0.8].forEach(zOff => {
+      const rib = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, R * 1.6, 0.08),
+        M.darkSteel()
+      );
+      rib.position.set(0, -(R * 0.6), zOff);
+      saddle.add(rib);
+    });
+    // Base plate
+    const base = new THREE.Mesh(
+      new THREE.BoxGeometry(1.4, 0.25, 3.2),
+      M.darkSteel()
+    );
+    base.position.y = -(R + 0.9);
+    saddle.add(base);
+    // Foundation pedestal
+    const pedestal = new THREE.Mesh(
+      new THREE.BoxGeometry(2.0, 0.6, 3.8),
+      M.concrete()
+    );
+    pedestal.position.y = -(R + 1.3);
+    saddle.add(pedestal);
+
+    saddle.position.x = xPos;
+    saddle.castShadow = true;
+    vessel.add(saddle);
+  });
+
+  // ─── 3a. Steel Grating Platform with OSHA Handrails ───
+  const platformGrp = new THREE.Group();
+  const platW = 12, platD = 4.5, platY = R + 0.6;
+  // Grating deck
+  const grating = new THREE.Mesh(
+    new THREE.BoxGeometry(platW, 0.08, platD),
+    M.grating()
+  );
+  grating.position.y = platY;
+  platformGrp.add(grating);
+  // Platform support beams
+  [-4, 0, 4].forEach(zOff => {
+    const beam = new THREE.Mesh(
+      new THREE.BoxGeometry(platW, 0.15, 0.12),
+      M.darkSteel()
+    );
+    beam.position.set(0, platY - 0.1, zOff);
+    platformGrp.add(beam);
+  });
+  // OSHA yellow handrail posts
+  const railH = 1.1;
+  const railPositions = [];
+  for (let x = -platW / 2; x <= platW / 2; x += 2) {
+    railPositions.push([x, platD / 2]);
+    railPositions.push([x, -platD / 2]);
+  }
+  railPositions.forEach(([rx, rz]) => {
+    const post = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.035, 0.035, railH, 8),
+      M.oshaYellow()
+    );
+    post.position.set(rx, platY + railH / 2, rz);
+    platformGrp.add(post);
+  });
+  // Top rail (continuous)
+  [platD / 2, -platD / 2].forEach(zRail => {
+    const rail = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025, 0.025, platW, 8),
+      M.oshaYellow()
+    );
+    rail.rotation.z = Math.PI / 2;
+    rail.position.set(0, platY + railH, zRail);
+    platformGrp.add(rail);
+  });
+  // Mid rail (knee rail)
+  [platD / 2, -platD / 2].forEach(zRail => {
+    const midRail = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.02, platW, 8),
+      M.oshaYellow()
+    );
+    midRail.rotation.z = Math.PI / 2;
+    midRail.position.set(0, platY + railH * 0.5, zRail);
+    platformGrp.add(midRail);
+  });
+  // Toe board
+  [platD / 2, -platD / 2].forEach(zRail => {
+    const toe = new THREE.Mesh(
+      new THREE.BoxGeometry(platW, 0.1, 0.04),
+      M.oshaYellow()
+    );
+    toe.position.set(0, platY + 0.09, zRail);
+    platformGrp.add(toe);
+  });
+  // Stairway
+  const stairAngle = 0.6;
+  const stairGrp = new THREE.Group();
+  stairGrp.rotation.y = stairAngle;
+  const stairLength = 5;
+  const stairSteps = 10;
+  for (let i = 0; i < stairSteps; i++) {
+    const step = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 0.06, 0.3),
+      M.grating()
+    );
+    step.position.set(0, -2 + i * (stairLength / stairSteps / Math.cos(0.3)), -2.5 + i * 0.35);
+    step.rotation.x = -0.3;
+    stairGrp.add(step);
+  }
+  // Stair handrails
+  [-0.6, 0.6].forEach(zSide => {
+    const sRail = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025, 0.025, stairLength, 8),
+      M.oshaYellow()
+    );
+    sRail.position.set(0, stairLength / 2 - 2, zSide);
+    sRail.rotation.x = -0.3;
+    stairGrp.add(sRail);
+  });
+  platformGrp.add(stairGrp);
+  vessel.add(platformGrp);
+
+  // ─── 3c. Internal Fluid Layers (Brine, Emulsion, Crude) ───
+  const fluidGroup = new THREE.Group();
+  fluidGroup.name = 'fluidLayers';
+  // Crude oil layer (bottom ~35%)
+  const crudeLayer = new THREE.Mesh(
+    new THREE.CylinderGeometry(R * 0.95, R * 0.95, R * 0.7, 32),
+    M.crude()
+  );
+  crudeLayer.rotation.z = Math.PI / 2;
+  crudeLayer.position.set(0, -(R * 0.65), 0);
+  fluidGroup.add(crudeLayer);
+  // Emulsion layer (middle ~25%)
+  const emulLayer = new THREE.Mesh(
+    new THREE.CylinderGeometry(R * 0.93, R * 0.93, R * 0.5, 32),
+    M.emulsion()
+  );
+  emulLayer.rotation.z = Math.PI / 2;
+  emulLayer.position.set(0, -(R * 0.05), 0);
+  fluidGroup.add(emulLayer);
+  // Brine/water layer (top ~20%)
+  const brineLayer = new THREE.Mesh(
+    new THREE.CylinderGeometry(R * 0.9, R * 0.9, R * 0.4, 32),
+    M.brine()
+  );
+  brineLayer.rotation.z = Math.PI / 2;
+  brineLayer.position.set(0, R * 0.45, 0);
+  fluidGroup.add(brineLayer);
+  vessel.add(fluidGroup);
+
+  // ─── 3d. Inlet Distributor Pipe with Nozzle Caps ───
+  const inletDist = new THREE.Group();
+  const distPipe = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.18, 0.18, L * 0.4, 16),
+    M.stainless()
+  );
+  distPipe.rotation.z = Math.PI / 2;
+  distPipe.position.set(-L * 0.3, -R * 0.4, 0);
+  inletDist.add(distPipe);
+  // Distributor nozzle caps (6 along the pipe)
+  for (let i = 0; i < 6; i++) {
+    const nozzleCap = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.04, 0.2, 8),
+      M.stainless()
+    );
+    nozzleCap.position.set(-L * 0.3 + (i - 2.5) * 0.8, -R * 0.2, 0);
+    inletDist.add(nozzleCap);
+    // Side jets
+    const jet = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.03, 0.03, 0.15, 6),
+      M.stainless()
+    );
+    jet.rotation.z = Math.PI / 2;
+    jet.position.set(-L * 0.3 + (i - 2.5) * 0.8, -R * 0.35, 0.12);
+    inletDist.add(jet);
+    const jet2 = jet.clone();
+    jet2.position.z = -0.12;
+    inletDist.add(jet2);
+  }
+  vessel.add(inletDist);
+
+  // ─── 3d. Wash Water Distribution Ring with Spray Nozzles ───
+  const washRing = new THREE.Group();
+  const ringRadius = R * 0.75;
+  const ringGeo = new THREE.TorusGeometry(ringRadius, 0.1, 8, 32);
+  const ringMesh = new THREE.Mesh(ringGeo, M.pipeWater());
+  ringMesh.rotation.x = Math.PI / 2;
+  washRing.add(ringMesh);
+  // Spray nozzles (8 around the ring)
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    const sprayNozzle = new THREE.Mesh(
+      new THREE.ConeGeometry(0.06, 0.25, 6),
+      M.stainless()
+    );
+    sprayNozzle.position.set(
+      Math.cos(angle) * ringRadius,
+      -0.12,
+      Math.sin(angle) * ringRadius
+    );
+    sprayNozzle.rotation.x = Math.PI;
+    washRing.add(sprayNozzle);
+  }
+  // Wash water inlet riser
+  const riser = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.12, 0.12, R + 0.8, 12),
+    M.pipeWater()
+  );
+  riser.position.set(-2, R * 0.1, 0);
+  washRing.add(riser);
+  washRing.position.y = R * 0.5;
+  vessel.add(washRing);
+
+  // ─── 3d. 4 Electrode Grids with Bars, Frames, Insulators, HV Leads, Glow ───
+  const electrodeGroup = new THREE.Group();
+  electrodeGroup.name = 'electrodes';
+  for (let g = 0; g < 4; g++) {
+    const grid = new THREE.Group();
+    grid.name = 'grid_' + g;
+    const gx = -4.5 + g * 3;
+    // Grid frame (rectangular)
+    const frameW = R * 1.6, frameH = R * 1.4;
+    const frameBar = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, frameH, 0.06),
+      M.stainless()
+    );
+    frameBar.position.set(gx, 0, frameH / 2);
+    grid.add(frameBar);
+    const frameBar2 = frameBar.clone();
+    frameBar2.position.z = -frameH / 2;
+    grid.add(frameBar2);
+    // Horizontal frame bars
+    const hBar = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, 0.06, frameH),
+      M.stainless()
+    );
+    hBar.position.set(gx, frameH / 2, 0);
+    grid.add(hBar);
+    const hBar2 = hBar.clone();
+    hBar2.position.y = -frameH / 2;
+    grid.add(hBar2);
+    // Electrode bars (horizontal grid wires — 6 per grid)
+    for (let b = 0; b < 6; b++) {
+      const eBar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.015, 0.015, frameH - 0.2, 6),
+        M.stainless()
+      );
+      eBar.rotation.x = Math.PI / 2;
+      eBar.position.set(gx, -frameH / 2 + 0.1 + b * (frameH / 6), 0);
+      grid.add(eBar);
+    }
+    // Ceramic insulators (4 per grid — top & bottom)
+    [-1, 1].forEach(yDir => {
+      [-1, 1].forEach(zDir => {
+        const insulator = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.06, 0.08, 0.2, 8),
+          M.ceramic()
+        );
+        insulator.position.set(gx, yDir * (frameH / 2 + 0.15), zDir * (frameH / 2 - 0.2));
+        grid.add(insulator);
+      });
+    });
+    // HV lead rod (vertical from top)
+    const hvLead = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.04, R + 0.5, 8),
+      M.warningRed()
+    );
+    hvLead.position.set(gx, R + 0.1, 0);
+    grid.add(hvLead);
+    // Electrode glow light
+    const glow = new THREE.PointLight(0x66aaff, 0.6, 4);
+    glow.position.set(gx, 0, 0);
+    grid.add(glow);
+    electrodeGlows.push(glow);
+    electrodeGrids.push(grid);
+    vessel.add(grid);
+  }
+  vessel.add(electrodeGroup);
+
+  // ─── 3d. Outlet Weir Collector Pipe with Slots ───
+  const weirGroup = new THREE.Group();
+  const weirPipe = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.22, 0.22, L * 0.35, 16),
+    M.stainless()
+  );
+  weirPipe.rotation.z = Math.PI / 2;
+  weirPipe.position.set(L * 0.28, -R * 0.15, 0);
+  weirGroup.add(weirPipe);
+  // Weir slots (8 cutout representations)
+  for (let s = 0; s < 8; s++) {
+    const slot = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05, 0.3, 0.02),
+      mat(0x0a0e17)
+    );
+    slot.position.set(L * 0.28 + (s - 3.5) * 0.55, -R * 0.05, 0.23);
+    weirGroup.add(slot);
+  }
+  // Weir baffle plate
+  const baffle = new THREE.Mesh(
+    new THREE.BoxGeometry(0.04, R * 1.6, R * 1.8),
+    M.stainless()
+  );
+  baffle.position.set(L * 0.44, 0.2, 0);
+  weirGroup.add(baffle);
+  vessel.add(weirGroup);
+
+  // ─── 3d. Brine Boot Sump ───
+  const brineBoot = new THREE.Group();
+  const bootCyl = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.6, 0.6, 1.2, 16),
+    M.shellSolid()
+  );
+  bootCyl.position.set(3, -(R + 0.7), 0);
+  brineBoot.add(bootCyl);
+  // Boot bottom cap
+  const bootCap = new THREE.Mesh(
+    new THREE.SphereGeometry(0.6, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+    M.shellSolid()
+  );
+  bootCap.position.set(3, -(R + 1.3), 0);
+  bootCap.rotation.x = Math.PI;
+  brineBoot.add(bootCap);
+  // Boot drain nozzle
+  const bootDrain = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.1, 0.1, 0.8, 8),
+    M.pipeBrine()
+  );
+  bootDrain.position.set(3, -(R + 1.8), 0);
+  brineBoot.add(bootDrain);
+  // Boot flange
+  const bootFlange = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.22, 0.22, 0.08, 12),
+    M.darkSteel()
+  );
+  bootFlange.position.set(3, -(R + 2.2), 0);
+  brineBoot.add(bootFlange);
+  vessel.add(brineBoot);
+
+  // ─── 3d. Flanged Nozzles for All Connections + Manway ───
+  function addNozzle(x, y, z, dir, len, r, pipeMat) {
+    const grp = new THREE.Group();
+    const pipe = new THREE.Mesh(
+      new THREE.CylinderGeometry(r, r, len, 12),
+      pipeMat
+    );
+    pipe.position.set(x, y, z);
+    // Orient nozzle
+    if (dir === 'top') { /* default Y-up */ }
+    else if (dir === 'bottom') pipe.rotation.x = Math.PI;
+    else if (dir === 'left') { pipe.rotation.z = Math.PI / 2; }
+    else if (dir === 'right') { pipe.rotation.z = -Math.PI / 2; }
+    else if (dir === 'front') { pipe.rotation.x = Math.PI / 2; }
+    else if (dir === 'back') { pipe.rotation.x = -Math.PI / 2; }
+    grp.add(pipe);
+    // Flange
+    const flange = new THREE.Mesh(
+      new THREE.CylinderGeometry(r * 1.8, r * 1.8, 0.08, 12),
+      M.darkSteel()
+    );
+    const fOff = dir === 'top' ? len / 2 : dir === 'bottom' ? -len / 2 : len / 2;
+    flange.position.set(x, y + fOff, z);
+    grp.add(flange);
+    return grp;
+  }
+  // Crude inlet nozzle (left)
+  vessel.add(addNozzle(-L / 2 - 0.8, 0.5, 0, 'left', 1.6, 0.25, M.pipeCrude()));
+  // Oil outlet nozzle (right)
+  vessel.add(addNozzle(L / 2 + 0.8, 0.5, 0, 'right', 1.6, 0.25, M.pipeOil()));
+  // Brine drain nozzle (bottom)
+  vessel.add(addNozzle(0, -(R + 0.5), 0, 'bottom', 1.0, 0.18, M.pipeBrine()));
+  // Wash water inlet (top)
+  vessel.add(addNozzle(-2, R + 0.5, 0, 'top', 1.2, 0.15, M.pipeWater()));
+  // Vent gas outlet (top right)
+  vessel.add(addNozzle(3, R + 0.5, 0, 'top', 0.8, 0.12, M.pipeSteam()));
+  // Manway (top center)
+  const manwayGrp = new THREE.Group();
+  const manwayNeck = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.5, 0.6, 16),
+    M.shellSolid()
+  );
+  manwayNeck.position.set(0, R + 0.4, 0);
+  manwayGrp.add(manwayNeck);
+  const manwayCover = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.65, 0.65, 0.1, 16),
+    M.darkSteel()
+  );
+  manwayCover.position.set(0, R + 0.75, 0);
+  manwayGrp.add(manwayCover);
+  // Manway bolts
+  for (let b = 0; b < 8; b++) {
+    const ba = (b / 8) * Math.PI * 2;
+    const bolt = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.04, 0.15, 6),
+      M.darkSteel()
+    );
+    bolt.position.set(Math.cos(ba) * 0.55, R + 0.85, Math.sin(ba) * 0.55);
+    manwayGrp.add(bolt);
+  }
+  vessel.add(manwayGrp);
+
+  // ─── 3j. External Piping ───
+  function addPipe(points, radius, pipeMat) {
+    const curve = new THREE.CatmullRomCurve3(points);
+    const tubeGeo = new THREE.TubeGeometry(curve, 32, radius, 8, false);
+    const pipe = new THREE.Mesh(tubeGeo, pipeMat);
+    pipe.castShadow = true;
+    vessel.add(pipe);
+    return pipe;
+  }
+  // Crude inlet pipe (from left)
+  addPipe([
+    new THREE.Vector3(-14, 0.5, 0), new THREE.Vector3(-12, 0.5, 0),
+    new THREE.Vector3(-10, 0.5, 0), new THREE.Vector3(-L / 2 - 0.8, 0.5, 0)
+  ], 0.22, M.pipeCrude());
+  // Oil outlet pipe (to right)
+  addPipe([
+    new THREE.Vector3(L / 2 + 0.8, 0.5, 0), new THREE.Vector3(L / 2 + 2, 0.5, 0),
+    new THREE.Vector3(L / 2 + 5, 1, 0), new THREE.Vector3(L / 2 + 8, 1, 0)
+  ], 0.22, M.pipeOil());
+  // Brine drain pipe (downward from bottom)
+  addPipe([
+    new THREE.Vector3(0, -(R + 1.5), 0), new THREE.Vector3(0, -(R + 3), 0),
+    new THREE.Vector3(2, -(R + 3.5), 0), new THREE.Vector3(5, -(R + 3.5), 0)
+  ], 0.15, M.pipeBrine());
+  // Wash water header (from top)
+  addPipe([
+    new THREE.Vector3(-2, R + 2, 0), new THREE.Vector3(-2, R + 1.2, 0),
+    new THREE.Vector3(-2, R + 0.5, 0)
+  ], 0.13, M.pipeWater());
+  // HV conduit pipes (from top of each grid to transformers)
+  [-4.5, 4.5].forEach(xPos => {
+    addPipe([
+      new THREE.Vector3(xPos, R + 0.5, 0), new THREE.Vector3(xPos, R + 2.5, 0),
+      new THREE.Vector3(xPos, R + 3, xPos > 0 ? -2.5 : 2.5)
+    ], 0.08, M.warningRed());
+  });
+
+  // ─── 3j. 2 HV Transformer Boxes ───
+  [-6, 6].forEach((xPos, idx) => {
+    const txGrp = new THREE.Group();
+    txGrp.name = 'transformer_' + idx;
+    // Main body
+    const txBody = new THREE.Mesh(
+      new THREE.BoxGeometry(2.2, 2.0, 1.8),
+      M.darkSteel()
+    );
+    txBody.position.set(xPos, R + 3.5, xPos < 0 ? 2.5 : -2.5);
+    txBody.castShadow = true;
+    txGrp.add(txBody);
+    // Cooling fins (6)
+    for (let f = 0; f < 6; f++) {
+      const fin = new THREE.Mesh(
+        new THREE.BoxGeometry(0.04, 1.6, 1.9),
+        M.darkSteel()
+      );
+      fin.position.set(xPos + (idx === 0 ? -1.3 : 1.3) + f * 0.08, R + 3.5, xPos < 0 ? 2.5 : -2.5);
+      txGrp.add(fin);
+    }
+    // Warning label plate
+    const label = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.0, 0.5),
+      mat(0xf0c040, { emissive: 0xf0c040, emissiveIntensity: 0.2 })
+    );
+    label.position.set(xPos, R + 3.8, (xPos < 0 ? 2.5 : -2.5) + 0.92);
+    txGrp.add(label);
+    // HV warning symbol
+    const warningPlate = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.8, 0.8),
+      mat(0xf0c040, { emissive: 0xf0c040, emissiveIntensity: 0.4 })
+    );
+    warningPlate.position.set(xPos, R + 4.2, (xPos < 0 ? 2.5 : -2.5) + 0.92);
+    txGrp.add(warningPlate);
+    // Red indicator light
+    const indicatorLight = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xff3333 })
+    );
+    indicatorLight.position.set(xPos + (idx === 0 ? -1 : 1), R + 4.3, (xPos < 0 ? 2.5 : -2.5) + 0.92);
+    txGrp.add(indicatorLight);
+    // Glow on indicator
+    const indGlow = new THREE.PointLight(0xff3333, 0.5, 3);
+    indGlow.position.copy(indicatorLight.position);
+    txGrp.add(indGlow);
+    hvTransformers.push(txGrp);
+    vessel.add(txGrp);
+  });
+
+  // ─── 3k. Sight Glasses with Level Indicators ───
+  [-3, 3].forEach(xPos => {
+    const sightGrp = new THREE.Group();
+    // Glass tube
+    const glassTube = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.06, R * 2.2, 8),
+      new THREE.MeshPhysicalMaterial({
+        color: 0xaaccff, transmission: 0.9, transparent: true, opacity: 0.6
+      })
+    );
+    glassTube.rotation.z = Math.PI / 2;
+    glassTube.position.set(xPos, 0, R + 0.15);
+    sightGrp.add(glassTube);
+    // Level indicator marks
+    for (let m = 0; m < 5; m++) {
+      const mark = new THREE.Mesh(
+        new THREE.BoxGeometry(0.04, 0.01, 0.2),
+        M.oshaYellow()
+      );
+      mark.position.set(xPos, -R * 0.8 + m * (R * 0.4), R + 0.28);
+      sightGrp.add(mark);
+    }
+    vessel.add(sightGrp);
+  });
+
+  // ─── 3l. Level Instruments, Pressure Gauges, Temperature Elements ───
+  // Level instrument (LT-101)
+  const ltGrp = new THREE.Group();
+  const ltBody = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.25), M.darkSteel());
+  ltBody.position.set(-5.5, -1, R + 0.3);
+  ltGrp.add(ltBody);
+  const ltDisplay = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.15),
+    new THREE.MeshBasicMaterial({ color: 0x00ff88 }));
+  ltDisplay.position.set(-5.5, -1, R + 0.44);
+  ltGrp.add(ltDisplay);
+  vessel.add(ltGrp);
+  // Pressure gauge (PT-101)
+  const ptGrp = new THREE.Group();
+  const ptBody = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3, 12), M.darkSteel());
+  ptBody.position.set(1, R + 0.3, 0);
+  ptGrp.add(ptBody);
+  const ptFace = new THREE.Mesh(new THREE.CircleGeometry(0.12, 16),
+    new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  ptFace.rotation.x = -Math.PI / 2;
+  ptFace.position.set(1, R + 0.48, 0);
+  ptGrp.add(ptFace);
+  vessel.add(ptGrp);
+  // Temperature element (TE-101)
+  const teGrp = new THREE.Group();
+  const teThermowell = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.8, 8), M.stainless());
+  teThermowell.rotation.z = Math.PI / 4;
+  teThermowell.position.set(-1, -(R + 0.1), R + 0.05);
+  teGrp.add(teThermowell);
+  vessel.add(teGrp);
+
+  // ─── 3m. PSV Safety Valve (clickable) ───
+  psvMesh = new THREE.Group();
+  psvMesh.name = 'psv';
+  // PSV body
+  const psvBody = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.18, 0.22, 0.6, 12),
+    M.warningRed()
+  );
+  psvBody.position.set(5, R + 1.0, 0);
+  psvMesh.add(psvBody);
+  // PSV outlet (vent to atmosphere)
+  const psvVent = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.12, 0.12, 1.0, 8),
+    M.pipeSteam()
+  );
+  psvVent.position.set(5, R + 1.8, 0);
+  psvMesh.add(psvVent);
+  // PSV spring housing
+  const psvSpring = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.14, 0.14, 0.4, 8),
+    M.warningRed()
+  );
+  psvSpring.position.set(5, R + 1.5, 0);
+  psvMesh.add(psvSpring);
+  // PSV tag
+  const psvTag = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.5, 0.2),
+    new THREE.MeshBasicMaterial({ color: 0xf0c040, side: THREE.DoubleSide })
+  );
+  psvTag.position.set(5.3, R + 1.0, 0);
+  psvMesh.add(psvTag);
+  vessel.add(psvMesh);
+
+  // ─── 3n. Support Skirts and Stiffener Rings ───
+  // Stiffener rings at 3 positions
+  [-5, 0, 5].forEach(xPos => {
+    const stiffRing = new THREE.Mesh(
+      new THREE.TorusGeometry(R + 0.03, 0.06, 8, 48),
+      M.shellSolid()
+    );
+    stiffRing.position.x = xPos;
+    stiffRing.rotation.y = Math.PI / 2;
+    vessel.add(stiffRing);
+  });
+
+  // ─── Add to Scene ───
+  vessel.position.y = 0;
+  scene.add(vessel);
+}
+
+/* ═══════════════════════════════════════════════════════
+   4. PARTICLE SYSTEMS
+   ═══════════════════════════════════════════════════════ */
+function buildParticles() {
+  // ─── 4a. Crude Inlet Particles (300) ───
+  createParticleSystem('crudeInlet', 0x8B4513, 300, {
+    curve: [
+      new THREE.Vector3(-14, 0.5, 0), new THREE.Vector3(-10, 0.5, 0),
+      new THREE.Vector3(-8, 0.3, 0.5), new THREE.Vector3(-8, -0.2, -0.3)
+    ], speed: 0.4, size: 0.1
+  });
+
+  // ─── 4b. Brine Drain Particles (200) ───
+  createParticleSystem('brineDrain', 0x22c55e, 200, {
+    curve: [
+      new THREE.Vector3(0, -2, 0), new THREE.Vector3(0, -4, 0),
+      new THREE.Vector3(2, -5, 0), new THREE.Vector3(6, -5.5, 0)
+    ], speed: 0.35, size: 0.08
+  });
+
+  // ─── 4c. Oil Outlet Particles (200) ───
+  createParticleSystem('oilOutlet', 0x3b82f6, 200, {
+    curve: [
+      new THREE.Vector3(8.8, 0.5, 0), new THREE.Vector3(11, 1, 0),
+      new THREE.Vector3(14, 1, 0), new THREE.Vector3(16, 1.2, 0)
+    ], speed: 0.45, size: 0.09
+  });
+
+  // ─── 4d. Wash Water Particles (200) ───
+  createParticleSystem('washWater', 0x38bdf8, 200, {
+    curve: [
+      new THREE.Vector3(-2, 4, 0), new THREE.Vector3(-2, 3, 0),
+      new THREE.Vector3(-2, 2, 0), new THREE.Vector3(-2, 1.5, 0)
+    ], speed: 0.3, size: 0.07
+  });
+
+  // ─── 4e. Internal Spark Particles (200) — electrostatic discharge ───
+  createParticleSystem('sparks', 0x66aaff, 200, {
+    curve: [
+      new THREE.Vector3(-4, 0, 0), new THREE.Vector3(-2, 0.3, 0.5),
+      new THREE.Vector3(0, -0.2, -0.4), new THREE.Vector3(2, 0.2, 0.3),
+      new THREE.Vector3(4, -0.1, 0.2)
+    ], speed: 0.6, size: 0.04
+  });
+
+  // ─── 4f. Steam Particles (150) — PSV vent ───
+  steamParticles = createParticleSystem('steam', 0xcccccc, 150, {
+    curve: [
+      new THREE.Vector3(5, 3.5, 0), new THREE.Vector3(5, 5, 0.2),
+      new THREE.Vector3(5.3, 7, -0.2), new THREE.Vector3(4.8, 9, 0)
+    ], speed: 0.5, size: 0.12
+  });
+  // Steam initially hidden (only shows when PSV vents)
+  if (steamParticles) steamParticles.visible = false;
+}
+
+// ─── Reusable Particle System Builder ───
+const particleSystems = [];
+function createParticleSystem(name, color, count, opts) {
+  const points = [];
+  const velocities = [];
+  for (let i = 0; i < count; i++) {
+    const t = Math.random();
+    const p = opts.curve[0].clone().lerp(opts.curve[opts.curve.length - 1], t);
+    // Add some spread
+    p.x += (Math.random() - 0.5) * 0.3;
+    p.y += (Math.random() - 0.5) * 0.3;
+    p.z += (Math.random() - 0.5) * 0.3;
+    points.push(p.x, p.y, p.z);
+    velocities.push({
+      offset: t,
+      speedVar: 0.7 + Math.random() * 0.6,
+      spread: (Math.random() - 0.5) * 0.2
+    });
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  const pMat = new THREE.PointsMaterial({
+    color: color, size: opts.size, transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+  });
+  const system = new THREE.Points(geo, pMat);
+  system.name = name;
+  system.userData = { curve: opts.curve, velocities, speed: opts.speed, count };
+  scene.add(system);
+  particleSystems.push(system);
+  return system;
+}
+
+/* ═══════════════════════════════════════════════════════
+   5. RAYCASTER INTERACTION
+   ═══════════════════════════════════════════════════════ */
+const tooltip = document.getElementById('tooltip');
+const interactiveObjects = [];
+
+function collectInteractive() {
+  // HV transformers
+  hvTransformers.forEach(tx => {
+    tx.traverse(child => {
+      if (child.isMesh) { child.userData.type = 'transformer'; interactiveObjects.push(child); }
+    });
+  });
+  // PSV
+  if (psvMesh) {
+    psvMesh.traverse(child => {
+      if (child.isMesh) { child.userData.type = 'psv'; interactiveObjects.push(child); }
+    });
+  }
+}
+
+function onClick(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && !obj.userData.type) obj = obj.parent;
+    if (!obj) return;
+    if (obj.userData.type === 'transformer') toggleElectrodes();
+    if (obj.userData.type === 'psv') ventPSV();
+  }
+}
+
+function onMouseMove(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && !obj.userData.type) obj = obj.parent;
+    if (obj) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = event.clientX + 12 + 'px';
+      tooltip.style.top = event.clientY + 12 + 'px';
+      if (obj.userData.type === 'transformer')
+        tooltip.textContent = 'HV Transformer — Click to toggle electrodes';
+      if (obj.userData.type === 'psv')
+        tooltip.textContent = 'PSV-101 — Click to vent (emergency release)';
+      return;
+    }
+  }
+  tooltip.style.display = 'none';
+}
+
+function toggleElectrodes() {
+  electrodesOn = !electrodesOn;
+  electrodeGlows.forEach(g => { g.intensity = electrodesOn ? 0.6 : 0; });
+  electrodeGrids.forEach((g, i) => {
+    g.visible = true;
+    g.children.forEach(child => {
+      if (child.isMesh) {
+        child.material = electrodesOn ?
+          M.stainless() : mat(0x404850, { metalness: 0.8, roughness: 0.3 });
+      }
+    });
+  });
+  // Update status indicators in right panel
+  document.querySelectorAll('.electrode-status .indicator').forEach(ind => {
+    ind.classList.toggle('on', electrodesOn);
+  });
+  document.querySelectorAll('.hv-reading').forEach(el => {
+    el.textContent = electrodesOn ? (17 + Math.random() * 1.5).toFixed(1) + ' kV' : '0.0 kV';
+  });
+}
+
+function ventPSV() {
+  if (isPSVVenting) return;
+  isPSVVenting = true;
+  if (steamParticles) steamParticles.visible = true;
+  // Boost steam hiss
+  if (hissGain) hissGain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
+  setTimeout(() => {
+    isPSVVenting = false;
+    if (steamParticles) steamParticles.visible = false;
+    if (hissGain) hissGain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.3);
+  }, 3000);
+}
+
+/* ═══════════════════════════════════════════════════════
+   6. WEB AUDIO API (60Hz Hum + Steam Hiss)
+   ═══════════════════════════════════════════════════════ */
+function initAudio() {
+  // Audio starts on first user interaction
+  document.addEventListener('click', () => {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // 60Hz transformer hum
+    const humOsc = audioCtx.createOscillator();
+    humOsc.type = 'sine';
+    humOsc.frequency.value = 60;
+    humGain = audioCtx.createGain();
+    humGain.gain.value = 0.08;
+    const humFilter = audioCtx.createBiquadFilter();
+    humFilter.type = 'lowpass';
+    humFilter.frequency.value = 120;
+    humOsc.connect(humFilter);
+    humFilter.connect(humGain);
+    humGain.connect(audioCtx.destination);
+    humOsc.start();
+
+    // Add 120Hz harmonic for realism
+    const hum2 = audioCtx.createOscillator();
+    hum2.type = 'sine';
+    hum2.frequency.value = 120;
+    const hum2Gain = audioCtx.createGain();
+    hum2Gain.gain.value = 0.03;
+    hum2.connect(hum2Gain);
+    hum2Gain.connect(audioCtx.destination);
+    hum2.start();
+
+    // Steam hiss (white noise filtered)
+    const bufferSize = audioCtx.sampleRate * 2;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    noise.loop = true;
+    const hissFilter = audioCtx.createBiquadFilter();
+    hissFilter.type = 'bandpass';
+    hissFilter.frequency.value = 4000;
+    hissFilter.Q.value = 0.5;
+    hissGain = audioCtx.createGain();
+    hissGain.gain.value = 0.05;
+    noise.connect(hissFilter);
+    hissFilter.connect(hissGain);
+    hissGain.connect(audioCtx.destination);
+    noise.start();
+  }, { once: true });
+}
+
+/* ═══════════════════════════════════════════════════════
+   7. VIEW MODES WITH ANIMATED CAMERA TRANSITIONS
+   ═══════════════════════════════════════════════════════ */
+function setupViewToggle() {
+  document.querySelectorAll('#view-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      if (view === currentView) return;
+      currentView = view;
+      document.querySelectorAll('#view-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      animateCamera(cameraPresets[view]);
+    });
+  });
+}
+
+function animateCamera(preset) {
+  const startPos = camera.position.clone();
+  const endPos = new THREE.Vector3(...preset.pos);
+  const startTarget = controls.target.clone();
+  const endTarget = new THREE.Vector3(...preset.target);
+  const duration = 1200;
+  const startTime = performance.now();
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    // Ease in-out cubic
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    camera.position.lerpVectors(startPos, endPos, ease);
+    controls.target.lerpVectors(startTarget, endTarget, ease);
+    controls.update();
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ═══════════════════════════════════════════════════════
+   8. LIVE ANIMATED HUD READINGS
+   ═══════════════════════════════════════════════════════ */
+function updateHUD(time) {
+  // Temperature: 125–132°C with slight oscillation
+  const temp = 128 + Math.sin(time * 0.3) * 2.5 + (Math.random() - 0.5) * 0.3;
+  document.getElementById('r-temp').textContent = temp.toFixed(1);
+  document.getElementById('bar-temp').style.width = ((temp / 200) * 100) + '%';
+
+  // Pressure: 12–14 barg
+  const pres = 12.8 + Math.sin(time * 0.2) * 0.8 + (Math.random() - 0.5) * 0.1;
+  document.getElementById('r-pres').textContent = pres.toFixed(1);
+  document.getElementById('bar-pres').style.width = ((pres / 25) * 100) + '%';
+
+  // Flow: 820–860 m³/h
+  const flow = 842 + Math.sin(time * 0.15) * 18 + (Math.random() - 0.5) * 2;
+  document.getElementById('r-flow').textContent = Math.round(flow);
+  document.getElementById('bar-flow').style.width = ((flow / 1200) * 100) + '%';
+
+  // Efficiency: 96–98%
+  const eff = 97.2 + Math.sin(time * 0.1) * 0.6;
+  document.getElementById('r-eff').textContent = eff.toFixed(1);
+  document.getElementById('bar-eff').style.width = eff + '%';
+
+  // Interface level: 38–48%
+  const iface = 42 + Math.sin(time * 0.08) * 5;
+  document.getElementById('r-interface').textContent = Math.round(iface);
+  document.getElementById('bar-interface').style.width = iface + '%';
+
+  // Wash water: 55–62 m³/h
+  const wash = 58.3 + Math.sin(time * 0.12) * 3;
+  document.getElementById('r-wash').textContent = wash.toFixed(1);
+  document.getElementById('bar-wash').style.width = ((wash / 120) * 100) + '%';
+
+  // Bottom panel stats
+  document.getElementById('s-salt').textContent = (0.3 + Math.random() * 0.4).toFixed(1);
+  document.getElementById('s-bsw').textContent = (0.1 + Math.random() * 0.1).toFixed(2);
+  document.getElementById('s-dehyd').textContent = (3.8 + Math.random() * 0.8).toFixed(1);
+  document.getElementById('s-mix').textContent = Math.round(310 + Math.random() * 20);
+
+  // Update transformer HV readings if electrodes are on
+  if (electrodesOn) {
+    document.querySelectorAll('.hv-reading').forEach((el, i) => {
+      el.textContent = (17.2 + Math.sin(time * 0.5 + i) * 1.0).toFixed(1) + ' kV';
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATION LOOP
+   ═══════════════════════════════════════════════════════ */
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+
+  controls.update();
+
+  // ─── Animate particle systems ───
+  particleSystems.forEach(sys => {
+    const positions = sys.geometry.attributes.position.array;
+    const { curve, velocities, speed, count } = sys.userData;
+    for (let i = 0; i < count; i++) {
+      const v = velocities[i];
+      v.offset = (v.offset + delta * speed * v.speedVar) % 1;
+      // Interpolate along curve
+      const totalLen = curve.length - 1;
+      const segF = v.offset * totalLen;
+      const segI = Math.min(Math.floor(segF), totalLen - 1);
+      const segT = segF - segI;
+      const p = new THREE.Vector3().lerpVectors(curve[segI], curve[segI + 1], segT);
+      // Add spread
+      p.x += v.spread * Math.sin(elapsed * 2 + i);
+      p.y += v.spread * Math.cos(elapsed * 1.5 + i);
+      p.z += v.spread * Math.sin(elapsed * 1.8 + i * 0.5);
+      positions[i * 3] = p.x;
+      positions[i * 3 + 1] = p.y;
+      positions[i * 3 + 2] = p.z;
+    }
+    sys.geometry.attributes.position.needsUpdate = true;
+  });
+
+  // ─── Internal fluid slosh animation ───
+  const fluidGroup = scene.getObjectByName('fluidLayers');
+  if (fluidGroup) {
+    fluidGroup.children.forEach((child, i) => {
+      child.position.y += Math.sin(elapsed * 0.8 + i * 1.2) * 0.001;
+    });
+  }
+
+  // ─── Electrode glow pulsing ───
+  electrodeGlows.forEach((glow, i) => {
+    if (electrodesOn) {
+      glow.intensity = 0.4 + 0.3 * Math.sin(elapsed * 3 + i * 0.8);
+    }
+  });
+
+  // ─── Live HUD ───
+  updateHUD(elapsed);
+
+  // ─── Render with bloom ───
+  if (composer && camera) { composer.render(); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY FUNCTIONS
+   ═══════════════════════════════════════════════════════ */
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function simulateLoading() {
+  const fill = document.getElementById('loader-fill');
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 15 + 5;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+      setTimeout(() => {
+        document.getElementById('loading-screen').classList.add('hidden');
+        collectInteractive();
+      }, 400);
+    }
+    fill.style.width = progress + '%';
+  }, 200);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════ */
+init();
+animate();
+</script>
+</body>
+</html>
+
