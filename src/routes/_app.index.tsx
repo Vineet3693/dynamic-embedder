@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Activity, Gauge, Waves } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import { getUnitById, UNITS } from '@/lib/units';
 
 type PlantNode = {
@@ -126,12 +127,12 @@ function Index() {
                   key={node.id}
                   to="/units/$unitId"
                   params={{ unitId: unit.id }}
-                  className="unit-node-3d absolute left-0 top-0 z-10 block h-24 w-28 -translate-x-1/2 -translate-y-1/2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  style={{ '--x': `${node.x * 11.2}px`, '--y': `${node.y * 7.2}px`, '--delay': `${index * -0.14}s` } as React.CSSProperties}
+                  className="unit-node-3d absolute left-0 top-0 z-10 block h-32 w-36 -translate-x-1/2 -translate-y-1/2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  style={{ '--x': `${node.x * 11.2}px`, '--y': `${node.y * 7.2}px`, '--delay': `${index * -0.14}s` } as CSSProperties}
                   aria-label={`Open ${unit.name}`}
                 >
                   <div className="unit-model-3d group flex h-full flex-col items-center justify-end gap-1 text-center">
-                    <UnitModel type={node.model} />
+                    <UnitModel id={node.id} type={node.model} />
                     <span className="max-w-28 rounded-sm border border-border bg-background/80 px-1.5 py-0.5 text-[0.56rem] font-semibold leading-tight text-foreground shadow-md backdrop-blur group-hover:border-warning">
                       {unit.tag}
                     </span>
