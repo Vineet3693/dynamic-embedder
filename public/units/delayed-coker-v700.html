@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ═══════════════════════════════════════════════════════════════════
+     DELAYED COKER V-700 — Thermal Cracking Column
+     Standalone 3D Isolation Viewer
+     Three.js r147 | Dark Industrial Theme | Production-Ready
+     ═══════════════════════════════════════════════════════════════════ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V-700 | Delayed Coker</title>
+<style>
+/* ─── 1. FULL CSS STYLING ─── */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{overflow:hidden;background:#0a0e17;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#c8d6e5;}
+
+/* ─── Loading Screen ─── */
+#loading-screen{position:fixed;inset:0;z-index:9999;background:#0a0e17;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.8s ease;}
+#loading-screen.hidden{opacity:0;pointer-events:none;}
+#loading-screen h1{font-size:1.4rem;color:#f0c040;margin-bottom:1.2rem;letter-spacing:0.08em;}
+.loader-bar{width:280px;height:4px;background:#1a2035;border-radius:2px;overflow:hidden;}
+.loader-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#f0c040,#e8a020);
+  border-radius:2px;transition:width 0.3s ease;}
+#loading-screen p{margin-top:1rem;font-size:0.8rem;color:#5a6a80;}
+
+/* ─── Topbar ─── */
+#topbar{position:fixed;top:0;left:0;right:0;height:48px;z-index:100;
+  background:linear-gradient(180deg,rgba(10,14,23,0.95),rgba(10,14,23,0.85));
+  border-bottom:1px solid #1e2a3a;display:flex;align-items:center;padding:0 16px;
+  backdrop-filter:blur(8px);}
+#topbar .tag{background:#f0c040;color:#0a0e17;font-weight:700;font-size:0.7rem;
+  padding:2px 8px;border-radius:3px;margin-right:12px;letter-spacing:0.06em;}
+#topbar h2{font-size:0.95rem;color:#e0e8f0;font-weight:600;}
+#topbar .unit-id{color:#f0c040;margin-left:8px;}
+#topbar .status{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:0.75rem;}
+#topbar .status .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;
+  box-shadow:0 0 6px #22c55e;animation:pulse-dot 2s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+/* ─── View Toggle Buttons ─── */
+#view-toggle{position:fixed;top:60px;right:16px;z-index:100;display:flex;flex-direction:column;gap:6px;}
+#view-toggle button{background:rgba(20,30,50,0.9);color:#8a9ab0;border:1px solid #1e2a3a;
+  padding:7px 14px;border-radius:4px;font-size:0.72rem;cursor:pointer;
+  transition:all 0.25s ease;letter-spacing:0.04em;font-weight:500;}
+#view-toggle button:hover,#view-toggle button.active{
+  background:rgba(240,192,64,0.15);color:#f0c040;border-color:#f0c040;}
+
+/* ─── Left Panel (Coking Cycle & Process Streams) ─── */
+#left-panel{position:fixed;top:60px;left:16px;width:230px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:14px;backdrop-filter:blur(6px);max-height:calc(100vh - 200px);overflow-y:auto;}
+#left-panel h3{font-size:0.7rem;color:#f0c040;text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:10px;margin-top:14px;}
+#left-panel h3:first-child{margin-top:0;}
+.section-divider{height:1px;background:#1a2540;margin:10px 0;}
+.reading{margin-bottom:8px;}
+.reading label{display:block;font-size:0.65rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:2px;}
+.reading .value{font-size:1.05rem;color:#e0e8f0;font-weight:600;
+  font-variant-numeric:tabular-nums;}
+.reading .unit{font-size:0.7rem;color:#5a6a80;margin-left:4px;}
+.reading .bar{height:3px;background:#1a2540;border-radius:2px;margin-top:3px;overflow:hidden;}
+.reading .bar-fill{height:100%;border-radius:2px;transition:width 0.5s ease;}
+.drum-status{padding:6px 8px;background:rgba(30,40,60,0.5);border-radius:4px;margin-bottom:6px;
+  display:flex;align-items:center;gap:8px;}
+.drum-status .indicator{width:10px;height:10px;border-radius:50%;transition:all 0.3s;}
+.drum-status .indicator.active{background:#22c55e;box-shadow:0 0 8px #22c55e;}
+.drum-status .indicator.decoke{background:#f59e0b;box-shadow:0 0 8px #f59e0b;}
+.drum-status .indicator.standby{background:#6b7280;box-shadow:none;}
+.drum-status span{font-size:0.72rem;color:#a0b0c0;}
+.drum-status .status-val{font-size:0.85rem;color:#f0c040;font-weight:600;margin-left:auto;}
+.legend-item{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:0.68rem;color:#8a9ab0;}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+
+/* ─── Right Panel (Live Readings & Unit Info) ─── */
+#right-panel{position:fixed;top:60px;right:16px;width:210px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:14px;backdrop-filter:blur(6px);margin-top:168px;
+  max-height:calc(100vh - 200px);overflow-y:auto;}
+#right-panel h3{font-size:0.7rem;color:#f0c040;text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:10px;margin-top:14px;}
+#right-panel h3:first-child{margin-top:0;}
+.unit-info{margin-top:8px;padding:8px;background:rgba(30,40,60,0.4);border-radius:4px;
+  border-left:3px solid #ef4444;}
+.unit-info p{font-size:0.68rem;color:#8a9ab0;margin-bottom:2px;}
+.unit-info .label{color:#5a6a80;}
+.yield-row{display:flex;justify-content:space-between;align-items:center;
+  padding:3px 0;font-size:0.68rem;}
+.yield-row .yield-name{color:#8a9ab0;}
+.yield-row .yield-val{color:#e0e8f0;font-weight:600;font-variant-numeric:tabular-nums;}
+
+/* ─── Bottom Panel (Process Summary) ─── */
+#bottom-panel{position:fixed;bottom:40px;left:16px;right:16px;height:80px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:12px 18px;backdrop-filter:blur(6px);display:flex;gap:18px;align-items:center;}
+.process-stat{text-align:center;flex:1;}
+.process-stat .num{font-size:1.15rem;color:#e0e8f0;font-weight:700;
+  font-variant-numeric:tabular-nums;}
+.process-stat .desc{font-size:0.58rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-top:2px;}
+
+/* ─── Alert Ticker Bar ─── */
+#alert-ticker{position:fixed;bottom:0;left:0;right:0;height:32px;z-index:100;
+  background:rgba(15,20,35,0.95);border-top:1px solid #1e2a3a;overflow:hidden;
+  display:flex;align-items:center;}
+#alert-ticker .label{background:#f0c040;color:#0a0e17;font-size:0.65rem;
+  font-weight:700;padding:0 10px;height:100%;display:flex;align-items:center;
+  letter-spacing:0.08em;white-space:nowrap;}
+#ticker-content{flex:1;overflow:hidden;white-space:nowrap;}
+#ticker-scroll{display:inline-block;animation:ticker-scroll 50s linear infinite;
+  font-size:0.72rem;color:#8a9ab0;padding-left:20px;}
+@keyframes ticker-scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+.ticker-item{margin-right:60px;}
+.ticker-item.warn{color:#f59e0b;}
+.ticker-item.info{color:#38bdf8;}
+.ticker-item.ok{color:#22c55e;}
+
+/* ─── Canvas Container ─── */
+#canvas-container{position:fixed;inset:0;z-index:1;}
+canvas{display:block;}
+
+/* ─── Tooltip ─── */
+#tooltip{position:fixed;z-index:200;background:rgba(10,14,23,0.95);border:1px solid #f0c040;
+  color:#e0e8f0;font-size:0.72rem;padding:6px 10px;border-radius:4px;pointer-events:none;
+  display:none;max-width:220px;}
+</style>
+</head>
+<body>
+
+<!-- ─── Loading Screen ─── -->
+<div id="loading-screen">
+  <h1>V-700 DELAYED COKER</h1>
+  <div class="loader-bar"><div class="loader-bar-fill" id="loader-fill"></div></div>
+  <p>Initializing 3D isolation viewer...</p>
+</div>
+
+<!-- ─── Topbar ─── -->
+<div id="topbar">
+  <span class="TAG">PROCESS UNIT</span>
+  <h2>Delayed Coker<span class="unit-id">V-700</span></h2>
+  <div class="status"><div class="dot"></div><span>ONLINE</span></div>
+</div>
+
+<!-- ─── View Toggle ─── -->
+<div id="view-toggle">
+  <button class="active" data-view="external">External</button>
+  <button data-view="internal">Internal</button>
+  <button data-view="cutaway">Cutaway</button>
+  <button data-view="flow">Flow</button>
+</div>
+
+<!-- ─── Left Panel: Coking Cycle & Process Streams ─── -->
+<div id="left-panel">
+  <h3>Coking Cycle</h3>
+  <div class="drum-status">
+    <div class="indicator active" id="drumA-ind"></div>
+    <span>Drum A</span>
+    <span class="status-val" id="drumA-status">FILLING</span>
+  </div>
+  <div class="drum-status">
+    <div class="indicator decoke" id="drumB-ind"></div>
+    <span>Drum B</span>
+    <span class="status-val" id="drumB-status">DECOKING</span>
+  </div>
+  <div class="reading">
+    <label>Cycle Time Remaining</label>
+    <div><span class="value" id="r-cycle">14:22</span><span class="unit">hh:mm</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-cycle" style="width:60%;background:#f0c040;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Drum A Fill Level</label>
+    <div><span class="value" id="r-fillA">62</span><span class="unit">%</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-fillA" style="width:62%;background:#ef4444;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Drum B Fill Level</label>
+    <div><span class="value" id="r-fillB">0</span><span class="unit">%</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-fillB" style="width:0%;background:#6b7280;"></div></div>
+  </div>
+
+  <h3>Process Streams</h3>
+  <div class="reading">
+    <label>Residue Feed Rate</label>
+    <div><span class="value" id="r-feed">185</span><span class="unit">t/h</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-feed" style="width:74%;background:#8B4513;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Vapor to Fractionator</label>
+    <div><span class="value" id="r-vapor">142</span><span class="unit">t/h</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-vapor" style="width:68%;background:#a78bfa;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Gas + Naphtha Overhead</label>
+    <div><span class="value" id="r-gas">28</span><span class="unit">t/h</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-gas" style="width:35%;background:#22c55e;"></div></div>
+  </div>
+  <div class="reading">
+    <label>LCGO Draw</label>
+    <div><span class="value" id="r-lcgo">32</span><span class="unit">t/h</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-lcgo" style="width:42%;background:#38bdf8;"></div></div>
+  </div>
+  <div class="reading">
+    <label>HCGO Draw</label>
+    <div><span class="value" id="r-hcgo">48</span><span class="unit">t/h</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-hcgo" style="width:56%;background:#3b82f6;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Coke Production</label>
+    <div><span class="value" id="r-coke">38</span><span class="unit">t/h</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-coke" style="width:48%;background:#1a1a2e;"></div></div>
+  </div>
+
+  <h3>Fluid Legend</h3>
+  <div class="legend-item"><div class="legend-dot" style="background:#8B4513;"></div>Residue Feed</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#a78bfa;"></div>Vapor / Gas</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div>Gas + Naphtha</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#38bdf8;"></div>LCGO</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div>HCGO</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1a1a2e;"></div>Coke / Heavy Residue</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d4d4d4;"></div>Steam</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#06b6d4;"></div>Quench Water</div>
+</div>
+
+<!-- ─── Right Panel: Live Readings & Coke Drum Status ─── -->
+<div id="right-panel">
+  <h3>Live Readings</h3>
+  <div class="reading">
+    <label>Drum Top Temp</label>
+    <div><span class="value" id="r-dtop">438</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-dtop" style="width:73%;background:#ef4444;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Drum Bottom Temp</label>
+    <div><span class="value" id="r-dbot">492</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-dbot" style="width:82%;background:#ef4444;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Fractionator Top Temp</label>
+    <div><span class="value" id="r-ftop">128</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-ftop" style="width:43%;background:#f59e0b;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Heater Outlet Temp</label>
+    <div><span class="value" id="r-heater">502</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-heater" style="width:84%;background:#ef4444;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Drum Pressure</label>
+    <div><span class="value" id="r-dpres">2.4</span><span class="unit">barg</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-dpres" style="width:48%;background:#38bdf8;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Coking Rate</label>
+    <div><span class="value" id="r-crate">38.2</span><span class="unit">t/h</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-crate" style="width:48%;background:#a78bfa;"></div></div>
+  </div>
+
+  <h3>Coke Drum Details</h3>
+  <div class="reading">
+    <label>Active Drum Fill %</label>
+    <div><span class="value" id="r-afill">62</span><span class="unit">%</span></div>
+  </div>
+  <div class="reading">
+    <label>Active Drum Temp</label>
+    <div><span class="value" id="r-atemp">465</span><span class="unit">°C</span></div>
+  </div>
+  <div class="reading">
+    <label>Cycle per Drum</label>
+    <div><span class="value" id="r-cyclet">20</span><span class="unit">hr</span></div>
+  </div>
+
+  <h3>Unit Info</h3>
+  <div class="unit-info">
+    <p><span class="label">Process:</span> Delayed Coking</p>
+    <p><span class="label">Drums:</span> 2 (alternating)</p>
+    <p><span class="label">Drum Diameter:</span> 5.0 m</p>
+    <p><span class="label">Drum Height:</span> 16.0 m</p>
+    <p><span class="label">Cycle Length:</span> 16-24 hr</p>
+    <p><span class="label">Coke Yield:</span> ~20-30 wt%</p>
+  </div>
+
+  <h3>Product Yields</h3>
+  <div class="yield-row"><span class="yield-name">Gas + Naphtha</span><span class="yield-val" id="y-gas">15.2%</span></div>
+  <div class="yield-row"><span class="yield-name">LCGO</span><span class="yield-val" id="y-lcgo">17.4%</span></div>
+  <div class="yield-row"><span class="yield-name">HCGO</span><span class="yield-val" id="y-hcgo">26.1%</span></div>
+  <div class="yield-row"><span class="yield-name">Coke</span><span class="yield-val" id="y-coke">25.8%</span></div>
+  <div class="yield-row"><span class="yield-name">Gas Oil Recycle</span><span class="yield-val" id="y-recycle">15.5%</span></div>
+</div>
+
+<!-- ─── Bottom Panel: Process Summary ─── -->
+<div id="bottom-panel">
+  <div class="process-stat"><div class="num" id="s-feed">185</div><div class="desc">Feed Rate (t/h)</div></div>
+  <div class="process-stat"><div class="num" id="s-hout">502</div><div class="desc">Heater Out Temp (°C)</div></div>
+  <div class="process-stat"><div class="num" id="s-dpres">2.4</div><div class="desc">Drum Press (barg)</div></div>
+  <div class="process-stat"><div class="num" id="s-active">DRUM A</div><div class="desc">Active Drum</div></div>
+  <div class="process-stat"><div class="num" id="s-time">14:22</div><div class="desc">Cycle Time Left</div></div>
+  <div class="process-stat"><div class="num" id="s-cprod">38.2</div><div class="desc">Coke Rate (t/h)</div></div>
+</div>
+
+<!-- ─── Alert Ticker ─── -->
+<div id="alert-ticker">
+  <div class="label">ALERTS</div>
+  <div id="ticker-content">
+    <div id="ticker-scroll">
+      <span class="ticker-item ok">&#9679; V-700 delayed coker operating normally — Drum A filling at design rate</span>
+      <span class="ticker-item info">&#9679; Drum B decoking in progress — drill stem engaged, water jet active</span>
+      <span class="ticker-item ok">&#9679; Heater outlet temperature steady at 502°C — within normal range</span>
+      <span class="ticker-item warn">&#9679; Drum A fill level approaching 62% — estimated 14:22 to switch</span>
+      <span class="ticker-item info">&#9679; Fractionator overhead temperature 128°C — LCGO draw rate optimized</span>
+      <span class="ticker-item ok">&#9679; 4-way switching valve ready for next drum switch cycle</span>
+      <span class="ticker-item info">&#9679; Quench oil injection at 12 t/h — coke quality within spec</span>
+      <span class="ticker-item ok">&#9679; Steam stripping rate 8.5 t/h — normal decoking steam assist</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Tooltip ─── -->
+<div id="tooltip"></div>
+
+<!-- ─── Canvas Container ─── -->
+<div id="canvas-container"></div>
+
+<!-- ─── 2. THREE.JS r147 CDN SETUP ─── -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   DELAYED COKER V-700 — COMPLETE 3D SCENE
+   ═══════════════════════════════════════════════════════════════════ */
+
+// ─── Global State ───
+let scene, camera, renderer, controls, composer;
+let raycaster, mouse, clock;
+let cokeDrumA, cokeDrumB;       // Coke drum meshes (clickable)
+let cokeLevelA, cokeLevelB;     // Coke fill level meshes
+let furnaceMesh = null;          // Furnace mesh (clickable)
+let furnaceFlames = [];          // Flame particles inside furnace
+let furnaceGlow = null;          // Furnace point light
+let drillStem = null;            // Drill stem for decoking drum
+let drillNozzle = null;          // Cutting nozzle at drill tip
+let cokeChute = null;            // Coke chute under decoking drum
+let valve4Way = null;            // 4-way switching valve
+let activeDrum = 'A';            // Which drum is active (coking)
+let cokeFillPercent = 62;        // Active drum fill percentage
+let cokeFillSpeed = 0.35;        // Fill speed (% per second of sim time)
+let currentView = 'external';
+let steamParticles = null;
+let vaporParticles = null;
+let decokingWaterParticles = null;
+let cokeRiseParticles = null;
+let feedParticles = null;
+let productParticles = null;
+const particleSystems = [];
+const interactiveObjects = [];
+
+// ─── Camera Presets for 4 View Modes ───
+const cameraPresets = {
+  external: { pos: [32, 18, 32], target: [0, 8, 0] },
+  internal: { pos: [7, 14, 0], target: [7, 10, 0] },
+  cutaway:  { pos: [24, 12, 24], target: [0, 8, 0] },
+  flow:     { pos: [20, 14, 20], target: [0, 8, 0] }
+};
+
+/* ═══════════════════════════════════════════════════════
+   INITIALIZATION
+   ═══════════════════════════════════════════════════════ */
+function init() {
+  const container = document.getElementById('canvas-container');
+  clock = new THREE.Clock();
+
+  // ─── Scene ───
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0e17);
+  scene.fog = new THREE.FogExp2(0x0a0e17, 0.008);
+
+  // ─── Camera ───
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 300);
+  camera.position.set(32, 18, 32);
+
+  // ─── Renderer ───
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+  container.appendChild(renderer.domElement);
+
+  // ─── Controls ───
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(0, 8, 0);
+  controls.minDistance = 5;
+  controls.maxDistance = 80;
+
+  // ─── Post-processing (UnrealBloomPass) ───
+  composer = new THREE.EffectComposer(renderer);
+  composer.addPass(new THREE.RenderPass(scene, camera));
+  const bloomPass = new THREE.UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.5, 0.4, 0.85
+  );
+  composer.addPass(bloomPass);
+
+  // ─── Raycaster ───
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  // ─── Lights ───
+  setupLights();
+
+  // ─── Build 3D Model ───
+  buildDelayedCoker();
+
+  // ─── Particle Systems ───
+  buildParticles();
+
+  // ─── Ground Plane ───
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(150, 150),
+    new THREE.MeshStandardMaterial({ color: 0x0d1220, roughness: 0.95, metalness: 0.1 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // ─── Events ───
+  window.addEventListener('resize', onResize);
+  renderer.domElement.addEventListener('click', onClick);
+  renderer.domElement.addEventListener('mousemove', onMouseMove);
+  setupViewToggle();
+
+  // ─── Hide Loading Screen ───
+  simulateLoading();
+}
+
+/* ═══════════════════════════════════════════════════════
+   LIGHT SETUP
+   ═══════════════════════════════════════════════════════ */
+function setupLights() {
+  const keyLight = new THREE.DirectionalLight(0xffeedd, 1.3);
+  keyLight.position.set(20, 30, 15);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.set(2048, 2048);
+  keyLight.shadow.camera.left = -30; keyLight.shadow.camera.right = 30;
+  keyLight.shadow.camera.top = 30; keyLight.shadow.camera.bottom = -10;
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0x8899cc, 0.4);
+  fillLight.position.set(-15, 12, -10);
+  scene.add(fillLight);
+
+  const rimLight = new THREE.DirectionalLight(0xffcc88, 0.35);
+  rimLight.position.set(-10, 15, -20);
+  scene.add(rimLight);
+
+  const ambientLight = new THREE.AmbientLight(0x303848, 0.6);
+  scene.add(ambientLight);
+
+  // Hot glow under coke drums
+  const hotGlow = new THREE.PointLight(0xff4400, 0.6, 25);
+  hotGlow.position.set(7, 2, 0);
+  scene.add(hotGlow);
+
+  // Furnace glow light
+  furnaceGlow = new THREE.PointLight(0xff6600, 1.2, 15);
+  furnaceGlow.position.set(-18, 2, 0);
+  scene.add(furnaceGlow);
+}
+
+/* ═══════════════════════════════════════════════════════
+   MATERIALS
+   ═══════════════════════════════════════════════════════ */
+function mat(color, opts = {}) {
+  return new THREE.MeshStandardMaterial({
+    color, metalness: opts.metalness ?? 0.85, roughness: opts.roughness ?? 0.25,
+    transparent: opts.transparent ?? false, opacity: opts.opacity ?? 1.0,
+    side: opts.side ?? THREE.FrontSide, emissive: opts.emissive ?? 0x000000,
+    emissiveIntensity: opts.emissiveIntensity ?? 0
+  });
+}
+
+const M = {
+  shell:    () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2, transparent: true, opacity: 0.5 }),
+  shellSolid: () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2 }),
+  hotShell: () => mat(0xc4522a, { metalness: 0.7, roughness: 0.3, emissive: 0x331100, emissiveIntensity: 0.3 }),
+  darkSteel: () => mat(0x383e45, { metalness: 0.9, roughness: 0.2 }),
+  stainless: () => mat(0xc0c8d0, { metalness: 0.95, roughness: 0.15 }),
+  oshaYellow: () => mat(0xf0c040, { metalness: 0.6, roughness: 0.35 }),
+  pipeCrude:  () => mat(0x8B4513, { metalness: 0.5, roughness: 0.4 }),
+  pipeVapor:  () => mat(0xa78bfa, { metalness: 0.5, roughness: 0.4 }),
+  pipeLCGO:   () => mat(0x38bdf8, { metalness: 0.5, roughness: 0.4 }),
+  pipeHCGO:   () => mat(0x3b82f6, { metalness: 0.5, roughness: 0.4 }),
+  pipeSteam:  () => mat(0xd4d4d4, { metalness: 0.7, roughness: 0.3 }),
+  pipeWater:  () => mat(0x06b6d4, { metalness: 0.5, roughness: 0.4 }),
+  pipeGas:    () => mat(0x22c55e, { metalness: 0.5, roughness: 0.4 }),
+  coke:       () => mat(0x0d0d0d, { metalness: 0.2, roughness: 0.95, emissive: 0x220800, emissiveIntensity: 0.4 }),
+  refractory: () => mat(0x8B7355, { metalness: 0.1, roughness: 0.9 }),
+  concrete:   () => mat(0x606868, { metalness: 0.05, roughness: 0.95 }),
+  grating:    () => mat(0x505a64, { metalness: 0.7, roughness: 0.5, transparent: true, opacity: 0.6 }),
+  insulation: () => mat(0xd4c4a8, { metalness: 0.1, roughness: 0.9, transparent: true, opacity: 0.35 }),
+  warningRed: () => mat(0xcc2222, { metalness: 0.5, roughness: 0.4 }),
+  flame:      () => mat(0xff6600, { emissive: 0xff4400, emissiveIntensity: 1.5, transparent: true, opacity: 0.8 }),
+  valveBody:  () => mat(0x4a5568, { metalness: 0.85, roughness: 0.2 }),
+};
+
+/* ═══════════════════════════════════════════════════════
+   DELAYED COKER V-700 — COMPLETE 3D MODEL
+   ═══════════════════════════════════════════════════════ */
+function buildDelayedCoker() {
+  const unit = new THREE.Group();
+  unit.name = 'V-700 Delayed Coker';
+
+  // Layout coordinates:
+  // Fractionator: x=-12, y_base=2, H=14
+  // Coke Drum A: x=4, y_base=2, H=16
+  // Coke Drum B: x=11, y_base=2, H=16
+  // Furnace: x=-22, y_base=0
+  // 4-way valve: x=7.5, y=3
+
+  // ─── 1. STRUCTURAL STEEL FRAMEWORK ───
+  buildSteelFramework(unit);
+
+  // ─── 2. FRACTIONATOR COLUMN ───
+  buildFractionator(unit);
+
+  // ─── 3. COKE DRUM A (Active / Decoking) ───
+  cokeDrumA = buildCokeDrum(unit, 4, 0, 'Drum A');
+
+  // ─── 4. COKE DRUM B (Active / Decoking) ───
+  cokeDrumB = buildCokeDrum(unit, 11, 0, 'Drum B');
+
+  // ─── 5. 4-WAY SWITCHING VALVE ───
+  build4WayValve(unit);
+
+  // ─── 6. FEED HEATER (FURNACE) ───
+  furnaceMesh = buildFurnace(unit);
+
+  // ─── 7. PIPING: Vapor lines, feed lines, product draws ───
+  buildPiping(unit);
+
+  // ─── 8. OVERHEAD SYSTEM: Condenser + Reflux Drum ───
+  buildOverheadSystem(unit);
+
+  // ─── 9. DRILL STEM + COKE CHUTE ───
+  buildDecokingEquipment(unit);
+
+  // ─── 10. COKE LEVELS ───
+  buildCokeLevels(unit);
+
+  // ─── 11. PLATFORMS ON TOP OF DRUMS ───
+  buildDrumPlatforms(unit);
+
+  scene.add(unit);
+}
+
+/* ─── 1A. STRUCTURAL STEEL FRAMEWORK ─── */
+function buildSteelFramework(parent) {
+  const framework = new THREE.Group();
+  // Main vertical columns — 4 legs for each coke drum area
+  const colPositions = [
+    [2, -2], [2, 2], [13, -2], [13, 2]  // x, z
+  ];
+  colPositions.forEach(([x, z]) => {
+    const col = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, 20, 0.4),
+      M.darkSteel()
+    );
+    col.position.set(x, 10, z);
+    col.castShadow = true;
+    framework.add(col);
+  });
+  // Cross beams at multiple elevations
+  [4, 10, 16, 20].forEach(y => {
+    // Front/back beams
+    [2, 13].forEach(x => {
+      const beam = new THREE.Mesh(
+        new THREE.BoxGeometry(0.3, 0.3, 4.4),
+        M.darkSteel()
+      );
+      beam.position.set(x, y, 0);
+      framework.add(beam);
+    });
+    // Side beams
+    [-2, 2].forEach(z => {
+      const beam = new THREE.Mesh(
+        new THREE.BoxGeometry(11.4, 0.3, 0.3),
+        M.darkSteel()
+      );
+      beam.position.set(7.5, y, z);
+      framework.add(beam);
+    });
+    // Diagonal bracing on front face
+    if (y <= 10) {
+      const brace = new THREE.Mesh(
+        new THREE.BoxGeometry(11.2, 0.15, 0.15),
+        M.darkSteel()
+      );
+      brace.position.set(7.5, y + 3, 2.2);
+      brace.rotation.z = 0.25;
+      framework.add(brace);
+    }
+  });
+  // Concrete foundations under columns
+  colPositions.forEach(([x, z]) => {
+    const found = new THREE.Mesh(
+      new THREE.BoxGeometry(1.5, 1.0, 1.5),
+      M.concrete()
+    );
+    found.position.set(x, 0, z);
+    framework.add(found);
+  });
+  parent.add(framework);
+}
+
+/* ─── 2. FRACTIONATOR COLUMN ─── */
+function buildFractionator(parent) {
+  const frac = new THREE.Group();
+  frac.name = 'Fractionator';
+  const R = 2.5;
+  const H = 14;
+  const baseY = 2;
+
+  // Shell (transparent)
+  const shellGeo = new THREE.CylinderGeometry(R, R, H, 48, 1, true);
+  const shell = new THREE.Mesh(shellGeo, M.shell());
+  shell.position.y = baseY + H / 2;
+  shell.castShadow = true;
+  frac.add(shell);
+
+  // Top dome (hemispherical)
+  const topCap = new THREE.Mesh(
+    new THREE.SphereGeometry(R, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2),
+    M.shellSolid()
+  );
+  topCap.position.y = baseY + H;
+  frac.add(topCap);
+
+  // Bottom cone (conical bottom)
+  const coneGeo = new THREE.CylinderGeometry(R, R * 0.5, 2, 48, 1, true);
+  const cone = new THREE.Mesh(coneGeo, M.shellSolid());
+  cone.position.y = baseY + 1;
+  frac.add(cone);
+  const coneBottom = new THREE.Mesh(
+    new THREE.CylinderGeometry(R * 0.5, R * 0.5, 0.1, 48),
+    M.shellSolid()
+  );
+  coneBottom.position.y = baseY + 0.05;
+  frac.add(coneBottom);
+
+  // Weld seam rings
+  const weldMat = mat(0xb0b8c0, { metalness: 0.9, roughness: 0.15 });
+  for (let y = baseY + 1.5; y < baseY + H; y += 2) {
+    const weld = new THREE.Mesh(
+      new THREE.TorusGeometry(R + 0.02, 0.03, 8, 48),
+      weldMat
+    );
+    weld.position.y = y;
+    weld.rotation.x = Math.PI / 2;
+    frac.add(weld);
+  }
+
+  // ~20 Sieve trays (horizontal discs inside)
+  for (let i = 0; i < 20; i++) {
+    const trayY = baseY + 1.5 + i * (H - 2.5) / 20;
+    const tray = new THREE.Mesh(
+      new THREE.CylinderGeometry(R * 0.92, R * 0.92, 0.04, 48, 1, true),
+      M.stainless()
+    );
+    tray.position.y = trayY;
+    frac.add(tray);
+    // Downcomer pipe on alternating sides
+    const dc = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.12, 0.12, 0.7, 8),
+      M.stainless()
+    );
+    dc.position.set(i % 2 === 0 ? R * 0.7 : -R * 0.7, trayY, 0);
+    frac.add(dc);
+  }
+
+  // Side draw nozzles — LCGO (mid-upper) and HCGO (mid-lower)
+  // LCGO draw
+  const lcgoNozzle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.25, 0.25, 1.5, 12),
+    M.pipeLCGO()
+  );
+  lcgoNozzle.rotation.z = Math.PI / 2;
+  lcgoNozzle.position.set(-R - 0.75, baseY + 10, 0);
+  frac.add(lcgoNozzle);
+  const lcgoFlange = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.45, 0.45, 0.1, 12),
+    M.darkSteel()
+  );
+  lcgoFlange.rotation.z = Math.PI / 2;
+  lcgoFlange.position.set(-R - 1.5, baseY + 10, 0);
+  frac.add(lcgoFlange);
+
+  // HCGO draw
+  const hcgoNozzle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.3, 1.5, 12),
+    M.pipeHCGO()
+  );
+  hcgoNozzle.rotation.z = Math.PI / 2;
+  hcgoNozzle.position.set(-R - 0.75, baseY + 5, 0);
+  frac.add(hcgoNozzle);
+  const hcgoFlange = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.5, 0.1, 12),
+    M.darkSteel()
+  );
+  hcgoFlange.rotation.z = Math.PI / 2;
+  hcgoFlange.position.set(-R - 1.5, baseY + 5, 0);
+  frac.add(hcgoFlange);
+
+  // Vapor inlet nozzle (bottom, connecting from coke drums)
+  const vapInlet = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.5, 1.5, 16),
+    M.pipeVapor()
+  );
+  vapInlet.rotation.z = Math.PI / 2;
+  vapInlet.position.set(-R - 0.75, baseY + 3, 0);
+  frac.add(vapInlet);
+
+  // Feed inlet nozzle from bottom (residue return)
+  const feedNozzle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35, 0.35, 1.2, 12),
+    M.pipeCrude()
+  );
+  feedNozzle.rotation.z = Math.PI / 2;
+  feedNozzle.position.set(R + 0.6, baseY + 2.5, 0);
+  frac.add(feedNozzle);
+
+  // Overhead vapor outlet (top)
+  const overheadOutlet = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.4, 0.4, 2, 12),
+    M.pipeVapor()
+  );
+  overheadOutlet.position.set(0, baseY + H + 1, 0);
+  frac.add(overheadOutlet);
+
+  // Quench oil injection nozzles
+  [7, 9, 11].forEach(y => {
+    const qNozzle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.08, 1.0, 8),
+      M.pipeCrude()
+    );
+    qNozzle.rotation.z = Math.PI / 2;
+    qNozzle.position.set(R + 0.5, y, 0);
+    frac.add(qNozzle);
+  });
+
+  // Insulation bands
+  const insMat = M.insulation();
+  for (let y = baseY + 2; y < baseY + H; y += 3) {
+    const ins = new THREE.Mesh(
+      new THREE.CylinderGeometry(R + 0.1, R + 0.1, 2.8, 48, 1, true),
+      insMat
+    );
+    ins.position.y = y;
+    frac.add(ins);
+  }
+
+  // Manway
+  const manway = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.6, 0.6, 0.5, 16),
+    M.shellSolid()
+  );
+  manway.rotation.z = Math.PI / 2;
+  manway.position.set(R + 0.3, baseY + 12, 0);
+  frac.add(manway);
+  const manwayCover = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.75, 0.75, 0.08, 16),
+    M.darkSteel()
+  );
+  manwayCover.rotation.z = Math.PI / 2;
+  manwayCover.position.set(R + 0.6, baseY + 12, 0);
+  frac.add(manwayCover);
+
+  parent.add(frac);
+}
+
+/* ─── 3/4. COKE DRUM BUILDER ─── */
+function buildCokeDrum(parent, xPos, zOffset, label) {
+  const drum = new THREE.Group();
+  drum.name = label;
+  drum.userData.type = 'cokeDrum';
+  drum.userData.label = label;
+
+  const R = 2.5;
+  const H = 16;
+  const baseY = 2;
+
+  // Outer shell — hot refractory-lined
+  const shellGeo = new THREE.CylinderGeometry(R, R, H, 48, 1, true);
+  const shell = new THREE.Mesh(shellGeo, M.hotShell());
+  shell.position.y = baseY + H / 2;
+  shell.castShadow = true;
+  drum.add(shell);
+
+  // Top dome
+  const topDome = new THREE.Mesh(
+    new THREE.SphereGeometry(R, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2),
+    M.shellSolid()
+  );
+  topDome.position.y = baseY + H;
+  drum.add(topDome);
+
+  // Bottom cone
+  const botCone = new THREE.Mesh(
+    new THREE.CylinderGeometry(R, R * 0.4, 2.5, 48, 1, true),
+    M.shellSolid()
+  );
+  botCone.position.y = baseY + 1.25;
+  drum.add(botCone);
+
+  // Bottom outlet nozzle
+  const botNozzle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.4, 0.4, 1.5, 12),
+    M.pipeCrude()
+  );
+  botNozzle.position.y = baseY - 0.2;
+  drum.add(botNozzle);
+
+  // Top vapor outlet nozzle
+  const topNozzle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.5, 1.5, 16),
+    M.pipeVapor()
+  );
+  topNozzle.position.y = baseY + H + 0.75;
+  drum.add(topNozzle);
+
+  // Steam injection nozzles (2 sides, mid-height)
+  [-1, 1].forEach(side => {
+    const steamNozzle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.12, 0.12, 1.0, 8),
+      M.pipeSteam()
+    );
+    steamNozzle.rotation.z = Math.PI / 2;
+    steamNozzle.position.set(xPos === 4 && side === -1 || xPos === 11 && side === 1 ? 0 : 0,
+      baseY + 12, side * (R + 0.5));
+    steamNozzle.position.set(0, baseY + 12, side * (R + 0.5));
+    // orient horizontally
+    const hSteam = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.12, 0.12, 1.2, 8),
+      M.pipeSteam()
+    );
+    hSteam.rotation.z = Math.PI / 2;
+    hSteam.position.set(0, baseY + 12, side * (R + 0.5));
+    drum.add(hSteam);
+  });
+
+  // Quench oil injection nozzle (mid-low)
+  const quenchNozzle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.15, 0.15, 1.2, 10),
+    M.pipeCrude()
+  );
+  quenchNozzle.position.set(0, baseY + 4, R + 0.6);
+  drum.add(quenchNozzle);
+
+  // Weld seam rings
+  const weldMat = mat(0xb0b8c0, { metalness: 0.9, roughness: 0.15 });
+  for (let y = baseY + 2; y < baseY + H; y += 3) {
+    const weld = new THREE.Mesh(
+      new THREE.TorusGeometry(R + 0.02, 0.03, 8, 48),
+      weldMat
+    );
+    weld.position.y = y;
+    weld.rotation.x = Math.PI / 2;
+    drum.add(weld);
+  }
+
+  // Skirt support
+  const skirt = new THREE.Mesh(
+    new THREE.CylinderGeometry(R * 0.9, R * 1.1, 2, 48, 1, true),
+    M.darkSteel()
+  );
+  skirt.position.y = baseY - 0.8;
+  drum.add(skirt);
+  // Skirt base ring
+  const skirtBase = new THREE.Mesh(
+    new THREE.TorusGeometry(R * 1.1, 0.12, 8, 48),
+    M.darkSteel()
+  );
+  skirtBase.position.y = baseY - 1.8;
+  skirtBase.rotation.x = Math.PI / 2;
+  drum.add(skirtBase);
+
+  // Tag label on shell
+  const tagLabel = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.2, 0.5),
+    mat(0xf0c040, { emissive: 0xf0c040, emissiveIntensity: 0.3 })
+  );
+  tagLabel.position.set(R + 0.05, baseY + H / 2, 0);
+  tagLabel.rotation.y = Math.PI / 2;
+  drum.add(tagLabel);
+
+  drum.position.set(xPos, 0, zOffset);
+  parent.add(drum);
+  return drum;
+}
+
+/* ─── 5. 4-WAY SWITCHING VALVE ─── */
+function build4WayValve(parent) {
+  const valve = new THREE.Group();
+  valve.name = '4WayValve';
+  valve.userData.type = 'valve';
+
+  // Main body (box)
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(1.8, 1.2, 1.8),
+    M.valveBody()
+  );
+  body.position.set(7.5, 3.5, 0);
+  body.castShadow = true;
+  valve.add(body);
+
+  // Valve actuator on top
+  const actuator = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35, 0.35, 1.0, 12),
+    M.darkSteel()
+  );
+  actuator.position.set(7.5, 5.1, 0);
+  valve.add(actuator);
+
+  // Actuator handwheel
+  const wheel = new THREE.Mesh(
+    new THREE.TorusGeometry(0.5, 0.06, 8, 24),
+    M.oshaYellow()
+  );
+  wheel.position.set(7.5, 5.7, 0);
+  wheel.rotation.x = Math.PI / 2;
+  valve.add(wheel);
+
+  // Inlet/outlet nozzles
+  const nozzleMat = M.pipeVapor();
+  // From fractionator (left)
+  const inPipe = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35, 0.35, 2.5, 12),
+    nozzleMat
+  );
+  inPipe.rotation.z = Math.PI / 2;
+  inPipe.position.set(5.0, 3.5, 0);
+  valve.add(inPipe);
+  // To drum A (left)
+  const outA = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35, 0.35, 1.5, 12),
+    nozzleMat
+  );
+  outA.rotation.z = Math.PI / 2;
+  outA.position.set(4, 3.5, 1);
+  valve.add(outA);
+  // To drum B (right)
+  const outB = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35, 0.35, 2, 12),
+    nozzleMat
+  );
+  outB.rotation.z = Math.PI / 2;
+  outB.position.set(11, 3.5, -1);
+  valve.add(outB);
+
+  // Indicator light
+  const indicator = new THREE.Mesh(
+    new THREE.SphereGeometry(0.1, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0x22c55e })
+  );
+  indicator.position.set(7.5, 6.3, 0);
+  valve.add(indicator);
+  const indGlow = new THREE.PointLight(0x22c55e, 0.5, 4);
+  indGlow.position.copy(indicator.position);
+  valve.add(indGlow);
+
+  valve4Way = valve;
+  parent.add(valve);
+}
+
+/* ─── 6. FEED HEATER (FURNACE) ─── */
+function buildFurnace(parent) {
+  const furnace = new THREE.Group();
+  furnace.name = 'FeedHeater';
+  furnace.userData.type = 'furnace';
+
+  // Main box body
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(5, 6, 5),
+    M.refractory()
+  );
+  body.position.set(-22, 3, 0);
+  body.castShadow = true;
+  furnace.add(body);
+
+  // Steel outer casing
+  const casing = new THREE.Mesh(
+    new THREE.BoxGeometry(5.3, 6.3, 5.3),
+    M.darkSteel()
+  );
+  casing.position.set(-22, 3, 0);
+  furnace.add(casing);
+
+  // Firebox opening (front)
+  const opening = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.5, 3),
+    mat(0x110800, { emissive: 0xff4400, emissiveIntensity: 0.6 })
+  );
+  opening.position.set(-22, 3, 2.7);
+  furnace.add(opening);
+
+  // Flame elements inside (visible through glow)
+  for (let i = 0; i < 6; i++) {
+    const flame = new THREE.Mesh(
+      new THREE.ConeGeometry(0.2, 2.0, 6),
+      M.flame()
+    );
+    flame.position.set(-22, 1.5 + (i % 3) * 1.5, (i < 3 ? -0.5 : 0.5));
+    furnaceFlames.push(flame);
+    furnace.add(flame);
+  }
+
+  // Burner nozzles at bottom
+  for (let i = 0; i < 4; i++) {
+    const burner = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.15, 0.2, 0.6, 8),
+      M.darkSteel()
+    );
+    burner.position.set(-22, 0.3, -1.5 + i);
+    furnace.add(burner);
+  }
+
+  // Stack (chimney) on top
+  const stack = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.6, 0.8, 8, 16),
+    M.darkSteel()
+  );
+  stack.position.set(-22, 10, 0);
+  furnace.add(stack);
+  // Stack top
+  const stackTop = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.8, 0.6, 0.5, 16),
+    M.darkSteel()
+  );
+  stackTop.position.set(-22, 14.2, 0);
+  furnace.add(stackTop);
+
+  // Feed inlet nozzle (left side)
+  const feedIn = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35, 0.35, 2, 12),
+    M.pipeCrude()
+  );
+  feedIn.rotation.z = Math.PI / 2;
+  feedIn.position.set(-26, 4, 0);
+  furnace.add(feedIn);
+
+  // Hot outlet nozzle (right side, to coke drums)
+  const hotOut = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.4, 0.4, 2, 12),
+    M.hotShell()
+  );
+  hotOut.rotation.z = Math.PI / 2;
+  hotOut.position.set(-19, 4, 0);
+  furnace.add(hotOut);
+
+  // Foundation
+  const found = new THREE.Mesh(
+    new THREE.BoxGeometry(6, 0.8, 6),
+    M.concrete()
+  );
+  found.position.set(-22, -0.4, 0);
+  furnace.add(found);
+
+  parent.add(furnace);
+  return furnace;
+}
+
+/* ─── 7. PIPING NETWORK ─── */
+function buildPiping(parent) {
+  function addPipe(points, radius, pipeMat) {
+    const curve = new THREE.CatmullRomCurve3(points);
+    const tubeGeo = new THREE.TubeGeometry(curve, 32, radius, 8, false);
+    const pipe = new THREE.Mesh(tubeGeo, pipeMat);
+    pipe.castShadow = true;
+    parent.add(pipe);
+    return pipe;
+  }
+
+  // Hot residue from furnace to coke drums (via 4-way valve)
+  addPipe([
+    new THREE.Vector3(-18, 4, 0),
+    new THREE.Vector3(-14, 4, 0),
+    new THREE.Vector3(-10, 3.5, 0),
+    new THREE.Vector3(-6, 3.5, 0),
+    new THREE.Vector3(-2, 3.5, 0),
+    new THREE.Vector3(5.0, 3.5, 0)
+  ], 0.38, M.hotShell());
+
+  // From 4-way valve to Drum A inlet
+  addPipe([
+    new THREE.Vector3(5.0, 3.5, 1),
+    new THREE.Vector3(4, 3.5, 1),
+    new THREE.Vector3(4, 5, 1),
+    new THREE.Vector3(4, 7, 0)
+  ], 0.35, M.pipeVapor());
+
+  // From 4-way valve to Drum B inlet
+  addPipe([
+    new THREE.Vector3(10, 3.5, -1),
+    new THREE.Vector3(11, 3.5, -1),
+    new THREE.Vector3(11, 5, -1),
+    new THREE.Vector3(11, 7, 0)
+  ], 0.35, M.pipeVapor());
+
+  // Vapor from Drum A top to fractionator bottom
+  addPipe([
+    new THREE.Vector3(4, 19, 0),
+    new THREE.Vector3(4, 20, 0),
+    new THREE.Vector3(0, 20, 0),
+    new THREE.Vector3(-5, 19, 0),
+    new THREE.Vector3(-9, 10, 0),
+    new THREE.Vector3(-12, 5, 0),
+    new THREE.Vector3(-14.5, 5, 0)
+  ], 0.45, M.pipeVapor());
+
+  // Vapor from Drum B top to fractionator bottom (parallel path)
+  addPipe([
+    new THREE.Vector3(11, 19, 0),
+    new THREE.Vector3(11, 21, 0),
+    new THREE.Vector3(7, 21, 0),
+    new THREE.Vector3(2, 21, 0),
+    new THREE.Vector3(-3, 20, 0),
+    new THREE.Vector3(-9, 11, 0),
+    new THREE.Vector3(-14.5, 6, 0)
+  ], 0.45, M.pipeVapor());
+
+  // LCGO product draw from fractionator
+  addPipe([
+    new THREE.Vector3(-14.5, 12, 0),
+    new THREE.Vector3(-17, 12, 0),
+    new THREE.Vector3(-20, 13, 0),
+    new THREE.Vector3(-24, 13, 0)
+  ], 0.22, M.pipeLCGO());
+
+  // HCGO product draw from fractionator
+  addPipe([
+    new THREE.Vector3(-14.5, 7, 0),
+    new THREE.Vector3(-17, 7, 0),
+    new THREE.Vector3(-20, 6, 0),
+    new THREE.Vector3(-24, 6, 0)
+  ], 0.25, M.pipeHCGO());
+
+  // Steam supply lines to drums
+  addPipe([
+    new THREE.Vector3(-6, 22, 3),
+    new THREE.Vector3(0, 22, 3),
+    new THREE.Vector3(4, 22, 3),
+    new THREE.Vector3(4, 16, 3),
+    new THREE.Vector3(4, 14, 3)
+  ], 0.12, M.pipeSteam());
+
+  addPipe([
+    new THREE.Vector3(-6, 23, -3),
+    new THREE.Vector3(5, 23, -3),
+    new THREE.Vector3(11, 23, -3),
+    new THREE.Vector3(11, 16, -3),
+    new THREE.Vector3(11, 14, -3)
+  ], 0.12, M.pipeSteam());
+
+  // Quench oil injection line
+  addPipe([
+    new THREE.Vector3(7.5, 1, -4),
+    new THREE.Vector3(7.5, 2, -4),
+    new THREE.Vector3(4, 3, -3.5),
+    new THREE.Vector3(4, 6, -3.2)
+  ], 0.15, M.pipeCrude());
+
+  // Residue feed to furnace
+  addPipe([
+    new THREE.Vector3(-30, 4, 0),
+    new THREE.Vector3(-28, 4, 0),
+    new THREE.Vector3(-26, 4, 0)
+  ], 0.3, M.pipeCrude());
+}
+
+/* ─── 8. OVERHEAD SYSTEM: Condenser + Reflux Drum ─── */
+function buildOverheadSystem(parent) {
+  const oh = new THREE.Group();
+
+  // Condenser shell (horizontal cylinder)
+  const condR = 1.0;
+  const condL = 5;
+  const condenser = new THREE.Mesh(
+    new THREE.CylinderGeometry(condR, condR, condL, 24, 1, true),
+    M.shell()
+  );
+  condenser.rotation.z = Math.PI / 2;
+  condenser.position.set(-12, 20, 4);
+  oh.add(condenser);
+  // End caps
+  [-1, 1].forEach(side => {
+    const cap = new THREE.Mesh(
+      new THREE.SphereGeometry(condR, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+      M.shellSolid()
+    );
+    cap.position.set(-12 + side * condL / 2, 20, 4);
+    cap.rotation.z = side * Math.PI / 2;
+    oh.add(cap);
+  });
+  // Condenser label
+  const condLabel = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.0, 0.3),
+    mat(0xf0c040, { emissive: 0xf0c040, emissiveIntensity: 0.2 })
+  );
+  condLabel.position.set(-12, 20 + condR + 0.2, 4);
+  oh.add(condLabel);
+
+  // Reflux drum (horizontal cylinder, smaller)
+  const refR = 0.8;
+  const refL = 3.5;
+  const refluxDrum = new THREE.Mesh(
+    new THREE.CylinderGeometry(refR, refR, refL, 24, 1, true),
+    M.shell()
+  );
+  refluxDrum.rotation.z = Math.PI / 2;
+  refluxDrum.position.set(-12, 22.5, 4);
+  oh.add(refluxDrum);
+  [-1, 1].forEach(side => {
+    const cap = new THREE.Mesh(
+      new THREE.SphereGeometry(refR, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+      M.shellSolid()
+    );
+    cap.position.set(-12 + side * refL / 2, 22.5, 4);
+    cap.rotation.z = side * Math.PI / 2;
+    oh.add(cap);
+  });
+
+  // Piping: overhead vapor from fractionator top to condenser
+  const vapPipe = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35, 0.35, 4, 12),
+    M.pipeVapor()
+  );
+  vapPipe.position.set(-12, 18, 0);
+  oh.add(vapPipe);
+  // Horizontal to condenser
+  const hPipe = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35, 0.35, 4.5, 12),
+    M.pipeVapor()
+  );
+  hPipe.rotation.x = Math.PI / 2;
+  hPipe.position.set(-12, 20, 2);
+  oh.add(hPipe);
+
+  // Condenser to reflux drum
+  const cdPipe = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.25, 0.25, 2, 12),
+    M.pipeLCGO()
+  );
+  cdPipe.position.set(-12, 21.2, 4);
+  oh.add(cdPipe);
+
+  // Reflux return line
+  const refluxReturn = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.2, 0.2, 8, 12),
+    M.pipeLCGO()
+  );
+  refluxReturn.position.set(-12, 18.5, 6);
+  refluxReturn.rotation.x = 0.2;
+  oh.add(refluxReturn);
+
+  // Gas+naphtha product outlet
+  const gasOutlet = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.2, 0.2, 2, 12),
+    M.pipeGas()
+  );
+  gasOutlet.rotation.z = Math.PI / 2;
+  gasOutlet.position.set(-15.5, 22.5, 4);
+  oh.add(gasOutlet);
+
+  // Support frame for overhead
+  [-14.5, -9.5].forEach(xPos => {
+    const leg = new THREE.Mesh(
+      new THREE.BoxGeometry(0.2, 22, 0.2),
+      M.darkSteel()
+    );
+    leg.position.set(xPos, 11, 3);
+    oh.add(leg);
+  });
+  // Cross beams
+  [19.5, 21].forEach(y => {
+    const beam = new THREE.Mesh(
+      new THREE.BoxGeometry(5.5, 0.15, 0.15),
+      M.darkSteel()
+    );
+    beam.position.set(-12, y, 3);
+    oh.add(beam);
+  });
+
+  parent.add(oh);
+}
+
+/* ─── 9. DECOKING EQUIPMENT ─── */
+function buildDecokingEquipment(parent) {
+  const decoke = new THREE.Group();
+
+  // Drill stem (on Drum B when A is active)
+  drillStem = new THREE.Group();
+  drillStem.name = 'drillStem';
+  // Main stem rod
+  const stemRod = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.15, 0.15, 20, 12),
+    M.stainless()
+  );
+  stemRod.position.y = 22;
+  drillStem.add(stemRod);
+  // Cutting nozzle at bottom
+  drillNozzle = new THREE.Mesh(
+    new THREE.ConeGeometry(0.25, 0.6, 8),
+    M.stainless()
+  );
+  drillNozzle.rotation.x = Math.PI;
+  drillNozzle.position.y = 12.2;
+  drillStem.add(drillNozzle);
+  // Water jet indicators
+  [-1, 1].forEach(side => {
+    const jet = new THREE.Mesh(
+      new THREE.ConeGeometry(0.06, 0.3, 6),
+      M.pipeWater()
+    );
+    jet.rotation.x = Math.PI;
+    jet.position.set(side * 0.3, 12.0, 0);
+    drillStem.add(jet);
+  });
+  // Drive motor on top
+  const motor = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.5, 1.0, 12),
+    M.darkSteel()
+  );
+  motor.position.y = 33;
+  drillStem.add(motor);
+  // Motor housing
+  const motorHousing = new THREE.Mesh(
+    new THREE.BoxGeometry(1.2, 0.8, 1.2),
+    M.darkSteel()
+  );
+  motorHousing.position.y = 33.5;
+  drillStem.add(motorHousing);
+
+  drillStem.position.set(11, 0, 0);
+  decoke.add(drillStem);
+
+  // Coke chute under Drum B
+  cokeChute = new THREE.Group();
+  cokeChute.name = 'cokeChute';
+  // Inclined chute
+  const chuteBody = new THREE.Mesh(
+    new THREE.BoxGeometry(1.5, 0.15, 3),
+    M.darkSteel()
+  );
+  chuteBody.position.set(13, 0.5, 0);
+  chuteBody.rotation.z = -0.3;
+  cokeChute.add(chuteBody);
+  // Chute sides (walls)
+  [-1, 1].forEach(side => {
+    const wall = new THREE.Mesh(
+      new THREE.BoxGeometry(3, 0.5, 0.1),
+      M.darkSteel()
+    );
+    wall.position.set(13, 0.8, side * 1.5);
+    wall.rotation.z = -0.3;
+    cokeChute.add(wall);
+  });
+  // Chute support
+  const chuteSupport = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.15, 0.15, 2, 8),
+    M.darkSteel()
+  );
+  chuteSupport.position.set(14.5, 0.5, 0);
+  cokeChute.add(chuteSupport);
+
+  cokeChute.position.set(0, 0, 0);
+  decoke.add(cokeChute);
+
+  // Steam supply manifold for decoking
+  const steamManifold = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.2, 0.2, 2, 10),
+    M.pipeSteam()
+  );
+  steamManifold.rotation.z = Math.PI / 2;
+  steamManifold.position.set(14, 5, 0);
+  decoke.add(steamManifold);
+
+  parent.add(decoke);
+}
+
+/* ─── 10. COKE LEVEL MESHES ─── */
+function buildCokeLevels(parent) {
+  const R = 2.4;
+  const drumH = 16;
+
+  // Coke level for Drum A (active, rising)
+  const cokeGeoA = new THREE.CylinderGeometry(R, R, drumH * 0.62, 32);
+  cokeLevelA = new THREE.Mesh(cokeGeoA, M.coke());
+  cokeLevelA.position.set(4, 2 + drumH * 0.62 / 2, 0);
+  cokeLevelA.name = 'cokeLevelA';
+  parent.add(cokeLevelA);
+
+  // Coke level for Drum B (empty while decoking)
+  const cokeGeoB = new THREE.CylinderGeometry(R, R, 0.1, 32);
+  cokeLevelB = new THREE.Mesh(cokeGeoB, M.coke());
+  cokeLevelB.position.set(11, 2, 0);
+  cokeLevelB.name = 'cokeLevelB';
+  parent.add(cokeLevelB);
+}
+
+/* ─── 11. PLATFORMS ON TOP OF DRUMS ─── */
+function buildDrumPlatforms(parent) {
+  [4, 11].forEach(xPos => {
+    const platGrp = new THREE.Group();
+    const platR = 3.8;
+    const platY = 18.5;
+
+    // Circular grating platform
+    const platform = new THREE.Mesh(
+      new THREE.CylinderGeometry(platR, platR, 0.1, 32),
+      M.grating()
+    );
+    platform.position.y = platY;
+    platGrp.add(platform);
+
+    // OSHA yellow handrail posts around perimeter
+    const railH = 1.1;
+    for (let i = 0; i < 16; i++) {
+      const angle = (i / 16) * Math.PI * 2;
+      const post = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.035, 0.035, railH, 8),
+        M.oshaYellow()
+      );
+      post.position.set(
+        Math.cos(angle) * (platR - 0.2),
+        platY + railH / 2,
+        Math.sin(angle) * (platR - 0.2)
+      );
+      platGrp.add(post);
+    }
+    // Top rail ring
+    const topRail = new THREE.Mesh(
+      new THREE.TorusGeometry(platR - 0.2, 0.025, 8, 48),
+      M.oshaYellow()
+    );
+    topRail.position.y = platY + railH;
+    topRail.rotation.x = Math.PI / 2;
+    platGrp.add(topRail);
+    // Mid rail ring
+    const midRail = new THREE.Mesh(
+      new THREE.TorusGeometry(platR - 0.2, 0.02, 8, 48),
+      M.oshaYellow()
+    );
+    midRail.position.y = platY + railH * 0.5;
+    midRail.rotation.x = Math.PI / 2;
+    platGrp.add(midRail);
+
+    // Stairway to platform
+    const stairGrp = new THREE.Group();
+    for (let i = 0; i < 14; i++) {
+      const step = new THREE.Mesh(
+        new THREE.BoxGeometry(1.2, 0.06, 0.35),
+        M.grating()
+      );
+      step.position.set(0, 4.5 + i * 1.0, -platR + 0.5 + i * 0.15);
+      step.rotation.x = -0.1;
+      stairGrp.add(step);
+    }
+    // Stair handrails
+    [-0.6, 0.6].forEach(zSide => {
+      const sRail = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.025, 0.025, 14, 8),
+        M.oshaYellow()
+      );
+      sRail.position.set(0, 11.5, -platR + 0.5 + 7 * 0.15 + zSide);
+      sRail.rotation.x = -0.1;
+      stairGrp.add(sRail);
+    });
+    platGrp.add(stairGrp);
+
+    // Platform support brackets
+    [-1, 1].forEach(side => {
+      const bracket = new THREE.Mesh(
+        new THREE.BoxGeometry(0.15, 1.5, 0.8),
+        M.darkSteel()
+      );
+      bracket.position.set(0, platY - 0.8, side * (R(xPos) + 0.5));
+      platGrp.add(bracket);
+    });
+
+    platGrp.position.set(xPos, 0, 0);
+    parent.add(platGrp);
+  });
+
+  function R(x) { return 2.5; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   PARTICLE SYSTEMS
+   ═══════════════════════════════════════════════════════ */
+function buildParticles() {
+  // ─── Vapor from active coke drum to fractionator ───
+  vaporParticles = createParticleSystem('vapor', 0xa78bfa, 350, {
+    curve: [
+      new THREE.Vector3(4, 19, 0), new THREE.Vector3(4, 20.5, 0),
+      new THREE.Vector3(0, 20.5, 0), new THREE.Vector3(-5, 19, 0),
+      new THREE.Vector3(-9, 10, 0), new THREE.Vector3(-14.5, 5, 0)
+    ], speed: 0.5, size: 0.12
+  });
+
+  // ─── Coke level rising particles inside active drum ───
+  cokeRiseParticles = createParticleSystem('cokeRise', 0xff4400, 150, {
+    curve: [
+      new THREE.Vector3(4, 3, 0), new THREE.Vector3(4, 6, 0),
+      new THREE.Vector3(4, 9, 0), new THREE.Vector3(4, 11, 0)
+    ], speed: 0.15, size: 0.06
+  });
+
+  // ─── Steam particles ───
+  steamParticles = createParticleSystem('steam', 0xcccccc, 200, {
+    curve: [
+      new THREE.Vector3(-6, 22, 3), new THREE.Vector3(0, 22, 3),
+      new THREE.Vector3(4, 16, 3), new THREE.Vector3(4, 14.5, 0)
+    ], speed: 0.35, size: 0.1
+  });
+
+  // ─── Decoking water jets ───
+  decokingWaterParticles = createParticleSystem('decokingWater', 0x06b6d4, 200, {
+    curve: [
+      new THREE.Vector3(11, 33, 0), new THREE.Vector3(11, 25, 0),
+      new THREE.Vector3(11, 18, 0), new THREE.Vector3(11, 12, 0),
+      new THREE.Vector3(13, 2, 0), new THREE.Vector3(16, 1, 0)
+    ], speed: 0.6, size: 0.08
+  });
+
+  // ─── Hot feed from furnace ───
+  feedParticles = createParticleSystem('hotFeed', 0xff6600, 250, {
+    curve: [
+      new THREE.Vector3(-18, 4, 0), new THREE.Vector3(-14, 4, 0),
+      new THREE.Vector3(-10, 3.5, 0), new THREE.Vector3(-6, 3.5, 0),
+      new THREE.Vector3(-2, 3.5, 0), new THREE.Vector3(5, 3.5, 0)
+    ], speed: 0.55, size: 0.1
+  });
+
+  // ─── Product draw particles ───
+  productParticles = createParticleSystem('productDraw', 0x38bdf8, 120, {
+    curve: [
+      new THREE.Vector3(-14.5, 12, 0), new THREE.Vector3(-17, 12, 0),
+      new THREE.Vector3(-20, 13, 0), new THREE.Vector3(-24, 13, 0)
+    ], speed: 0.4, size: 0.07
+  });
+}
+
+// ─── Reusable Particle System Builder ───
+function createParticleSystem(name, color, count, opts) {
+  const points = [];
+  const velocities = [];
+  for (let i = 0; i < count; i++) {
+    const t = Math.random();
+    const p = opts.curve[0].clone().lerp(opts.curve[opts.curve.length - 1], t);
+    p.x += (Math.random() - 0.5) * 0.4;
+    p.y += (Math.random() - 0.5) * 0.4;
+    p.z += (Math.random() - 0.5) * 0.4;
+    points.push(p.x, p.y, p.z);
+    velocities.push({
+      offset: t,
+      speedVar: 0.7 + Math.random() * 0.6,
+      spread: (Math.random() - 0.5) * 0.25
+    });
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  const pMat = new THREE.PointsMaterial({
+    color: color, size: opts.size, transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+  });
+  const system = new THREE.Points(geo, pMat);
+  system.name = name;
+  system.userData = { curve: opts.curve, velocities, speed: opts.speed, count };
+  scene.add(system);
+  particleSystems.push(system);
+  return system;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RAYCASTER INTERACTION
+   ═══════════════════════════════════════════════════════ */
+const tooltip = document.getElementById('tooltip');
+
+function collectInteractive() {
+  // Coke drums
+  [cokeDrumA, cokeDrumB].forEach(drum => {
+    if (!drum) return;
+    drum.traverse(child => {
+      if (child.isMesh) {
+        child.userData.type = 'cokeDrum';
+        child.userData.label = drum.userData.label;
+        interactiveObjects.push(child);
+      }
+    });
+  });
+  // Furnace
+  if (furnaceMesh) {
+    furnaceMesh.traverse(child => {
+      if (child.isMesh) { child.userData.type = 'furnace'; interactiveObjects.push(child); }
+    });
+  }
+}
+
+function onClick(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && !obj.userData.type) obj = obj.parent;
+    if (!obj) return;
+    if (obj.userData.type === 'cokeDrum') switchDrums();
+    if (obj.userData.type === 'furnace') toggleFurnaceFlames();
+  }
+}
+
+function onMouseMove(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && !obj.userData.type) obj = obj.parent;
+    if (obj) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = event.clientX + 12 + 'px';
+      tooltip.style.top = event.clientY + 12 + 'px';
+      if (obj.userData.type === 'cokeDrum')
+        tooltip.textContent = obj.userData.label + ' — Click to switch active/decoking mode';
+      if (obj.userData.type === 'furnace')
+        tooltip.textContent = 'Feed Heater — Click to toggle flame intensity';
+      return;
+    }
+  }
+  tooltip.style.display = 'none';
+}
+
+function switchDrums() {
+  // Toggle which drum is active
+  activeDrum = activeDrum === 'A' ? 'B' : 'A';
+  cokeFillPercent = activeDrum === 'A' ? 62 : 0;
+  updateDrumVisuals();
+}
+
+function updateDrumVisuals() {
+  const aInd = document.getElementById('drumA-ind');
+  const bInd = document.getElementById('drumB-ind');
+  const aStatus = document.getElementById('drumA-status');
+  const bStatus = document.getElementById('drumB-status');
+
+  if (activeDrum === 'A') {
+    aInd.className = 'indicator active';
+    bInd.className = 'indicator decoke';
+    aStatus.textContent = 'FILLING';
+    bStatus.textContent = 'DECOKING';
+    // Move drill stem to Drum B
+    if (drillStem) drillStem.position.set(11, 0, 0);
+    if (cokeChute) cokeChute.position.set(11, 0, 0);
+  } else {
+    aInd.className = 'indicator decoke';
+    bInd.className = 'indicator active';
+    aStatus.textContent = 'DECOKING';
+    bStatus.textContent = 'FILLING';
+    // Move drill stem to Drum A
+    if (drillStem) drillStem.position.set(4, 0, 0);
+    if (cokeChute) cokeChute.position.set(4, 0, 0);
+  }
+
+  document.getElementById('s-active').textContent = 'DRUM ' + activeDrum;
+}
+
+let furnaceFlameHigh = true;
+function toggleFurnaceFlames() {
+  furnaceFlameHigh = !furnaceFlameHigh;
+  if (furnaceGlow) {
+    furnaceGlow.intensity = furnaceFlameHigh ? 1.2 : 0.5;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   VIEW MODES
+   ═══════════════════════════════════════════════════════ */
+function setupViewToggle() {
+  document.querySelectorAll('#view-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      if (view === currentView) return;
+      currentView = view;
+      document.querySelectorAll('#view-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      animateCamera(cameraPresets[view]);
+    });
+  });
+}
+
+function animateCamera(preset) {
+  const startPos = camera.position.clone();
+  const endPos = new THREE.Vector3(...preset.pos);
+  const startTarget = controls.target.clone();
+  const endTarget = new THREE.Vector3(...preset.target);
+  const duration = 1200;
+  const startTime = performance.now();
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    camera.position.lerpVectors(startPos, endPos, ease);
+    controls.target.lerpVectors(startTarget, endTarget, ease);
+    controls.update();
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ═══════════════════════════════════════════════════════
+   LIVE ANIMATED HUD READINGS
+   ═══════════════════════════════════════════════════════ */
+function updateHUD(time) {
+  // Coke fill rising slowly
+  const fillTarget = activeDrum === 'A' ? 88 : 12;
+  cokeFillPercent += (fillTarget - cokeFillPercent) * 0.0002;
+  cokeFillPercent = Math.max(0, Math.min(95, cokeFillPercent));
+
+  const activeFill = activeDrum === 'A' ? cokeFillPercent : (95 - cokeFillPercent);
+  const deActiveFill = activeDrum === 'A' ? 0 : cokeFillPercent;
+
+  document.getElementById('r-fillA').textContent = activeDrum === 'A' ? Math.round(activeFill) : '0';
+  document.getElementById('r-fillB').textContent = activeDrum === 'B' ? Math.round(activeFill) : '0';
+  document.getElementById('bar-fillA').style.width = (activeDrum === 'A' ? activeFill : 0) + '%';
+  document.getElementById('bar-fillB').style.width = (activeDrum === 'B' ? activeFill : 0) + '%';
+  document.getElementById('r-afill').textContent = Math.round(activeFill);
+
+  // Cycle time (simulate countdown)
+  const cycleHrs = 14 + Math.sin(time * 0.05) * 0.5;
+  const cycleMin = Math.floor((cycleHrs % 1) * 60);
+  document.getElementById('r-cycle').textContent = Math.floor(cycleHrs) + ':' + String(cycleMin).padStart(2, '0');
+  document.getElementById('s-time').textContent = Math.floor(cycleHrs) + ':' + String(cycleMin).padStart(2, '0');
+  document.getElementById('bar-cycle').style.width = ((cycleHrs / 24) * 100) + '%';
+
+  // Drum temperatures
+  const dtop = 438 + Math.sin(time * 0.3) * 5 + (Math.random() - 0.5) * 1;
+  document.getElementById('r-dtop').textContent = Math.round(dtop);
+  document.getElementById('bar-dtop').style.width = ((dtop / 600) * 100) + '%';
+
+  const dbot = 492 + Math.sin(time * 0.25) * 4 + (Math.random() - 0.5) * 1;
+  document.getElementById('r-dbot').textContent = Math.round(dbot);
+  document.getElementById('bar-dbot').style.width = ((dbot / 600) * 100) + '%';
+
+  // Fractionator top temp
+  const ftop = 128 + Math.sin(time * 0.2) * 3 + (Math.random() - 0.5) * 0.5;
+  document.getElementById('r-ftop').textContent = Math.round(ftop);
+  document.getElementById('bar-ftop').style.width = ((ftop / 300) * 100) + '%';
+
+  // Heater outlet temp
+  const heater = 502 + Math.sin(time * 0.15) * 3 + (Math.random() - 0.5) * 1;
+  document.getElementById('r-heater').textContent = Math.round(heater);
+  document.getElementById('bar-heater').style.width = ((heater / 600) * 100) + '%';
+  document.getElementById('s-hout').textContent = Math.round(heater);
+
+  // Drum pressure
+  const dpres = 2.4 + Math.sin(time * 0.18) * 0.2 + (Math.random() - 0.5) * 0.05;
+  document.getElementById('r-dpres').textContent = dpres.toFixed(1);
+  document.getElementById('bar-dpres').style.width = ((dpres / 5) * 100) + '%';
+  document.getElementById('s-dpres').textContent = dpres.toFixed(1);
+
+  // Coking rate
+  const crate = 38.2 + Math.sin(time * 0.12) * 1.5 + (Math.random() - 0.5) * 0.2;
+  document.getElementById('r-crate').textContent = crate.toFixed(1);
+  document.getElementById('bar-crate').style.width = ((crate / 80) * 100) + '%';
+
+  // Active drum temp
+  const atemp = 465 + Math.sin(time * 0.2) * 5;
+  document.getElementById('r-atemp').textContent = Math.round(atemp);
+
+  // Process streams
+  const feed = 185 + Math.sin(time * 0.1) * 5 + (Math.random() - 0.5) * 2;
+  document.getElementById('r-feed').textContent = Math.round(feed);
+  document.getElementById('bar-feed').style.width = ((feed / 250) * 100) + '%';
+  document.getElementById('s-feed').textContent = Math.round(feed);
+
+  const vapor = 142 + Math.sin(time * 0.08) * 4;
+  document.getElementById('r-vapor').textContent = Math.round(vapor);
+  document.getElementById('bar-vapor').style.width = ((vapor / 200) * 100) + '%';
+
+  const gas = 28 + Math.sin(time * 0.11) * 2;
+  document.getElementById('r-gas').textContent = Math.round(gas);
+  document.getElementById('bar-gas').style.width = ((gas / 80) * 100) + '%';
+
+  const lcgo = 32 + Math.sin(time * 0.09) * 2;
+  document.getElementById('r-lcgo').textContent = Math.round(lcgo);
+  document.getElementById('bar-lcgo').style.width = ((lcgo / 80) * 100) + '%';
+
+  const hcgo = 48 + Math.sin(time * 0.07) * 3;
+  document.getElementById('r-hcgo').textContent = Math.round(hcgo);
+  document.getElementById('bar-hcgo').style.width = ((hcgo / 100) * 100) + '%';
+
+  const cokeProd = 38 + Math.sin(time * 0.06) * 2;
+  document.getElementById('r-coke').textContent = Math.round(cokeProd);
+  document.getElementById('bar-coke').style.width = ((cokeProd / 80) * 100) + '%';
+  document.getElementById('s-cprod').textContent = cokeProd.toFixed(1);
+
+  // Product yields (slight variation)
+  document.getElementById('y-gas').textContent = (15.2 + Math.sin(time * 0.05) * 0.3).toFixed(1) + '%';
+  document.getElementById('y-lcgo').textContent = (17.4 + Math.sin(time * 0.04) * 0.4).toFixed(1) + '%';
+  document.getElementById('y-hcgo').textContent = (26.1 + Math.sin(time * 0.03) * 0.5).toFixed(1) + '%';
+  document.getElementById('y-coke').textContent = (25.8 + Math.sin(time * 0.06) * 0.3).toFixed(1) + '%';
+  document.getElementById('y-recycle').textContent = (15.5 + Math.sin(time * 0.07) * 0.2).toFixed(1) + '%';
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATION LOOP
+   ═══════════════════════════════════════════════════════ */
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+
+  controls.update();
+
+  // ─── Animate particle systems ───
+  particleSystems.forEach(sys => {
+    const positions = sys.geometry.attributes.position.array;
+    const { curve, velocities, speed, count } = sys.userData;
+    for (let i = 0; i < count; i++) {
+      const v = velocities[i];
+      v.offset = (v.offset + delta * speed * v.speedVar) % 1;
+      const totalLen = curve.length - 1;
+      const segF = v.offset * totalLen;
+      const segI = Math.min(Math.floor(segF), totalLen - 1);
+      const segT = segF - segI;
+      const p = new THREE.Vector3().lerpVectors(curve[segI], curve[segI + 1], segT);
+      p.x += v.spread * Math.sin(elapsed * 2 + i);
+      p.y += v.spread * Math.cos(elapsed * 1.5 + i);
+      p.z += v.spread * Math.sin(elapsed * 1.8 + i * 0.5);
+      positions[i * 3] = p.x;
+      positions[i * 3 + 1] = p.y;
+      positions[i * 3 + 2] = p.z;
+    }
+    sys.geometry.attributes.position.needsUpdate = true;
+  });
+
+  // ─── Animate coke level rising (active drum) ───
+  const drumH = 16;
+  const activeX = activeDrum === 'A' ? 4 : 11;
+  const activeCoke = activeDrum === 'A' ? cokeLevelA : cokeLevelB;
+  const deactiveCoke = activeDrum === 'A' ? cokeLevelB : cokeLevelA;
+
+  if (activeCoke) {
+    const cokeH = Math.max(0.1, drumH * (cokeFillPercent / 100));
+    activeCoke.scale.y = cokeFillPercent > 0.5 ? 1 : 0.1;
+    activeCoke.position.y = 2 + cokeH / 2;
+    activeCoke.geometry.dispose();
+    activeCoke.geometry = new THREE.CylinderGeometry(2.4, 2.4, cokeH, 32);
+    // Glowing top surface
+    activeCoke.material.emissiveIntensity = 0.4 + 0.2 * Math.sin(elapsed * 2);
+  }
+  if (deactiveCoke) {
+    deactiveCoke.scale.y = 0.1;
+    deactiveCoke.position.y = 2;
+  }
+
+  // ─── Animate drill stem rotation ───
+  if (drillStem) {
+    drillStem.rotation.y += delta * 0.5;
+    // Bob the nozzle up and down
+    if (drillNozzle) {
+      drillNozzle.position.y = 12.2 + Math.sin(elapsed * 0.8) * 1.5;
+    }
+  }
+
+  // ─── Animate furnace flames ───
+  furnaceFlames.forEach((flame, i) => {
+    const flickerScale = furnaceFlameHigh ? 1.0 : 0.5;
+    flame.scale.y = (0.8 + Math.sin(elapsed * 8 + i * 1.5) * 0.3) * flickerScale;
+    flame.scale.x = (0.9 + Math.sin(elapsed * 6 + i * 2) * 0.2) * flickerScale;
+    flame.material.emissiveIntensity = furnaceFlameHigh ?
+      (1.2 + Math.sin(elapsed * 10 + i) * 0.5) : 0.4;
+  });
+  if (furnaceGlow) {
+    furnaceGlow.intensity = furnaceFlameHigh ?
+      (1.0 + Math.sin(elapsed * 4) * 0.3) : 0.4;
+  }
+
+  // ─── 4-way valve indicator blink ───
+  if (valve4Way) {
+    valve4Way.children.forEach(child => {
+      if (child.isPointLight) {
+        child.intensity = 0.3 + 0.3 * Math.sin(elapsed * 2);
+      }
+    });
+  }
+
+  // ─── Live HUD ───
+  updateHUD(elapsed);
+
+  // ─── Render with bloom ───
+  if (composer && camera) { composer.render(); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY FUNCTIONS
+   ═══════════════════════════════════════════════════════ */
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function simulateLoading() {
+  const fill = document.getElementById('loader-fill');
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 15 + 5;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+      setTimeout(() => {
+        document.getElementById('loading-screen').classList.add('hidden');
+        collectInteractive();
+        updateDrumVisuals();
+      }, 400);
+    }
+    fill.style.width = progress + '%';
+  }, 200);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════ */
+init();
+animate();
+</script>
+</body>
+</html>
+

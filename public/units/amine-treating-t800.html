@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ═══════════════════════════════════════════════════════════════════
+     AMINE TREATING T-800 — Sour Gas Removal Unit
+     Standalone 3D Isolation Viewer
+     Three.js r147 | Dark Industrial Theme | Production-Ready
+     ═══════════════════════════════════════════════════════════════════ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-800 | Amine Gas Treating</title>
+<style>
+/* ─── 1. FULL CSS STYLING ─── */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{overflow:hidden;background:#2d3343;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#c8d6e5;}
+
+/* ─── Loading Screen ─── */
+#loading-screen{position:fixed;inset:0;z-index:9999;background:#2d3343;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.8s ease;}
+#loading-screen.hidden{opacity:0;pointer-events:none;}
+#loading-screen h1{font-size:1.4rem;color:#22c55e;margin-bottom:1.2rem;letter-spacing:0.08em;}
+.loader-bar{width:280px;height:4px;background:#1a2035;border-radius:2px;overflow:hidden;}
+.loader-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#16a34a);
+  border-radius:2px;transition:width 0.3s ease;}
+#loading-screen p{margin-top:1rem;font-size:0.8rem;color:#5a6a80;}
+
+/* ─── Topbar ─── */
+#topbar{position:fixed;top:0;left:0;right:0;height:48px;z-index:100;
+  background:linear-gradient(180deg,rgba(10,14,23,0.95),rgba(10,14,23,0.85));
+  border-bottom:1px solid #1e2a3a;display:flex;align-items:center;padding:0 16px;
+  backdrop-filter:blur(8px);}
+#topbar .tag{background:#22c55e;color:#0a0e17;font-weight:700;font-size:0.7rem;
+  padding:2px 8px;border-radius:3px;margin-right:12px;letter-spacing:0.06em;}
+#topbar h2{font-size:0.95rem;color:#e0e8f0;font-weight:600;}
+#topbar .unit-id{color:#22c55e;margin-left:8px;}
+#topbar .status{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:0.75rem;}
+#topbar .status .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;
+  box-shadow:0 0 6px #22c55e;animation:pulse-dot 2s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+/* ─── View Toggle Buttons ─── */
+#view-toggle{position:fixed;top:60px;right:16px;z-index:100;display:flex;flex-direction:column;gap:6px;}
+#view-toggle button{background:rgba(20,30,50,0.9);color:#8a9ab0;border:1px solid #1e2a3a;
+  padding:7px 14px;border-radius:4px;font-size:0.72rem;cursor:pointer;
+  transition:all 0.25s ease;letter-spacing:0.04em;font-weight:500;}
+#view-toggle button:hover,#view-toggle button.active{
+  background:rgba(34,197,94,0.15);color:#22c55e;border-color:#22c55e;}
+
+/* ─── Left Panel (Instrumentation) ─── */
+#left-panel{position:fixed;top:60px;left:16px;width:230px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:14px;backdrop-filter:blur(6px);max-height:calc(100vh - 140px);overflow-y:auto;}
+#left-panel h3{font-size:0.7rem;color:#22c55e;text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:8px;margin-top:14px;}
+#left-panel h3:first-child{margin-top:0;}
+.panel-section{margin-bottom:6px;padding-bottom:8px;border-bottom:1px solid #1a2540;}
+.panel-section:last-child{border-bottom:none;}
+.reading{margin-bottom:8px;}
+.reading label{display:block;font-size:0.62rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:2px;}
+.reading .value{font-size:1.0rem;color:#e0e8f0;font-weight:600;
+  font-variant-numeric:tabular-nums;}
+.reading .unit{font-size:0.65rem;color:#5a6a80;margin-left:4px;}
+.reading .bar{height:3px;background:#1a2540;border-radius:2px;margin-top:3px;overflow:hidden;}
+.reading .bar-fill{height:100%;border-radius:2px;transition:width 0.5s ease;}
+
+/* ─── Fluid Legend ─── */
+.legend{display:flex;flex-direction:column;gap:4px;}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:0.68rem;color:#8a9ab0;}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+
+/* ─── Right Panel ─── */
+#right-panel{position:fixed;top:60px;right:16px;width:210px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:14px;backdrop-filter:blur(6px);margin-top:172px;
+  max-height:calc(100vh - 240px);overflow-y:auto;}
+#right-panel h3{font-size:0.7rem;color:#22c55e;text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:8px;margin-top:14px;}
+#right-panel h3:first-child{margin-top:0;}
+.info-block{padding:8px;background:rgba(30,40,60,0.4);border-radius:4px;
+  border-left:3px solid #22c55e;margin-top:8px;}
+.info-block p{font-size:0.68rem;color:#8a9ab0;margin-bottom:3px;}
+.info-block .lbl{color:#5a6a80;}
+.info-block.red{border-left-color:#ef4444;}
+.eff-row{display:flex;justify-content:space-between;align-items:center;
+  padding:4px 6px;background:rgba(30,40,60,0.3);border-radius:3px;margin-bottom:4px;}
+.eff-row .elbl{font-size:0.65rem;color:#8a9ab0;}
+.eff-row .eval{font-size:0.85rem;color:#22c55e;font-weight:600;}
+
+/* ─── Bottom Panel (Process Summary) ─── */
+#bottom-panel{position:fixed;bottom:40px;left:16px;right:16px;height:80px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:12px 18px;backdrop-filter:blur(6px);display:flex;gap:24px;align-items:center;}
+.process-stat{text-align:center;flex:1;}
+.process-stat .num{font-size:1.15rem;color:#e0e8f0;font-weight:700;
+  font-variant-numeric:tabular-nums;}
+.process-stat .desc{font-size:0.58rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-top:2px;}
+
+/* ─── Alert Ticker Bar ─── */
+#alert-ticker{position:fixed;bottom:0;left:0;right:0;height:32px;z-index:100;
+  background:rgba(15,20,35,0.95);border-top:1px solid #1e2a3a;overflow:hidden;
+  display:flex;align-items:center;}
+#alert-ticker .label{background:#22c55e;color:#0a0e17;font-size:0.65rem;
+  font-weight:700;padding:0 10px;height:100%;display:flex;align-items:center;
+  letter-spacing:0.08em;white-space:nowrap;}
+#ticker-content{flex:1;overflow:hidden;white-space:nowrap;}
+#ticker-scroll{display:inline-block;animation:ticker-scroll 50s linear infinite;
+  font-size:0.72rem;color:#8a9ab0;padding-left:20px;}
+@keyframes ticker-scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+.ticker-item{margin-right:60px;}
+.ticker-item.warn{color:#f59e0b;}
+.ticker-item.info{color:#38bdf8;}
+.ticker-item.ok{color:#22c55e;}
+
+/* ─── Canvas Container ─── */
+#canvas-container{position:fixed;inset:0;z-index:1;background:transparent;display:block;pointer-events:auto;}
+canvas{display:block;}
+
+/* ─── Tooltip ─── */
+#tooltip{position:fixed;z-index:200;background:rgba(10,14,23,0.95);border:1px solid #22c55e;
+  color:#e0e8f0;font-size:0.72rem;padding:6px 10px;border-radius:4px;pointer-events:none;
+  display:none;max-width:220px;}
+
+/* ─── Scrollbar ─── */
+#left-panel::-webkit-scrollbar,#right-panel::-webkit-scrollbar{width:4px;}
+#left-panel::-webkit-scrollbar-track,#right-panel::-webkit-scrollbar-track{background:transparent;}
+#left-panel::-webkit-scrollbar-thumb,#right-panel::-webkit-scrollbar-thumb{background:#1e2a3a;border-radius:2px;}
+
+/* ─── Popup Info ─── */
+#popup{position:fixed;z-index:200;background:rgba(12,18,30,0.98);border:1px solid #22c55e;
+  border-radius:6px;width:180px;padding:12px;display:none;backdrop-filter:blur(10px);
+  box-shadow:0 10px 25px rgba(0,0,0,0.5);pointer-events:none;}
+#popup-title{font-size:0.75rem;color:#22c55e;font-weight:700;margin-bottom:8px;
+  border-bottom:1px solid #1a2540;padding-bottom:5px;text-transform:uppercase;letter-spacing:0.05em;}
+.p-row{display:flex;justify-content:space-between;margin-bottom:4px;}
+.p-lbl{font-size:0.6rem;color:#5a6a80;text-transform:uppercase;}
+.p-val{font-size:0.68rem;color:#e0e8f0;font-weight:600;}
+</style>
+</head>
+<body>
+
+<!-- ─── Loading Screen ─── -->
+<div id="loading-screen">
+  <h1>T-800 AMINE TREATING</h1>
+  <div class="loader-bar"><div class="loader-bar-fill" id="loader-fill"></div></div>
+  <p>Initializing 3D gas treating viewer...</p>
+</div>
+
+<!-- ─── Topbar ─── -->
+<div id="topbar">
+  <span class="tag">PROCESS UNIT</span>
+  <h2>Amine Treating — Sour Gas Removal<span class="unit-id">T-800</span></h2>
+  <div class="status"><div class="dot"></div><span>ONLINE</span></div>
+</div>
+
+<!-- ─── View Toggle ─── -->
+<div id="view-toggle">
+  <button class="active" data-view="external">External</button>
+  <button data-view="internal">Internal</button>
+  <button data-view="cutaway">Cutaway</button>
+  <button data-view="flow">Flow</button>
+</div>
+
+<!-- ─── Left Panel: Gas Treating + Amine System + Legend ─── -->
+<div id="left-panel">
+  <div class="panel-section">
+    <h3>Gas Treating Performance</h3>
+    <div class="reading">
+      <label>H2S Inlet</label>
+      <div><span class="value" id="r-h2sin">1200</span><span class="unit">ppm</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-h2sin" style="width:80%;background:#ef4444;"></div></div>
+    </div>
+    <div class="reading">
+      <label>H2S Outlet</label>
+      <div><span class="value" id="r-h2sout">3.8</span><span class="unit">ppm</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-h2sout" style="width:4%;background:#22c55e;"></div></div>
+    </div>
+    <div class="reading">
+      <label>CO2 Inlet</label>
+      <div><span class="value" id="r-co2in">2.80</span><span class="unit">mol%</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-co2in" style="width:70%;background:#f59e0b;"></div></div>
+    </div>
+    <div class="reading">
+      <label>CO2 Outlet</label>
+      <div><span class="value" id="r-co2out">0.05</span><span class="unit">mol%</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-co2out" style="width:2%;background:#22c55e;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Total Removal Efficiency</label>
+      <div><span class="value" id="r-removal">99.7</span><span class="unit">%</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-removal" style="width:99%;background:#a78bfa;"></div></div>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <h3>Amine System</h3>
+    <div class="reading">
+      <label>Lean Loading</label>
+      <div><span class="value" id="r-leanload">0.012</span><span class="unit">mol/mol</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-leanload" style="width:12%;background:#38bdf8;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Rich Loading</label>
+      <div><span class="value" id="r-richload">0.48</span><span class="unit">mol/mol</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-richload" style="width:60%;background:#f59e0b;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Circulation Rate</label>
+      <div><span class="value" id="r-circ">185</span><span class="unit">m³/h</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-circ" style="width:62%;background:#06b6d4;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Lean Amine Temp</label>
+      <div><span class="value" id="r-lean-temp">42.5</span><span class="unit">°C</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-lean-temp" style="width:42%;background:#22c55e;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Rich Amine Temp</label>
+      <div><span class="value" id="r-rich-temp">68.2</span><span class="unit">°C</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-rich-temp" style="width:68%;background:#f59e0b;"></div></div>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <h3>Fluid Legend</h3>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#84cc16;"></div>Sour Gas (H2S/CO2)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#38bdf8;"></div>Sweet Gas (Treated)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div>Lean Amine (MDEA)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#a3e635;"></div>Rich Amine (Loaded)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#facc15;"></div>Acid Gas (to SRU)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#d4d4d4;"></div>Steam (Stripping)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Right Panel: Live Readings + Efficiency + Unit Info + Regen ─── -->
+<div id="right-panel">
+  <div class="panel-section">
+    <h3>Live Readings</h3>
+    <div class="reading">
+      <label>Absorber Pressure</label>
+      <div><span class="value" id="r-abs-pres">68.5</span><span class="unit">barg</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-abs-pres" style="width:68%;background:#38bdf8;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Absorber Temperature</label>
+      <div><span class="value" id="r-abs-temp">48.2</span><span class="unit">°C</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-abs-temp" style="width:40%;background:#ef4444;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Stripper Pressure</label>
+      <div><span class="value" id="r-str-pres">1.65</span><span class="unit">barg</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-str-pres" style="width:33%;background:#38bdf8;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Stripper Temperature</label>
+      <div><span class="value" id="r-str-temp">122.4</span><span class="unit">°C</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-str-temp" style="width:81%;background:#ef4444;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Reboiler Duty</label>
+      <div><span class="value" id="r-reb-duty">8.42</span><span class="unit">MW</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-reb-duty" style="width:70%;background:#f59e0b;"></div></div>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <h3>Removal Efficiency</h3>
+    <div class="eff-row"><span class="elbl">H2S Removal</span><span class="eval" id="e-h2s">99.68%</span></div>
+    <div class="eff-row"><span class="elbl">CO2 Removal</span><span class="eval" id="e-co2">98.2%</span></div>
+    <div class="eff-row"><span class="elbl">Acid Gas Load</span><span class="eval" id="e-acidgas">1420 kg/hr</span></div>
+    <div class="eff-row"><span class="elbl">Amine Degradation</span><span class="eval" id="e-degrad">0.12%</span></div>
+  </div>
+
+  <div class="panel-section">
+    <h3>Unit Info</h3>
+    <div class="info-block">
+      <p><span class="lbl">Amine Type:</span> MDEA 45 wt%</p>
+      <p><span class="lbl">Packed Beds:</span> 3 per column</p>
+      <p><span class="lbl">Absorber Dia:</span> 3.0 m</p>
+      <p><span class="lbl">Stripper Dia:</span> 2.4 m</p>
+      <p><span class="lbl">Design Press:</span> 75 barg</p>
+      <p><span class="lbl">H2S Removal:</span> <span style="color:#22c55e;">99.7%</span></p>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <h3>Regeneration</h3>
+    <div class="reading">
+      <label>Reboiler Temp</label>
+      <div><span class="value" id="r-reb-temp">128.6</span><span class="unit">°C</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-reb-temp" style="width:86%;background:#ef4444;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Reflux Ratio</label>
+      <div><span class="value" id="r-reflux">0.85</span><span class="unit"></span></div>
+      <div class="bar"><div class="bar-fill" id="bar-reflux" style="width:85%;background:#06b6d4;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Acid Gas to SRU</label>
+      <div><span class="value" id="r-acidflow">2850</span><span class="unit">Sm³/h</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-acidflow" style="width:57%;background:#facc15;"></div></div>
+    </div>
+    <div class="reading">
+      <label>Lean Amine Purity</label>
+      <div><span class="value" id="r-purity">99.92</span><span class="unit">%</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-purity" style="width:99%;background:#22c55e;"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Bottom Panel: Process Summary ─── -->
+<div id="bottom-panel">
+  <div class="process-stat"><div class="num" id="s-sour">285</div><div class="desc">Sour Gas (MMSCFD)</div></div>
+  <div class="process-stat"><div class="num" id="s-sweet">282</div><div class="desc">Sweet Gas (MMSCFD)</div></div>
+  <div class="process-stat"><div class="num" id="s-h2sin">1200</div><div class="desc">H2S In (ppm)</div></div>
+  <div class="process-stat"><div class="num" id="s-h2sout">3.8</div><div class="desc">H2S Out (ppm)</div></div>
+  <div class="process-stat"><div class="num" id="s-circ">185</div><div class="desc">Amine Circ (m³/h)</div></div>
+  <div class="process-stat"><div class="num" id="s-rebduty">8.42</div><div class="desc">Reboiler Duty (MW)</div></div>
+</div>
+
+<!-- ─── Alert Ticker ─── -->
+<div id="alert-ticker">
+  <div class="label">ALERTS</div>
+  <div id="ticker-content">
+    <div id="ticker-scroll">
+      <span class="ticker-item ok">&#9679; T-800 Amine Treating unit operating normally — H2S removal at 99.7%</span>
+      <span class="ticker-item info">&#9679; Reboiler duty adjusted +2% to compensate for rising sour gas H2S content</span>
+      <span class="ticker-item ok">&#9679; Lean amine loading stable at 0.012 mol/mol — well below design limit</span>
+      <span class="ticker-item warn">&#9679; Amine filter differential pressure trending up — schedule element change</span>
+      <span class="ticker-item info">&#9679; Acid gas flow to SRU steady at 2850 Sm³/h — SRU running normally</span>
+      <span class="ticker-item ok">&#9679; Amine cooler outlet temperature 42°C — within target range</span>
+      <span class="ticker-item warn">&#9679; Flash drum liquid level approaching high alarm — check level control valve</span>
+      <span class="ticker-item ok">&#9679; MDEA solution analysis: active amine 44.8 wt% — acceptable range</span>
+      <span class="ticker-item info">&#9679; Next scheduled turnaround inspection in 18 months — Q1 2027</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Tooltip ─── -->
+<div id="tooltip"></div>
+
+<!-- ─── Popup ─── -->
+<div id="popup">
+  <div id="popup-title">EQUIPMENT DATA</div>
+  <div id="popup-content"></div>
+</div>
+
+<!-- ─── Canvas Container ─── -->
+<div id="canvas-container"></div>
+
+<!-- ─── 2. THREE.JS r147 CDN SETUP ─── -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   AMINE TREATING T-800 — COMPLETE 3D SCENE
+   ═══════════════════════════════════════════════════════════════════ */
+
+// ─── Global State ───
+let scene, camera, renderer, controls, composer;
+let raycaster, mouse, clock;
+let interactiveObjects = [];
+let currentView = 'external';
+let shellMeshes = [];        // For view-mode toggling
+let internalMeshes = [];     // Internal components
+let particleSystems = [];
+
+// ─── Layout Constants ───
+const ABS_X = -7, ABS_Z = 0;         // Absorber position
+const STR_X = 7, STR_Z = 0;          // Stripper position
+const GROUND_Y = -5;                 // Ground plane level
+
+// Vessel Dimensions (Global Scope to prevent ReferenceErrors)
+const absR = 1.5, absH = 18;
+const strR = 1.2, strH = 16;
+const surgeR = 1.0, surgeL = 4.0;
+const flashR = 0.5, flashL = 2.0;
+const hxR = 0.5, hxL = 3.0;
+const rebR = 0.8, rebL = 3.0;
+
+// ─── Camera Presets for 4 View Modes ───
+const cameraPresets = {
+  external: { pos: [28, 16, 28], target: [0, 4, 0] },
+  internal: { pos: [ABS_X, 5, 2], target: [ABS_X, 5, 0] },
+  cutaway:  { pos: [22, 8, 22], target: [0, 4, 0] },
+  flow:     { pos: [18, 10, 18], target: [0, 4, 0] }
+};
+
+/* ═══════════════════════════════════════════════════════
+   INITIALIZATION
+   ═══════════════════════════════════════════════════════ */
+function init() {
+  const container = document.getElementById('canvas-container');
+  clock = new THREE.Clock();
+
+  // ─── Scene ───
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0e17);
+  scene.fog = new THREE.FogExp2(0x0a0e17, 0.005);
+
+  // ─── Camera ───
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 250);
+  camera.position.set(28, 16, 28);
+
+  // ─── Renderer ───
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.setClearColor(0x000000); // BLACK BACKGROUND
+  container.appendChild(renderer.domElement);
+
+  // ─── Controls ───
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(0, 4, 0);
+  controls.minDistance = 5;
+  controls.maxDistance = 80;
+
+  // ─── Post-processing (UnrealBloomPass) ───
+  composer = new THREE.EffectComposer(renderer);
+  composer.addPass(new THREE.RenderPass(scene, camera));
+  const bloomPass = new THREE.UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.35, 0.5, 0.85
+  );
+  composer.addPass(bloomPass);
+
+  // ─── Raycaster ───
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  // ─── Lights ───
+  setupLights();
+  const grid = new THREE.GridHelper(100, 50, 0x445566, 0x1e2a3a);
+  grid.position.y = GROUND_Y + 0.01;
+  scene.add(grid);
+
+  // ─── Build 3D Model ───
+  try {
+    buildAmineUnit();
+  } catch (e) {
+    console.error("Amine Unit Build Error:", e);
+  }
+
+  // ─── Particle Systems ───
+  buildParticles();
+
+
+  // ─── Ground Plane ───
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(150, 150),
+    new THREE.MeshStandardMaterial({ color: 0x1e2536, roughness: 0.95, metalness: 0.1 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = GROUND_Y;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // ─── Events ───
+  window.addEventListener('resize', onResize);
+  renderer.domElement.addEventListener('click', onClick);
+  renderer.domElement.addEventListener('mousemove', onMouseMove);
+  setupViewToggle();
+
+  // ─── Hide Loading Screen ───
+  simulateLoading();
+  onResize(); // Force initial size
+  console.log('T-800 init complete.');
+}
+
+/* ═══════════════════════════════════════════════════════
+   5-LIGHT SETUP
+   ═══════════════════════════════════════════════════════ */
+function setupLights() {
+  const keyLight = new THREE.DirectionalLight(0xffeedd, 1.5);
+  keyLight.position.set(20, 25, 15);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.set(2048, 2048);
+  keyLight.shadow.camera.left = -25; keyLight.shadow.camera.right = 25;
+  keyLight.shadow.camera.top = 25; keyLight.shadow.camera.bottom = -25;
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0x8899cc, 0.4);
+  fillLight.position.set(-15, 10, -8);
+  scene.add(fillLight);
+
+  const rimLight = new THREE.DirectionalLight(0xffcc88, 0.35);
+  rimLight.position.set(-8, 12, -20);
+  scene.add(rimLight);
+
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+  scene.add(ambientLight);
+
+  // Under-lighting under absorber
+  const absLight = new THREE.PointLight(0x2266aa, 0.4, 25);
+  absLight.position.set(ABS_X, GROUND_Y + 1, ABS_Z);
+  scene.add(absLight);
+
+  // Under-lighting under stripper
+  const strLight = new THREE.PointLight(0xaa6622, 0.3, 20);
+  strLight.position.set(STR_X, GROUND_Y + 1, STR_Z);
+  scene.add(strLight);
+}
+
+/* ═══════════════════════════════════════════════════════
+   3. MATERIALS (RAL Colors & ISO Pipe Colors)
+   ═══════════════════════════════════════════════════════ */
+function mat(color, opts = {}) {
+  return new THREE.MeshStandardMaterial({
+    color, metalness: opts.metalness ?? 0.85, roughness: opts.roughness ?? 0.25,
+    transparent: opts.transparent ?? false, opacity: opts.opacity ?? 1.0,
+    side: opts.side ?? THREE.FrontSide, emissive: opts.emissive ?? 0x000000,
+    emissiveIntensity: opts.emissiveIntensity ?? 0
+  });
+}
+
+const M = {
+  shell:       () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2, transparent: true, opacity: 0.55 }),
+  shellSolid:  () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2 }),
+  darkSteel:   () => mat(0x383e45, { metalness: 0.9, roughness: 0.2 }),
+  stainless:   () => mat(0xc0c8d0, { metalness: 0.95, roughness: 0.15 }),
+  oshaYellow:  () => mat(0xf0c040, { metalness: 0.6, roughness: 0.35 }),
+  // Process pipe colors
+  pipeSour:    () => mat(0x84cc16, { metalness: 0.5, roughness: 0.4 }),   // Sour gas — lime green
+  pipeSweet:   () => mat(0x38bdf8, { metalness: 0.5, roughness: 0.4 }),   // Sweet gas — light blue
+  pipeLean:    () => mat(0x3b82f6, { metalness: 0.5, roughness: 0.4 }),   // Lean amine — blue
+  pipeRich:    () => mat(0xa3e635, { metalness: 0.5, roughness: 0.4 }),   // Rich amine — yellow-green
+  pipeAcid:    () => mat(0xfacc15, { metalness: 0.5, roughness: 0.4 }),   // Acid gas — yellow
+  pipeSteam:   () => mat(0xd4d4d4, { metalness: 0.7, roughness: 0.3 }),   // Steam — silver
+  // Fluids
+  sourGas:     () => mat(0x84cc16, { emissive: 0x4d7c0f, emissiveIntensity: 0.3, transparent: true, opacity: 0.5 }),
+  sweetGas:    () => mat(0x38bdf8, { emissive: 0x1e6fa0, emissiveIntensity: 0.3, transparent: true, opacity: 0.5 }),
+  leanAmine:   () => mat(0x3b82f6, { emissive: 0x1d4ed8, emissiveIntensity: 0.3, transparent: true, opacity: 0.5 }),
+  richAmine:   () => mat(0xa3e635, { emissive: 0x65a30d, emissiveIntensity: 0.3, transparent: true, opacity: 0.5 }),
+  acidGas:     () => mat(0xfacc15, { emissive: 0xca8a04, emissiveIntensity: 0.3, transparent: true, opacity: 0.5 }),
+  // Packing material (Raschig rings)
+  packing:     () => mat(0x8a7060, { metalness: 0.3, roughness: 0.7 }),
+  // Insulation
+  insulation:  () => mat(0xd4c4a8, { metalness: 0.1, roughness: 0.9, transparent: true, opacity: 0.35 }),
+  // Concrete foundation
+  concrete:    () => mat(0x606868, { metalness: 0.05, roughness: 0.95 }),
+  // Grating
+  grating:     () => mat(0x505a64, { metalness: 0.7, roughness: 0.5, transparent: true, opacity: 0.6 }),
+  // Warning red
+  warningRed:  () => mat(0xcc2222, { metalness: 0.5, roughness: 0.4 }),
+  // Mist eliminator (chevron)
+  mistElim:    () => mat(0xb0b8c0, { metalness: 0.8, roughness: 0.3 }),
+  // Kettle reboiler
+  kettle:      () => mat(0xc8d0d8, { metalness: 0.75, roughness: 0.25 }),
+  // Fin-fan cooler
+  coolerFin:   () => mat(0xa0b0c0, { metalness: 0.8, roughness: 0.2 }),
+  // Pump
+  pumpBody:    () => mat(0x3b82f6, { metalness: 0.7, roughness: 0.3 }),
+  pumpMotor:   () => mat(0x383e45, { metalness: 0.85, roughness: 0.2 }),
+  // Wire mesh
+  wireMesh:    () => mat(0x90a0b0, { metalness: 0.9, roughness: 0.15, transparent: true, opacity: 0.5 }),
+};
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY FUNCTIONS
+   ═══════════════════════════════════════════════════════ */
+
+// Add a flanged nozzle to a parent group
+function addNozzle(parent, x, y, z, dir, len, r, pipeMat) {
+  const grp = new THREE.Group();
+  const pipe = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 12), pipeMat);
+  pipe.position.set(x, y, z);
+  if (dir === 'bottom') pipe.rotation.x = Math.PI;
+  else if (dir === 'left') pipe.rotation.z = Math.PI / 2;
+  else if (dir === 'right') pipe.rotation.z = -Math.PI / 2;
+  else if (dir === 'front') pipe.rotation.x = Math.PI / 2;
+  else if (dir === 'back') pipe.rotation.x = -Math.PI / 2;
+  grp.add(pipe);
+  const flange = new THREE.Mesh(
+    new THREE.CylinderGeometry(r * 1.8, r * 1.8, 0.08, 12),
+    M.darkSteel()
+  );
+  const fOff = dir === 'bottom' ? -len / 2 : len / 2;
+  flange.position.set(x, y + fOff, z);
+  grp.add(flange);
+  parent.add(grp);
+  return grp;
+}
+
+// Add a pipe using CatmullRomCurve3
+function addPipe(parent, points, radius, pipeMat) {
+  const curve = new THREE.CatmullRomCurve3(points);
+  const tubeGeo = new THREE.TubeGeometry(curve, 32, radius, 8, false);
+  const pipe = new THREE.Mesh(tubeGeo, pipeMat);
+  pipe.castShadow = true;
+  parent.add(pipe);
+  return pipe;
+}
+
+// Add OSHA handrail platform
+function addPlatform(parent, cx, cy, cz, w, d, label) {
+  const grp = new THREE.Group();
+  grp.name = label || 'platform';
+  const railH = 1.1;
+  // Grating deck
+  const grating = new THREE.Mesh(new THREE.BoxGeometry(w, 0.08, d), M.grating());
+  grating.position.set(cx, cy, cz);
+  grp.add(grating);
+  // Support beams
+  const halfD = d / 2;
+  [cz - halfD * 0.6, cz, cz + halfD * 0.6].forEach(zOff => {
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(w, 0.15, 0.12), M.darkSteel());
+    beam.position.set(cx, cy - 0.1, zOff);
+    grp.add(beam);
+  });
+  // Handrail posts
+  for (let x = cx - w / 2; x <= cx + w / 2; x += 2) {
+    [cz + halfD, cz - halfD].forEach(z => {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, railH, 8), M.oshaYellow());
+      post.position.set(x, cy + railH / 2, z);
+      grp.add(post);
+    });
+  }
+  // Top rails
+  [cz + halfD, cz - halfD].forEach(z => {
+    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, w, 8), M.oshaYellow());
+    rail.rotation.z = Math.PI / 2;
+    rail.position.set(cx, cy + railH, z);
+    grp.add(rail);
+  });
+  // Mid rails
+  [cz + halfD, cz - halfD].forEach(z => {
+    const midRail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, w, 8), M.oshaYellow());
+    midRail.rotation.z = Math.PI / 2;
+    midRail.position.set(cx, cy + railH * 0.5, z);
+    grp.add(midRail);
+  });
+  // Toe boards
+  [cz + halfD, cz - halfD].forEach(z => {
+    const toe = new THREE.Mesh(new THREE.BoxGeometry(w, 0.1, 0.04), M.oshaYellow());
+    toe.position.set(cx, cy + 0.09, z);
+    grp.add(toe);
+  });
+  parent.add(grp);
+  return grp;
+}
+
+// Add vertical column with internals
+function buildColumn(parent, cx, cz, radius, height, label, type) {
+  const grp = new THREE.Group();
+  grp.name = label;
+
+  const R = radius;
+  const H = height;
+  const halfH = H / 2;
+  const baseY = GROUND_Y + 1;
+
+  // ─── Column Shell (transparent) ───
+  const shellGeo = new THREE.CylinderGeometry(R, R, H, 48, 1, true);
+  const shell = new THREE.Mesh(shellGeo, M.shell());
+  shell.position.set(cx, baseY + halfH, cz);
+  shell.castShadow = true;
+  shellMeshes.push(shell);
+  grp.add(shell);
+
+  // ─── Top & Bottom Hemispherical Caps ───
+  const topCap = new THREE.Mesh(
+    new THREE.SphereGeometry(R, 48, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+    M.shellSolid()
+  );
+  topCap.position.set(cx, baseY + H, cz);
+  topCap.castShadow = true;
+  grp.add(topCap);
+
+  const botCap = new THREE.Mesh(
+    new THREE.SphereGeometry(R, 48, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
+    M.shellSolid()
+  );
+  botCap.position.set(cx, baseY, cz);
+  botCap.castShadow = true;
+  grp.add(botCap);
+
+  // ─── Weld Seam Rings ───
+  const weldMat = mat(0xb0b8c0, { metalness: 0.9, roughness: 0.15 });
+  for (let y = baseY + 2; y < baseY + H - 1; y += 3) {
+    const weld = new THREE.Mesh(new THREE.TorusGeometry(R + 0.02, 0.03, 8, 48), weldMat);
+    weld.position.set(cx, y, cz);
+    weld.rotation.x = Math.PI / 2;
+    grp.add(weld);
+  }
+
+  // ─── Skirt Foundation ───
+  const skirtH = 2.0;
+  const skirt = new THREE.Mesh(
+    new THREE.CylinderGeometry(R + 0.05, R + 0.15, skirtH, 32, 1, true),
+    M.darkSteel()
+  );
+  skirt.position.set(cx, baseY - skirtH / 2, cz);
+  grp.add(skirt);
+  // Skirt base ring
+  const skirtBase = new THREE.Mesh(
+    new THREE.TorusGeometry(R + 0.15, 0.08, 8, 48),
+    M.darkSteel()
+  );
+  skirtBase.position.set(cx, baseY - skirtH, cz);
+  skirtBase.rotation.x = Math.PI / 2;
+  grp.add(skirtBase);
+  // Concrete pedestal
+  const pedestal = new THREE.Mesh(
+    new THREE.CylinderGeometry(R + 0.6, R + 0.8, 0.6, 32),
+    M.concrete()
+  );
+  pedestal.position.set(cx, baseY - skirtH - 0.3, cz);
+  grp.add(pedestal);
+
+  // ─── 3 Random Packing Beds with Raschig Ring Texture ───
+  const bedH = 2.2;
+  const bedSpacing = 3.2;
+  const bedStartY = baseY + 3;
+  for (let b = 0; b < 3; b++) {
+    const by = bedStartY + b * bedSpacing;
+    // Packing bed volume (dotted cylinders = Raschig rings)
+    const bedGrp = new THREE.Group();
+    bedGrp.name = label + '_bed' + b;
+    // Random Raschig rings — small cylinders scattered
+    for (let ring = 0; ring < 60; ring++) {
+      const angle = Math.random() * Math.PI * 2;
+      const rad = Math.random() * R * 0.8;
+      const ry = Math.random() * bedH;
+      const rGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.18, 6);
+      const rMesh = new THREE.Mesh(rGeo, M.packing());
+      rMesh.position.set(
+        cx + Math.cos(angle) * rad,
+        by + ry - bedH / 2,
+        cz + Math.sin(angle) * rad
+      );
+      rMesh.rotation.x = Math.random() * Math.PI;
+      rMesh.rotation.z = Math.random() * Math.PI;
+      internalMeshes.push(rMesh);
+      bedGrp.add(rMesh);
+    }
+    // Bed support grid (wire mesh plate)
+    const supportGrid = new THREE.Mesh(
+      new THREE.CylinderGeometry(R * 0.95, R * 0.95, 0.06, 32, 1, false),
+      M.wireMesh()
+    );
+    supportGrid.position.set(cx, by - bedH / 2 - 0.03, cz);
+    internalMeshes.push(supportGrid);
+    bedGrp.add(supportGrid);
+    // Liquid distributor above bed (disc with spray nozzles)
+    const distDisc = new THREE.Mesh(
+      new THREE.CylinderGeometry(R * 0.9, R * 0.9, 0.05, 32),
+      M.stainless()
+    );
+    distDisc.position.set(cx, by + bedH / 2 + 0.1, cz);
+    internalMeshes.push(distDisc);
+    bedGrp.add(distDisc);
+    // Spray nozzles on distributor
+    for (let n = 0; n < 6; n++) {
+      const nAngle = (n / 6) * Math.PI * 2;
+      const nozzle = new THREE.Mesh(
+        new THREE.ConeGeometry(0.04, 0.15, 6),
+        M.stainless()
+      );
+      nozzle.position.set(
+        cx + Math.cos(nAngle) * R * 0.5,
+        by + bedH / 2 + 0.02,
+        cz + Math.sin(nAngle) * R * 0.5
+      );
+      nozzle.rotation.x = Math.PI;
+      internalMeshes.push(nozzle);
+      bedGrp.add(nozzle);
+    }
+    // Distributor riser pipe
+    const riser = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8),
+      M.stainless()
+    );
+    riser.position.set(cx, by + bedH / 2 + 0.35, cz);
+    internalMeshes.push(riser);
+    bedGrp.add(riser);
+    grp.add(bedGrp);
+  }
+
+  // ─── Mist Eliminator at Top (zigzag chevron layer) ───
+  const mistY = baseY + H - 1.8;
+  for (let m = 0; m < 8; m++) {
+    const chevron = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 0.5, R * 1.6),
+      M.mistElim()
+    );
+    chevron.position.set(
+      cx + (m - 3.5) * 0.2,
+      mistY + Math.sin(m * 0.8) * 0.1,
+      cz
+    );
+    chevron.rotation.z = Math.sin(m) * 0.3;
+    internalMeshes.push(chevron);
+    grp.add(chevron);
+  }
+  // Mist eliminator frame
+  const mistFrame = new THREE.Mesh(
+    new THREE.CylinderGeometry(R * 0.92, R * 0.92, 0.08, 32, 1, true),
+    M.darkSteel()
+  );
+  mistFrame.position.set(cx, mistY, cz);
+  internalMeshes.push(mistFrame);
+  grp.add(mistFrame);
+
+  // ─── Nozzles ───
+  if (type === 'absorber') {
+    // Sour gas inlet at bottom
+    addNozzle(grp, cx + R + 0.5, baseY + 1.5, cz, 'right', 1.2, 0.2, M.pipeSour());
+    // Sweet gas outlet at top
+    addNozzle(grp, cx, baseY + H + 0.5, cz, 'top', 1.0, 0.2, M.pipeSweet());
+    // Lean amine inlet at top
+    addNozzle(grp, cx + R + 0.5, baseY + H - 2, cz, 'right', 1.0, 0.15, M.pipeLean());
+    // Rich amine outlet at bottom
+    addNozzle(grp, cx + R + 0.5, baseY + 3, cz, 'right', 1.0, 0.15, M.pipeRich());
+  } else {
+    // Rich amine inlet at top
+    addNozzle(grp, cx - R - 0.5, baseY + H - 2, cz, 'left', 1.0, 0.15, M.pipeRich());
+    // Lean amine outlet at bottom
+    addNozzle(grp, cx - R - 0.5, baseY + 2, cz, 'left', 1.0, 0.15, M.pipeLean());
+    // Acid gas outlet at top
+    addNozzle(grp, cx, baseY + H + 0.5, cz, 'top', 1.0, 0.18, M.pipeAcid());
+    // Steam inlet at bottom
+    addNozzle(grp, cx - R - 0.5, baseY + 1, cz, 'left', 0.8, 0.12, M.pipeSteam());
+  }
+
+  // ─── Insulation Bands ───
+  for (let y = baseY + 1; y < baseY + H - 1; y += 4) {
+    const ins = new THREE.Mesh(
+      new THREE.CylinderGeometry(R + 0.06, R + 0.06, 3.8, 48, 1, true),
+      M.insulation()
+    );
+    ins.position.set(cx, y + 1.9, cz);
+    grp.add(ins);
+  }
+
+  // ─── Platform at Top ───
+  addPlatform(grp, cx, baseY + H + 0.3, cz, R * 3.5, R * 3.5, label + '_platform');
+
+  // ─── Pressure Gauge ───
+  const ptBody = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.25, 12), M.darkSteel());
+  ptBody.position.set(cx - R - 0.2, baseY + H * 0.6, cz + R + 0.1);
+  grp.add(ptBody);
+  const ptFace = new THREE.Mesh(new THREE.CircleGeometry(0.1, 16),
+    new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  ptFace.position.set(cx - R - 0.2, baseY + H * 0.6 + 0.15, cz + R + 0.22);
+  ptFace.rotation.x = -Math.PI / 2;
+  grp.add(ptFace);
+
+  // ─── Manway ───
+  const mwY = baseY + H * 0.7;
+  const mwNeck = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.4, 0.4, 0.5, 16),
+    M.shellSolid()
+  );
+  mwNeck.rotation.z = Math.PI / 2;
+  mwNeck.position.set(cx + R + 0.35, mwY, cz);
+  grp.add(mwNeck);
+  const mwCover = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.55, 0.55, 0.08, 16),
+    M.darkSteel()
+  );
+  mwCover.rotation.z = Math.PI / 2;
+  mwCover.position.set(cx + R + 0.7, mwY, cz);
+  grp.add(mwCover);
+
+  parent.add(grp);
+  return grp;
+}
+
+/* ═══════════════════════════════════════════════════════
+   3. BUILD COMPLETE AMINE TREATING UNIT
+   ═══════════════════════════════════════════════════════ */
+function buildAmineUnit() {
+  const unit = new THREE.Group();
+  unit.name = 'T-800 Amine Treating';
+
+  const baseY = GROUND_Y + 1;
+
+  // ─── 3a. Absorber Column ───
+  const absorber = buildColumn(unit, ABS_X, ABS_Z, absR, absH, 'Absorber', 'absorber');
+  const absTopY = baseY + absH;
+
+  // ─── 3b. Stripper Column ───
+  const stripper = buildColumn(unit, STR_X, STR_Z, strR, strH, 'Stripper', 'stripper');
+  const strTopY = baseY + strH;
+
+  // ─── 3c. Amine Surge Tank (horizontal, r=1.0, L=4) ───
+  const surgeGrp = new THREE.Group();
+  surgeGrp.name = 'SurgeTank';
+  const surgeX = STR_X + 6, surgeZ = 4;
+  const surgeY = baseY + 1.5;
+  // Horizontal cylinder
+  const surgeBody = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.0, 1.0, 4, 32, 1, false),
+    M.shellSolid()
+  );
+  surgeBody.rotation.z = Math.PI / 2;
+  surgeBody.position.set(surgeX, surgeY, surgeZ);
+  surgeGrp.add(surgeBody);
+  // End caps
+  [-2, 2].forEach(side => {
+    const cap = new THREE.Mesh(
+      new THREE.SphereGeometry(1.0, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+      M.shellSolid()
+    );
+    cap.rotation.z = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+    cap.position.set(surgeX + side, surgeY, surgeZ);
+    surgeGrp.add(cap);
+  });
+  // Saddles
+  [-1.2, 1.2].forEach(xOff => {
+    const saddle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, 1.2, 2.6),
+      M.darkSteel()
+    );
+    saddle.position.set(surgeX + xOff, surgeY - 1.2, surgeZ);
+    surgeGrp.add(saddle);
+    const found = new THREE.Mesh(
+      new THREE.BoxGeometry(0.8, 0.3, 3.0),
+      M.concrete()
+    );
+    found.position.set(surgeX + xOff, surgeY - 1.85, surgeZ);
+    surgeGrp.add(found);
+  });
+  // Nozzles
+  addNozzle(surgeGrp, surgeX - 2.5, surgeY, surgeZ, 'left', 0.8, 0.12, M.pipeLean());
+  addNozzle(surgeGrp, surgeX + 2.5, surgeY, surgeZ, 'right', 0.8, 0.12, M.pipeLean());
+  addNozzle(surgeGrp, surgeX, surgeY + 1.1, surgeZ, 'top', 0.6, 0.1, M.pipeSteam());
+  unit.add(surgeGrp);
+
+  // ─── 3d. Flash Drum (horizontal, r=0.5, L=2) ───
+  const flashGrp = new THREE.Group();
+  flashGrp.name = 'FlashDrum';
+  const flashX = 0, flashZ = 6;
+  const flashY = baseY + 1.2;
+  const flashBody = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.5, 2, 24, 1, false),
+    M.shellSolid()
+  );
+  flashBody.rotation.z = Math.PI / 2;
+  flashBody.position.set(flashX, flashY, flashZ);
+  flashGrp.add(flashBody);
+  [-1, 1].forEach(side => {
+    const cap = new THREE.Mesh(
+      new THREE.SphereGeometry(0.5, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+      M.shellSolid()
+    );
+    cap.rotation.z = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+    cap.position.set(flashX + side, flashY, flashZ);
+    flashGrp.add(cap);
+  });
+  // Supports
+  [-0.5, 0.5].forEach(xOff => {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.8, 0.15), M.darkSteel());
+    leg.position.set(flashX + xOff, flashY - 0.7, flashZ);
+    flashGrp.add(leg);
+  });
+  // Nozzles
+  addNozzle(flashGrp, flashX - 1.3, flashY, flashZ, 'left', 0.6, 0.1, M.pipeRich());
+  addNozzle(flashGrp, flashX + 1.3, flashY, flashZ, 'right', 0.6, 0.1, M.pipeRich());
+  addNozzle(flashGrp, flashX, flashY + 0.6, flashZ, 'top', 0.5, 0.08, M.pipeAcid());
+  addNozzle(flashGrp, flashX, flashY - 0.6, flashZ, 'bottom', 0.5, 0.08, M.pipeRich());
+  unit.add(flashGrp);
+
+  // ─── 3e. Rich/Lean Amine Heat Exchanger (shell-and-tube, r=0.5, L=3) ───
+  const hxGrp = new THREE.Group();
+  hxGrp.name = 'HeatExchanger';
+  const hxX = 0, hxZ = 3;
+  const hxY = baseY + 1.5;
+  // Shell
+  const hxShell = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.5, 3, 24, 1, false),
+    M.shellSolid()
+  );
+  hxShell.rotation.z = Math.PI / 2;
+  hxShell.position.set(hxX, hxY, hxZ);
+  hxGrp.add(hxShell);
+  // End caps (channel heads)
+  [-1.8, 1.8].forEach(side => {
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.55, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+      M.shellSolid()
+    );
+    head.rotation.z = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+    head.position.set(hxX + side, hxY, hxZ);
+    hxGrp.add(head);
+  });
+  // Tube bundle representation (internal lines)
+  for (let t = 0; t < 7; t++) {
+    const tube = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025, 0.025, 2.8, 6),
+      M.stainless()
+    );
+    tube.rotation.z = Math.PI / 2;
+    const angle = (t / 7) * Math.PI * 2;
+    tube.position.set(hxX, hxY + Math.cos(angle) * 0.3, hxZ + Math.sin(angle) * 0.3);
+    internalMeshes.push(tube);
+    hxGrp.add(tube);
+  }
+  // Baffles (3)
+  [-0.8, 0, 0.8].forEach(xOff => {
+    const baffle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 0.9, 0.9),
+      M.stainless()
+    );
+    baffle.position.set(hxX + xOff, hxY, hxZ);
+    internalMeshes.push(baffle);
+    hxGrp.add(baffle);
+  });
+  // Supports
+  [-1, 1].forEach(xOff => {
+    const sup = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.3), M.darkSteel());
+    sup.position.set(hxX + xOff, hxY - 0.5, hxZ);
+    hxGrp.add(sup);
+  });
+  // Nozzles — shell side
+  addNozzle(hxGrp, hxX - 2.3, hxY + 0.2, hxZ, 'left', 0.6, 0.1, M.pipeRich());
+  addNozzle(hxGrp, hxX + 2.3, hxY + 0.2, hxZ, 'right', 0.6, 0.1, M.pipeRich());
+  // Nozzles — tube side
+  addNozzle(hxGrp, hxX + 2.3, hxY - 0.2, hxZ, 'right', 0.6, 0.1, M.pipeLean());
+  addNozzle(hxGrp, hxX - 2.3, hxY - 0.2, hxZ, 'left', 0.6, 0.1, M.pipeLean());
+  unit.add(hxGrp);
+
+  // ─── 3f. Regenerator Reboiler (kettle-type, r=0.8, L=3) ───
+  const rebGrp = new THREE.Group();
+  rebGrp.name = 'Reboiler';
+  const rebX = STR_X + 5, rebZ = -3;
+  const rebY = baseY + 1.2;
+  // Kettle shell (larger diameter bottom)
+  const rebKettle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.8, 0.9, 3, 32, 1, false),
+    M.kettle()
+  );
+  rebKettle.rotation.z = Math.PI / 2;
+  rebKettle.position.set(rebX, rebY, rebZ);
+  rebGrp.add(rebKettle);
+  // Kettle dome (bottom)
+  const rebDome = new THREE.Mesh(
+    new THREE.SphereGeometry(0.9, 24, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
+    M.kettle()
+  );
+  rebDome.rotation.z = Math.PI / 2;
+    rebDome.position.set(rebX, rebY, rebZ);
+  rebGrp.add(rebDome);
+  // Tube sheet (end plate)
+  const rebSheet = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.82, 0.82, 0.08, 24),
+    M.darkSteel()
+  );
+  rebSheet.rotation.z = Math.PI / 2;
+  rebSheet.position.set(rebX - 1.55, rebY, rebZ);
+  rebGrp.add(rebSheet);
+  // Internal tubes
+  for (let t = 0; t < 8; t++) {
+    const angle = (t / 8) * Math.PI * 2;
+    const r = 0.3 + (t % 3) * 0.15;
+    const tube = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.02, 2.5, 6),
+      M.stainless()
+    );
+    tube.rotation.z = Math.PI / 2;
+    tube.position.set(rebX, rebY + Math.cos(angle) * r, rebZ + Math.sin(angle) * r);
+    internalMeshes.push(tube);
+    rebGrp.add(tube);
+  }
+  // Supports
+  [-0.8, 0.8].forEach(xOff => {
+    const sup = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.9, 1.0), M.darkSteel());
+    sup.position.set(rebX + xOff, rebY - 1.0, rebZ);
+    rebGrp.add(sup);
+    const found = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 1.4), M.concrete());
+    found.position.set(rebX + xOff, rebY - 1.5, rebZ);
+    rebGrp.add(found);
+  });
+  // Nozzles
+  addNozzle(rebGrp, rebX - 2.3, rebY, rebZ, 'left', 0.8, 0.12, M.pipeSteam());
+  addNozzle(rebGrp, rebX + 2.0, rebY + 0.3, rebZ, 'right', 0.6, 0.1, M.pipeLean());
+  addNozzle(rebGrp, rebX, rebY + 1.0, rebZ, 'top', 0.8, 0.15, M.pipeSteam());
+  addNozzle(rebGrp, rebX, rebY - 1.0, rebZ, 'bottom', 0.6, 0.1, M.pipeSteam());
+  unit.add(rebGrp);
+
+  // ─── 3g. Amine Cooler (fin-fan box on structure) ───
+  const coolerGrp = new THREE.Group();
+  coolerGrp.name = 'AmineCooler';
+  const coolX = STR_X + 6, coolZ = -7;
+  const coolY = baseY + 2.5;
+  // Support structure
+  const coolBase = new THREE.Mesh(
+    new THREE.BoxGeometry(3.5, 0.15, 2.5),
+    M.darkSteel()
+  );
+  coolBase.position.set(coolX, coolY - 1.5, coolZ);
+  coolerGrp.add(coolBase);
+  // Legs
+  [[-1.5, -1], [-1.5, 1], [1.5, -1], [1.5, 1]].forEach(([xo, zo]) => {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.5, 0.12), M.darkSteel());
+    leg.position.set(coolX + xo, coolY - 0.75, coolZ + zo);
+    coolerGrp.add(leg);
+  });
+  // Fin-tube bundle (3 rows of tubes with fins)
+  for (let row = 0; row < 3; row++) {
+    const ry = coolY - 1.3 + row * 0.45;
+    for (let t = 0; t < 5; t++) {
+      const tx = coolX - 1.2 + t * 0.6;
+      // Tube
+      const tube = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.03, 0.03, 2.2, 8),
+        M.stainless()
+      );
+      tube.rotation.x = Math.PI / 2;
+      tube.position.set(tx, ry, coolZ);
+      coolerGrp.add(tube);
+      // Fins (8 per tube)
+      for (let f = 0; f < 8; f++) {
+        const fin = new THREE.Mesh(
+          new THREE.BoxGeometry(0.02, 0.25, 0.25),
+          M.coolerFin()
+        );
+        fin.position.set(tx, ry, coolZ - 0.9 + f * 0.26);
+        coolerGrp.add(fin);
+      }
+    }
+  }
+  // Fan housing (2 fans)
+  [-0.6, 0.6].forEach(xOff => {
+    const fanRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.5, 0.04, 8, 24),
+      M.darkSteel()
+    );
+    fanRing.position.set(coolX + xOff, coolY + 0.2, coolZ);
+    fanRing.rotation.x = Math.PI / 2;
+    coolerGrp.add(fanRing);
+    // Fan hub
+    const hub = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.08, 0.3, 8),
+      M.darkSteel()
+    );
+    hub.position.set(coolX + xOff, coolY + 0.35, coolZ);
+    coolerGrp.add(hub);
+  });
+  // Fan motor deck
+  const motorDeck = new THREE.Mesh(
+    new THREE.BoxGeometry(3.5, 0.06, 0.6),
+    M.darkSteel()
+  );
+  motorDeck.position.set(coolX, coolY + 0.5, coolZ);
+  coolerGrp.add(motorDeck);
+  // Motors
+  [-0.6, 0.6].forEach(xOff => {
+    const motor = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.2, 0.2, 0.5, 12),
+      M.pumpMotor()
+    );
+    motor.position.set(coolX + xOff, coolY + 0.8, coolZ);
+    coolerGrp.add(motor);
+  });
+  // Nozzles
+  addNozzle(coolerGrp, coolX - 1.8, coolY - 1.0, coolZ, 'left', 0.6, 0.1, M.pipeLean());
+  addNozzle(coolerGrp, coolX + 1.8, coolY - 1.0, coolZ, 'right', 0.6, 0.1, M.pipeLean());
+  unit.add(coolerGrp);
+
+  // ─── 3h. Amine Circulation Pump ───
+  const pumpGrp = new THREE.Group();
+  pumpGrp.name = 'CircPump';
+  const pumpX = STR_X + 6, pumpZ = -4.5;
+  const pumpY = baseY + 0.8;
+  // Pump body (centrifugal)
+  const pumpBody = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.35, 0.5, 16),
+    M.pumpBody()
+  );
+  pumpBody.position.set(pumpX, pumpY, pumpZ);
+  pumpGrp.add(pumpBody);
+  // Pump volute
+  const volute = new THREE.Mesh(
+    new THREE.SphereGeometry(0.4, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+    M.pumpBody()
+  );
+  volute.position.set(pumpX, pumpY + 0.25, pumpZ);
+  pumpGrp.add(volute);
+  // Motor
+  const motor = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.2, 0.2, 0.8, 12),
+    M.pumpMotor()
+  );
+  motor.position.set(pumpX, pumpY + 0.8, pumpZ);
+  pumpGrp.add(motor);
+  // Coupling
+  const coupling = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.12, 0.12, 0.15, 8),
+    M.stainless()
+  );
+  coupling.position.set(pumpX, pumpY + 0.55, pumpZ);
+  pumpGrp.add(coupling);
+  // Base plate
+  const basePlate = new THREE.Mesh(
+    new THREE.BoxGeometry(1.0, 0.12, 0.8),
+    M.darkSteel()
+  );
+  basePlate.position.set(pumpX, pumpY - 0.35, pumpZ);
+  pumpGrp.add(basePlate);
+  // Nozzles
+  addNozzle(pumpGrp, pumpX - 0.5, pumpY, pumpZ, 'left', 0.5, 0.1, M.pipeLean());
+  addNozzle(pumpGrp, pumpX + 0.5, pumpY, pumpZ, 'right', 0.5, 0.1, M.pipeLean());
+  unit.add(pumpGrp);
+
+  // ─── 3i. Piping Network ───
+  // Sour gas inlet pipe → absorber bottom
+  addPipe(unit, [
+    new THREE.Vector3(ABS_X - 10, baseY + 1.5, ABS_Z),
+    new THREE.Vector3(ABS_X - 5, baseY + 1.5, ABS_Z),
+    new THREE.Vector3(ABS_X - absR - 0.5, baseY + 1.5, ABS_Z)
+  ], 0.18, M.pipeSour());
+
+  // Sweet gas outlet pipe → away from absorber top
+  addPipe(unit, [
+    new THREE.Vector3(ABS_X, absTopY + 0.5, ABS_Z),
+    new THREE.Vector3(ABS_X, absTopY + 2, ABS_Z),
+    new THREE.Vector3(ABS_X - 3, absTopY + 3, ABS_Z),
+    new THREE.Vector3(ABS_X - 8, absTopY + 3, ABS_Z)
+  ], 0.18, M.pipeSweet());
+
+  // Rich amine out of absorber → flash drum
+  addPipe(unit, [
+    new THREE.Vector3(ABS_X + absR + 0.5, baseY + 3, ABS_Z),
+    new THREE.Vector3(ABS_X + absR + 1.5, baseY + 3, ABS_Z),
+    new THREE.Vector3(ABS_X + 3, baseY + 3, 2),
+    new THREE.Vector3(ABS_X + 3, baseY + 1.2, flashZ),
+    new THREE.Vector3(flashX - 1.3, flashY, flashZ)
+  ], 0.12, M.pipeRich());
+
+  // Flash drum → heat exchanger (shell side)
+  addPipe(unit, [
+    new THREE.Vector3(flashX + 1.3, flashY, flashZ),
+    new THREE.Vector3(flashX + 2, flashY, flashZ),
+    new THREE.Vector3(flashX + 2, hxY + 0.2, hxZ),
+    new THREE.Vector3(hxX - 2.3, hxY + 0.2, hxZ)
+  ], 0.1, M.pipeRich());
+
+  // Heat exchanger shell out → stripper top
+  addPipe(unit, [
+    new THREE.Vector3(hxX + 2.3, hxY + 0.2, hxZ),
+    new THREE.Vector3(hxX + 3, hxY + 0.2, hxZ),
+    new THREE.Vector3(STR_X + 2, hxY + 0.2, STR_Z + 2),
+    new THREE.Vector3(STR_X + 2, strTopY - 2, STR_Z),
+    new THREE.Vector3(STR_X - strR - 0.5, strTopY - 2, STR_Z)
+  ], 0.1, M.pipeRich());
+
+  // Stripper bottom → reboiler
+  addPipe(unit, [
+    new THREE.Vector3(STR_X - strR - 0.5, baseY + 1, STR_Z),
+    new THREE.Vector3(STR_X - 2, baseY + 1, STR_Z),
+    new THREE.Vector3(STR_X - 2, baseY + 0.5, rebZ),
+    new THREE.Vector3(rebX - 2.3, rebY, rebZ)
+  ], 0.12, M.pipeLean());
+
+  // Reboiler return → stripper bottom
+  addPipe(unit, [
+    new THREE.Vector3(rebX + 2.0, rebY + 0.3, rebZ),
+    new THREE.Vector3(rebX + 3, rebY + 0.3, rebZ),
+    new THREE.Vector3(STR_X + 2, rebY + 0.3, STR_Z),
+    new THREE.Vector3(STR_X + 2, baseY + 1.5, STR_Z),
+    new THREE.Vector3(STR_X - strR - 0.5, baseY + 2, STR_Z)
+  ], 0.1, M.pipeLean());
+
+  // Stripper bottom → pump
+  addPipe(unit, [
+    new THREE.Vector3(STR_X - strR - 0.5, baseY + 2, STR_Z),
+    new THREE.Vector3(STR_X - 3, baseY + 2, STR_Z),
+    new THREE.Vector3(STR_X - 3, pumpY, pumpZ - 1),
+    new THREE.Vector3(pumpX - 0.5, pumpY, pumpZ)
+  ], 0.1, M.pipeLean());
+
+  // Pump → cooler
+  addPipe(unit, [
+    new THREE.Vector3(pumpX + 0.5, pumpY, pumpZ),
+    new THREE.Vector3(pumpX + 1, pumpY, pumpZ),
+    new THREE.Vector3(coolX - 1.8, coolY - 1.0, coolZ)
+  ], 0.1, M.pipeLean());
+
+  // Cooler → heat exchanger (tube side)
+  addPipe(unit, [
+    new THREE.Vector3(coolX + 1.8, coolY - 1.0, coolZ),
+    new THREE.Vector3(coolX + 3, coolY - 1.0, coolZ),
+    new THREE.Vector3(coolX + 3, hxY - 0.2, hxZ - 1),
+    new THREE.Vector3(hxX - 2.3, hxY - 0.2, hxZ)
+  ], 0.1, M.pipeLean());
+
+  // Heat exchanger tube out → surge tank
+  addPipe(unit, [
+    new THREE.Vector3(hxX + 2.3, hxY - 0.2, hxZ),
+    new THREE.Vector3(hxX + 3, hxY - 0.2, hxZ),
+    new THREE.Vector3(hxX + 3, surgeY, surgeZ),
+    new THREE.Vector3(surgeX - 2.5, surgeY, surgeZ)
+  ], 0.1, M.pipeLean());
+
+  // Surge tank → absorber top (lean amine return)
+  addPipe(unit, [
+    new THREE.Vector3(surgeX - 2.5, surgeY, surgeZ),
+    new THREE.Vector3(surgeX - 4, surgeY, surgeZ),
+    new THREE.Vector3(surgeX - 4, absTopY - 2, ABS_Z + 3),
+    new THREE.Vector3(ABS_X + 3, absTopY - 2, ABS_Z),
+    new THREE.Vector3(ABS_X + absR + 0.5, absTopY - 2, ABS_Z)
+  ], 0.1, M.pipeLean());
+
+  // Acid gas from stripper top → to SRU (up and away)
+  addPipe(unit, [
+    new THREE.Vector3(STR_X, strTopY + 0.5, STR_Z),
+    new THREE.Vector3(STR_X, strTopY + 3, STR_Z),
+    new THREE.Vector3(STR_X + 3, strTopY + 4, STR_Z),
+    new THREE.Vector3(STR_X + 8, strTopY + 4, STR_Z)
+  ], 0.15, M.pipeAcid());
+
+  // Flash drum vent gas → SRU
+  addPipe(unit, [
+    new THREE.Vector3(flashX, flashY + 0.6, flashZ),
+    new THREE.Vector3(flashX, flashY + 2, flashZ),
+    new THREE.Vector3(flashX + 2, flashY + 3, flashZ),
+    new THREE.Vector3(flashX + 5, flashY + 4, flashZ),
+    new THREE.Vector3(STR_X + 8, strTopY + 4, STR_Z)
+  ], 0.08, M.pipeAcid());
+
+  // Steam to reboiler
+  addPipe(unit, [
+    new THREE.Vector3(rebX - 4, rebY + 1.0, rebZ),
+    new THREE.Vector3(rebX - 3, rebY + 1.0, rebZ),
+    new THREE.Vector3(rebX - 2.3, rebY, rebZ)
+  ], 0.1, M.pipeSteam());
+
+  // ─── 3j. Stairway from ground to absorber platform ───
+  const stairGrp = new THREE.Group();
+  const stairSteps = 14;
+  const stairRise = (absTopY - GROUND_Y) / stairSteps;
+  for (let i = 0; i < stairSteps; i++) {
+    const step = new THREE.Mesh(
+      new THREE.BoxGeometry(1.0, 0.05, 0.3),
+      M.grating()
+    );
+    step.position.set(
+      ABS_X - absR * 2 - 1.5,
+      GROUND_Y + i * stairRise,
+      ABS_Z + 0.5 + i * 0.25
+    );
+    stairGrp.add(step);
+  }
+  // Stair handrails
+  [-0.5, 0.5].forEach(zSide => {
+    const rail = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.02, absTopY - GROUND_Y + 1, 8),
+      M.oshaYellow()
+    );
+    rail.position.set(
+      ABS_X - absR * 2 - 1.5,
+      GROUND_Y + (absTopY - GROUND_Y) / 2,
+      ABS_Z + 0.5 + stairSteps * 0.125 + zSide
+    );
+    rail.rotation.x = 0.25;
+    stairGrp.add(rail);
+  });
+  unit.add(stairGrp);
+
+  // ─── 3k. Interconnecting pipe bridge / rack ───
+  const rackGrp = new THREE.Group();
+  // Main pipe rack between columns
+  const rackLen = STR_X - ABS_X;
+  for (let z = 2; z <= 4; z += 2) {
+    const rackBeam = new THREE.Mesh(
+      new THREE.BoxGeometry(rackLen, 0.1, 0.1),
+      M.darkSteel()
+    );
+    rackBeam.position.set(0, baseY + 6 + (z - 2) * 1.5, ABS_Z + z);
+    rackGrp.add(rackBeam);
+  }
+  // Vertical supports
+  [ABS_X + 2, 0, STR_X - 2].forEach(xPos => {
+    const support = new THREE.Mesh(
+      new THREE.BoxGeometry(0.1, 4, 0.1),
+      M.darkSteel()
+    );
+    support.position.set(xPos, baseY + 5, ABS_Z + 2);
+    rackGrp.add(support);
+  });
+  unit.add(rackGrp);
+
+  // ─── Add to Scene ───
+  unit.position.y = 0;
+  scene.add(unit);
+}
+
+/* ═══════════════════════════════════════════════════════
+   4. PARTICLE SYSTEMS
+   ═══════════════════════════════════════════════════════ */
+function buildParticles() {
+  const baseY = GROUND_Y + 1;
+  const absTopY = baseY + absH;
+  const strTopY = baseY + strH;
+
+  // ─── 4a. Sour gas bubbles rising in absorber (greenish) ───
+  createParticleSystem('sourGas', 0x84cc16, 250, {
+    curve: [
+      new THREE.Vector3(ABS_X, baseY + 1, ABS_Z),
+      new THREE.Vector3(ABS_X + 0.3, baseY + 5, ABS_Z + 0.2),
+      new THREE.Vector3(ABS_X - 0.2, baseY + 10, ABS_Z - 0.1),
+      new THREE.Vector3(ABS_X, baseY + 14, ABS_Z),
+      new THREE.Vector3(ABS_X, absTopY - 1, ABS_Z)
+    ], speed: 0.3, size: 0.09
+  });
+
+  // ─── 4b. Sweet gas exiting absorber top (clean blue) ───
+  createParticleSystem('sweetGas', 0x38bdf8, 180, {
+    curve: [
+      new THREE.Vector3(ABS_X, absTopY, ABS_Z),
+      new THREE.Vector3(ABS_X, absTopY + 2, ABS_Z),
+      new THREE.Vector3(ABS_X - 1, absTopY + 3, ABS_Z),
+      new THREE.Vector3(ABS_X - 4, absTopY + 3.5, ABS_Z),
+      new THREE.Vector3(ABS_X - 8, absTopY + 3, ABS_Z)
+    ], speed: 0.45, size: 0.07
+  });
+
+  // ─── 4c. Lean amine flowing down absorber (blue) ───
+  createParticleSystem('leanAmineDown', 0x3b82f6, 200, {
+    curve: [
+      new THREE.Vector3(ABS_X + absR + 0.5, absTopY - 2, ABS_Z),
+      new THREE.Vector3(ABS_X + 0.5, absTopY - 5, ABS_Z),
+      new THREE.Vector3(ABS_X - 0.3, baseY + 8, ABS_Z),
+      new THREE.Vector3(ABS_X + 0.2, baseY + 5, ABS_Z),
+      new THREE.Vector3(ABS_X, baseY + 3, ABS_Z)
+    ], speed: 0.25, size: 0.06
+  });
+
+  // ─── 4d. Rich amine out of absorber → flash drum (green-yellow) ───
+  createParticleSystem('richAmineOut', 0xa3e635, 200, {
+    curve: [
+      new THREE.Vector3(ABS_X + absR + 0.5, baseY + 3, ABS_Z),
+      new THREE.Vector3(ABS_X + 2, baseY + 3, 1),
+      new THREE.Vector3(0, baseY + 2, 5),
+      new THREE.Vector3(-1, baseY + 1.2, 6)
+    ], speed: 0.35, size: 0.07
+  });
+
+  // ─── 4e. Rich amine through heat exchanger (green-yellow) ───
+  createParticleSystem('richAmineHX', 0xa3e635, 150, {
+    curve: [
+      new THREE.Vector3(1, baseY + 1.2, 6),
+      new THREE.Vector3(1, baseY + 1.5, 4),
+      new THREE.Vector3(-2, baseY + 1.7, 3),
+      new THREE.Vector3(-2.5, baseY + 1.7, 3),
+      new THREE.Vector3(2.5, baseY + 1.7, 3)
+    ], speed: 0.3, size: 0.06
+  });
+
+  // ─── 4f. Acid gas in stripper rising (yellow-green) ───
+  createParticleSystem('acidGasStripper', 0xfacc15, 180, {
+    curve: [
+      new THREE.Vector3(STR_X, baseY + 2, STR_Z),
+      new THREE.Vector3(STR_X + 0.2, baseY + 6, STR_Z - 0.2),
+      new THREE.Vector3(STR_X - 0.1, baseY + 10, STR_Z + 0.1),
+      new THREE.Vector3(STR_X, strTopY - 1, STR_Z),
+      new THREE.Vector3(STR_X, strTopY, STR_Z)
+    ], speed: 0.3, size: 0.08
+  });
+
+  // ─── 4g. Acid gas exiting stripper to SRU (yellow) ───
+  createParticleSystem('acidGasSRU', 0xfacc15, 150, {
+    curve: [
+      new THREE.Vector3(STR_X, strTopY, STR_Z),
+      new THREE.Vector3(STR_X, strTopY + 3, STR_Z),
+      new THREE.Vector3(STR_X + 4, strTopY + 4, STR_Z),
+      new THREE.Vector3(STR_X + 8, strTopY + 4, STR_Z)
+    ], speed: 0.5, size: 0.07
+  });
+
+  // ─── 4h. Lean amine circulating through pump/cooler/exchanger ───
+  createParticleSystem('leanAmineCirc', 0x3b82f6, 200, {
+    curve: [
+      new THREE.Vector3(STR_X - strR - 0.5, baseY + 2, STR_Z),
+      new THREE.Vector3(STR_X - 3, baseY + 2, STR_Z),
+      new THREE.Vector3(STR_X - 3, baseY + 0.8, -4),
+      new THREE.Vector3(STR_X + 5.5, baseY + 0.8, -4.5),
+      new THREE.Vector3(STR_X + 6, baseY + 1.5, -7),
+      new THREE.Vector3(STR_X + 8, baseY + 1.5, -7),
+      new THREE.Vector3(STR_X + 8, baseY + 1.5, 3),
+      new THREE.Vector3(2.5, baseY + 1.3, 3)
+    ], speed: 0.28, size: 0.06
+  });
+
+  // ─── 4i. Lean amine return to absorber (blue) ───
+  createParticleSystem('leanAmineReturn', 0x3b82f6, 160, {
+    curve: [
+      new THREE.Vector3(-2.5, baseY + 1.5, 4),
+      new THREE.Vector3(-4, baseY + 1.5, 4),
+      new THREE.Vector3(-4, absTopY - 2, 2),
+      new THREE.Vector3(ABS_X + 2, absTopY - 2, 0),
+      new THREE.Vector3(ABS_X + absR + 0.5, absTopY - 2, 0)
+    ], speed: 0.3, size: 0.06
+  });
+
+  // ─── 4j. Steam particles in reboiler area ───
+  createParticleSystem('steamReboiler', 0xd4d4d4, 120, {
+    curve: [
+      new THREE.Vector3(STR_X + 1, baseY + 0.8, -3),
+      new THREE.Vector3(STR_X + 2, baseY + 0.8, -3),
+      new THREE.Vector3(STR_X + 3.5, baseY + 1.0, -3),
+      new THREE.Vector3(STR_X + 4.5, baseY + 1.2, -3)
+    ], speed: 0.2, size: 0.1
+  });
+}
+
+// ─── Reusable Particle System Builder ───
+function createParticleSystem(name, color, count, opts) {
+  const points = [];
+  const velocities = [];
+  for (let i = 0; i < count; i++) {
+    const t = Math.random();
+    const p = opts.curve[0].clone().lerp(opts.curve[opts.curve.length - 1], t);
+    p.x += (Math.random() - 0.5) * 0.3;
+    p.y += (Math.random() - 0.5) * 0.3;
+    p.z += (Math.random() - 0.5) * 0.3;
+    points.push(p.x, p.y, p.z);
+    velocities.push({
+      offset: t,
+      speedVar: 0.7 + Math.random() * 0.6,
+      spread: (Math.random() - 0.5) * 0.2
+    });
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  const pMat = new THREE.PointsMaterial({
+    color: color, size: opts.size, transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+  });
+  const system = new THREE.Points(geo, pMat);
+  system.name = name;
+  system.userData = { curve: opts.curve, velocities, speed: opts.speed, count };
+  scene.add(system);
+  particleSystems.push(system);
+  return system;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   6. VIEW MODES WITH ANIMATED CAMERA TRANSITIONS
+   ═══════════════════════════════════════════════════════ */
+function setupViewToggle() {
+  document.querySelectorAll('#view-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      if (view === currentView) return;
+      currentView = view;
+      document.querySelectorAll('#view-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Handle view-specific shell visibility
+      if (view === 'internal') {
+        shellMeshes.forEach(m => { m.visible = false; });
+        internalMeshes.forEach(m => { m.visible = true; });
+      } else if (view === 'cutaway') {
+        shellMeshes.forEach(m => {
+          m.material = mat(0xd5dce0, { metalness: 0.8, roughness: 0.2, transparent: true, opacity: 0.25, side: THREE.DoubleSide });
+        });
+        internalMeshes.forEach(m => { m.visible = true; });
+      } else {
+        shellMeshes.forEach(m => {
+          m.material = M.shell();
+          m.visible = true;
+        });
+        internalMeshes.forEach(m => { m.visible = true; });
+      }
+
+      animateCamera(cameraPresets[view]);
+    });
+  });
+}
+
+function animateCamera(preset) {
+  const startPos = camera.position.clone();
+  const endPos = new THREE.Vector3(...preset.pos);
+  const startTarget = controls.target.clone();
+  const endTarget = new THREE.Vector3(...preset.target);
+  const duration = 1200;
+  const startTime = performance.now();
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    camera.position.lerpVectors(startPos, endPos, ease);
+    controls.target.lerpVectors(startTarget, endTarget, ease);
+    controls.update();
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ═══════════════════════════════════════════════════════
+   7. LIVE ANIMATED HUD READINGS
+   ═══════════════════════════════════════════════════════ */
+function updateHUD(time) {
+  // ─── Gas Treating ───
+  const h2sin = 1200 + Math.sin(time * 0.15) * 50 + (Math.random() - 0.5) * 20;
+  document.getElementById('r-h2sin').textContent = Math.round(h2sin);
+  document.getElementById('bar-h2sin').style.width = ((h2sin / 1500) * 100) + '%';
+
+  const h2sout = 3.8 + Math.sin(time * 0.2) * 0.5 + (Math.random() - 0.5) * 0.3;
+  document.getElementById('r-h2sout').textContent = h2sout.toFixed(1);
+  document.getElementById('bar-h2sout').style.width = ((h2sout / 100) * 100) + '%';
+
+  const co2in = 2.80 + Math.sin(time * 0.1) * 0.15 + (Math.random() - 0.5) * 0.05;
+  document.getElementById('r-co2in').textContent = co2in.toFixed(2);
+  document.getElementById('bar-co2in').style.width = ((co2in / 4) * 100) + '%';
+
+  const co2out = 0.05 + Math.sin(time * 0.12) * 0.008 + (Math.random() - 0.5) * 0.005;
+  document.getElementById('r-co2out').textContent = co2out.toFixed(3);
+  document.getElementById('bar-co2out').style.width = ((co2out / 2) * 100) + '%';
+
+  const removal = 99.7 + Math.sin(time * 0.08) * 0.15;
+  document.getElementById('r-removal').textContent = removal.toFixed(1);
+  document.getElementById('bar-removal').style.width = removal + '%';
+
+  // ─── Amine System ───
+  const leanLoad = 0.012 + Math.sin(time * 0.18) * 0.002;
+  document.getElementById('r-leanload').textContent = leanLoad.toFixed(3);
+  document.getElementById('bar-leanload').style.width = ((leanLoad / 0.1) * 100) + '%';
+
+  const richLoad = 0.48 + Math.sin(time * 0.14) * 0.02;
+  document.getElementById('r-richload').textContent = richLoad.toFixed(3);
+  document.getElementById('bar-richload').style.width = ((richLoad / 0.8) * 100) + '%';
+
+  const circ = 185 + Math.sin(time * 0.1) * 5;
+  document.getElementById('r-circ').textContent = Math.round(circ);
+  document.getElementById('bar-circ').style.width = ((circ / 300) * 100) + '%';
+
+  const leanTemp = 42.5 + Math.sin(time * 0.2) * 1.5;
+  document.getElementById('r-lean-temp').textContent = leanTemp.toFixed(1);
+  document.getElementById('bar-lean-temp').style.width = ((leanTemp / 100) * 100) + '%';
+
+  const richTemp = 68.2 + Math.sin(time * 0.16) * 2.0;
+  document.getElementById('r-rich-temp').textContent = richTemp.toFixed(1);
+  document.getElementById('bar-rich-temp').style.width = ((richTemp / 100) * 100) + '%';
+
+  // ─── Live Readings (Right Panel) ───
+  const absPres = 68.5 + Math.sin(time * 0.12) * 1.2;
+  document.getElementById('r-abs-pres').textContent = absPres.toFixed(1);
+  document.getElementById('bar-abs-pres').style.width = ((absPres / 100) * 100) + '%';
+
+  const absTemp = 48.2 + Math.sin(time * 0.18) * 1.5;
+  document.getElementById('r-abs-temp').textContent = absTemp.toFixed(1);
+  document.getElementById('bar-abs-temp').style.width = ((absTemp / 120) * 100) + '%';
+
+  const strPres = 1.65 + Math.sin(time * 0.15) * 0.08;
+  document.getElementById('r-str-pres').textContent = strPres.toFixed(2);
+  document.getElementById('bar-str-pres').style.width = ((strPres / 5) * 100) + '%';
+
+  const strTemp = 122.4 + Math.sin(time * 0.1) * 2.5;
+  document.getElementById('r-str-temp').textContent = strTemp.toFixed(1);
+  document.getElementById('bar-str-temp').style.width = ((strTemp / 150) * 100) + '%';
+
+  const rebDuty = 8.42 + Math.sin(time * 0.13) * 0.3;
+  document.getElementById('r-reb-duty').textContent = rebDuty.toFixed(2);
+  document.getElementById('bar-reb-duty').style.width = ((rebDuty / 12) * 100) + '%';
+
+  // ─── Removal Efficiency ───
+  const h2sEff = 99.68 + Math.sin(time * 0.09) * 0.12;
+  document.getElementById('e-h2s').textContent = h2sEff.toFixed(2) + '%';
+
+  const co2Eff = 98.2 + Math.sin(time * 0.07) * 0.3;
+  document.getElementById('e-co2').textContent = co2Eff.toFixed(1) + '%';
+
+  const acidGas = 1420 + Math.sin(time * 0.11) * 30;
+  document.getElementById('e-acidgas').textContent = Math.round(acidGas) + ' kg/hr';
+
+  const degrad = 0.12 + Math.sin(time * 0.05) * 0.02;
+  document.getElementById('e-degrad').textContent = degrad.toFixed(2) + '%';
+
+  // ─── Regeneration ───
+  const rebTemp = 128.6 + Math.sin(time * 0.12) * 1.8;
+  document.getElementById('r-reb-temp').textContent = rebTemp.toFixed(1);
+  document.getElementById('bar-reb-temp').style.width = ((rebTemp / 150) * 100) + '%';
+
+  const reflux = 0.85 + Math.sin(time * 0.08) * 0.05;
+  document.getElementById('r-reflux').textContent = reflux.toFixed(2);
+  document.getElementById('bar-reflux').style.width = (reflux * 100) + '%';
+
+  const acidFlow = 2850 + Math.sin(time * 0.1) * 50;
+  document.getElementById('r-acidflow').textContent = Math.round(acidFlow);
+  document.getElementById('bar-acidflow').style.width = ((acidFlow / 5000) * 100) + '%';
+
+  const purity = 99.92 + Math.sin(time * 0.06) * 0.04;
+  document.getElementById('r-purity').textContent = purity.toFixed(2);
+  document.getElementById('bar-purity').style.width = purity + '%';
+
+  // ─── Bottom Panel ───
+  document.getElementById('s-sour').textContent = Math.round(285 + Math.sin(time * 0.1) * 5);
+  document.getElementById('s-sweet').textContent = Math.round(282 + Math.sin(time * 0.1) * 4);
+  document.getElementById('s-h2sin').textContent = Math.round(h2sin);
+  document.getElementById('s-h2sout').textContent = h2sout.toFixed(1);
+  document.getElementById('s-circ').textContent = Math.round(circ);
+  document.getElementById('s-rebduty').textContent = rebDuty.toFixed(2);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATION LOOP
+   ═══════════════════════════════════════════════════════ */
+function animate() {
+  requestAnimationFrame(animate);
+  const elapsed = clock ? clock.getElapsedTime() : performance.now() / 1000;
+  const delta = clock ? clock.getDelta() : 0.016;
+
+  if (controls) {
+    controls.update();
+  }
+
+  // ─── Live HUD ───
+  updateHUD(elapsed);
+
+  // ─── Render with fallback ───
+  if (composer && currentView !== 'internal') {
+    composer.render();
+  } else if (renderer && scene && camera) {
+    renderer.render(scene, camera);
+  }
+
+  // ─── Animate particles ───
+  if (currentView === 'flow') {
+    particleSystems.forEach(sys => {
+      const positions = sys.geometry.attributes.position.array;
+      const { curve, velocities, speed, count } = sys.userData;
+      for (let i = 0; i < count; i++) {
+        const v = velocities[i];
+        v.offset = (v.offset + delta * speed * v.speedVar) % 1;
+        const totalLen = curve.length - 1;
+        const segF = v.offset * totalLen;
+        const segI = Math.min(Math.floor(segF), totalLen - 1);
+        const segT = segF - segI;
+        const p = new THREE.Vector3().lerpVectors(curve[segI], curve[segI + 1], segT);
+        positions[i * 3] = p.x;
+        positions[i * 3 + 1] = p.y;
+        positions[i * 3 + 2] = p.z;
+      }
+      sys.geometry.attributes.position.needsUpdate = true;
+    });
+  }
+
+  // ─── HUD ───
+  if (typeof updateHUD === 'function') updateHUD(elapsed);
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY FUNCTIONS
+   ═══════════════════════════════════════════════════════ */
+function onResize() {
+  if (camera) {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  if (renderer) {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+  if (composer) {
+    composer.setSize(window.innerWidth, window.innerHeight);
+  }
+}
+
+
+// ─── Raycaster Interaction ───
+const tooltip = document.getElementById('tooltip');
+
+function collectInteractive() {
+  scene.traverse(child => {
+    if (child.isMesh && child.userData.type) {
+      interactiveObjects.push(child);
+    } else if (child.isMesh && child.parent && child.parent.name && child.parent.name.includes('-')) {
+      // Fallback for units where labels are on parent groups (e.g. R-101)
+      child.userData.type = child.parent.name;
+      interactiveObjects.push(child);
+    }
+  });
+}
+
+function onClick(event) {
+  if (event.target !== renderer.domElement) return;
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && !obj.userData.type) obj = obj.parent;
+    if (obj) {
+      const popup = document.getElementById('popup');
+      const title = document.getElementById('popup-title');
+      const cont = document.getElementById('popup-content');
+      if(popup && title && cont) {
+          title.textContent = obj.userData.type + ' Status';
+          cont.innerHTML = `<div class="p-row"><span class="p-lbl">Condition</span><span class="p-val">Normal</span></div>
+                            <div class="p-row"><span class="p-lbl">Status</span><span class="p-val">Online</span></div>`;
+          popup.style.display = 'block';
+          popup.style.left = (event.clientX + 20) + 'px';
+          popup.style.top = (event.clientY - 20) + 'px';
+      }
+    }
+  }
+}
+
+function onMouseMove(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && !obj.userData.type) obj = obj.parent;
+    if (obj && tooltip) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = event.clientX + 12 + 'px';
+      tooltip.style.top = event.clientY + 12 + 'px';
+      tooltip.textContent = obj.userData.type;
+      return;
+    }
+  }
+  if(tooltip) tooltip.style.display = 'none';
+}
+
+function simulateLoading() {
+  const fill = document.getElementById('loader-fill');
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 15 + 5;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+      setTimeout(() => {
+        document.getElementById('loading-screen').classList.add('hidden');
+        collectInteractive();
+      }, 400);
+    }
+    fill.style.width = progress + '%';
+  }, 200);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('Initializing 3D Amine viewer...');
+  try {
+    init();
+    animate();
+  } catch (error) {
+    console.error('Initialization error:', error);
+    const loader = document.getElementById('loading-screen');
+    if (loader) loader.classList.add('hidden');
+  }
+});
+</script>
+</body>
+</html>
+

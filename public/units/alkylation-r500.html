@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ═══════════════════════════════════════════════════════════════════
+     ALKY R-500 — Sulfuric Acid Alkylation Unit
+     Standalone 3D Isolation Viewer
+     Three.js r147 | Dark Industrial Theme | Production-Ready
+     ═══════════════════════════════════════════════════════════════════ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R-500 | Sulfuric Acid Alkylation Unit</title>
+<style>
+/* ─── 1. FULL CSS STYLING ─── */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{overflow:hidden;background:#0a0e17;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#c8d6e5;}
+
+/* ─── Loading Screen ─── */
+#loading-screen{position:fixed;inset:0;z-index:9999;background:#0a0e17;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.8s ease;}
+#loading-screen.hidden{opacity:0;pointer-events:none;}
+#loading-screen h1{font-size:1.4rem;color:#f0c040;margin-bottom:1.2rem;letter-spacing:0.08em;}
+.loader-bar{width:280px;height:4px;background:#1a2035;border-radius:2px;overflow:hidden;}
+.loader-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#f0c040,#e8a020);
+  border-radius:2px;transition:width 0.3s ease;}
+#loading-screen p{margin-top:1rem;font-size:0.8rem;color:#5a6a80;}
+
+/* ─── Topbar ─── */
+#topbar{position:fixed;top:0;left:0;right:0;height:48px;z-index:100;
+  background:linear-gradient(180deg,rgba(10,14,23,0.95),rgba(10,14,23,0.85));
+  border-bottom:1px solid #1e2a3a;display:flex;align-items:center;padding:0 16px;
+  backdrop-filter:blur(8px);}
+#topbar .tag{background:#f0c040;color:#0a0e17;font-weight:700;font-size:0.7rem;
+  padding:2px 8px;border-radius:3px;margin-right:12px;letter-spacing:0.06em;}
+#topbar h2{font-size:0.95rem;color:#e0e8f0;font-weight:600;}
+#topbar .unit-id{color:#f0c040;margin-left:8px;}
+#topbar .status{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:0.75rem;}
+#topbar .status .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;
+  box-shadow:0 0 6px #22c55e;animation:pulse-dot 2s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+/* ─── View Toggle Buttons ─── */
+#view-toggle{position:fixed;top:60px;right:16px;z-index:100;display:flex;flex-direction:column;gap:6px;}
+#view-toggle button{background:rgba(20,30,50,0.9);color:#8a9ab0;border:1px solid #1e2a3a;
+  padding:7px 14px;border-radius:4px;font-size:0.72rem;cursor:pointer;
+  transition:all 0.25s ease;letter-spacing:0.04em;font-weight:500;}
+#view-toggle button:hover,#view-toggle button.active{
+  background:rgba(240,192,64,0.15);color:#f0c040;border-color:#f0c040;}
+
+/* ─── Left Panel ─── */
+#left-panel{position:fixed;top:60px;left:16px;width:224px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:14px;backdrop-filter:blur(6px);max-height:calc(100vh - 220px);overflow-y:auto;}
+#left-panel h3{font-size:0.7rem;color:#f0c040;text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:10px;margin-top:14px;}
+#left-panel h3:first-child{margin-top:0;}
+.reading{margin-bottom:10px;}
+.reading label{display:block;font-size:0.65rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:2px;}
+.reading .value{font-size:1.1rem;color:#e0e8f0;font-weight:600;
+  font-variant-numeric:tabular-nums;}
+.reading .unit{font-size:0.7rem;color:#5a6a80;margin-left:4px;}
+.reading .bar{height:3px;background:#1a2540;border-radius:2px;margin-top:3px;overflow:hidden;}
+.reading .bar-fill{height:100%;border-radius:2px;transition:width 0.5s ease;}
+.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:0.72rem;color:#a0b0c0;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* ─── Right Panel ─── */
+#right-panel{position:fixed;top:60px;right:16px;width:210px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:14px;backdrop-filter:blur(6px);margin-top:168px;max-height:calc(100vh - 220px);overflow-y:auto;}
+#right-panel h3{font-size:0.7rem;color:#f0c040;text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:10px;margin-top:14px;}
+#right-panel h3:first-child{margin-top:0;}
+.info-row{display:flex;justify-content:space-between;margin-bottom:5px;}
+.info-row .lbl{font-size:0.68rem;color:#5a6a80;}
+.info-row .val{font-size:0.72rem;color:#c8d6e5;font-weight:600;}
+.refrigerant-status{display:flex;align-items:center;gap:8px;margin-bottom:8px;
+  padding:6px 8px;background:rgba(30,40,60,0.5);border-radius:4px;}
+.refrigerant-status .indicator{width:10px;height:10px;border-radius:50%;
+  background:#22c55e;box-shadow:0 0 6px #22c55e;}
+.refrigerant-status span{font-size:0.72rem;color:#a0b0c0;}
+.refrigerant-status .rv{font-size:0.8rem;color:#f0c040;font-weight:600;margin-left:auto;}
+
+/* ─── Bottom Panel (Process Summary) ─── */
+#bottom-panel{position:fixed;bottom:40px;left:16px;right:16px;height:80px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:12px 18px;backdrop-filter:blur(6px);display:flex;gap:24px;align-items:center;}
+.process-stat{text-align:center;flex:1;}
+.process-stat .num{font-size:1.2rem;color:#e0e8f0;font-weight:700;
+  font-variant-numeric:tabular-nums;}
+.process-stat .desc{font-size:0.6rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-top:2px;}
+
+/* ─── Alert Ticker Bar ─── */
+#alert-ticker{position:fixed;bottom:0;left:0;right:0;height:32px;z-index:100;
+  background:rgba(15,20,35,0.95);border-top:1px solid #1e2a3a;overflow:hidden;
+  display:flex;align-items:center;}
+#alert-ticker .label{background:#f0c040;color:#0a0e17;font-size:0.65rem;
+  font-weight:700;padding:0 10px;height:100%;display:flex;align-items:center;
+  letter-spacing:0.08em;white-space:nowrap;}
+#ticker-content{flex:1;overflow:hidden;white-space:nowrap;}
+#ticker-scroll{display:inline-block;animation:ticker-scroll 55s linear infinite;
+  font-size:0.72rem;color:#8a9ab0;padding-left:20px;}
+@keyframes ticker-scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+.ticker-item{margin-right:60px;}
+.ticker-item.warn{color:#f59e0b;}
+.ticker-item.info{color:#38bdf8;}
+.ticker-item.ok{color:#22c55e;}
+
+/* ─── Canvas Container ─── */
+#canvas-container{position:fixed;inset:0;z-index:1;}
+canvas{display:block;}
+
+/* ─── Tooltip ─── */
+#tooltip{position:fixed;z-index:200;background:rgba(10,14,23,0.95);border:1px solid #f0c040;
+  color:#e0e8f0;font-size:0.72rem;padding:6px 10px;border-radius:4px;pointer-events:none;
+  display:none;max-width:260px;line-height:1.4;}
+
+/* ─── Click Info Popup ─── */
+#click-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:300;
+  background:rgba(12,18,30,0.96);border:1px solid #f0c040;border-radius:8px;
+  padding:20px 24px;min-width:300px;max-width:380px;display:none;backdrop-filter:blur(8px);}
+#click-popup h4{color:#f0c040;font-size:0.85rem;margin-bottom:12px;letter-spacing:0.06em;}
+#click-popup .popup-row{display:flex;justify-content:space-between;margin-bottom:6px;
+  font-size:0.75rem;color:#a0b0c0;}
+#click-popup .popup-row .pv{color:#e0e8f0;font-weight:600;}
+#click-popup .close-btn{position:absolute;top:8px;right:12px;cursor:pointer;
+  color:#5a6a80;font-size:1.1rem;font-weight:700;}
+#click-popup .close-btn:hover{color:#f0c040;}
+</style>
+</head>
+<body>
+
+<!-- ─── Loading Screen ─── -->
+<div id="loading-screen">
+  <h1>R-500 ALKYLATION UNIT</h1>
+  <div class="loader-bar"><div class="loader-bar-fill" id="loader-fill"></div></div>
+  <p>Initializing 3D alkylation unit viewer...</p>
+</div>
+
+<!-- ─── Topbar ─── -->
+<div id="topbar">
+  <span class="tag">PROCESS UNIT</span>
+  <h2>Sulfuric Acid Alkylation<span class="unit-id">R-500</span></h2>
+  <div class="status"><div class="dot"></div><span>ONLINE</span></div>
+</div>
+
+<!-- ─── View Toggle ─── -->
+<div id="view-toggle">
+  <button class="active" data-view="external">External</button>
+  <button data-view="internal">Internal</button>
+  <button data-view="cutaway">Cutaway</button>
+  <button data-view="flow">Flow</button>
+</div>
+
+<!-- ─── Left Panel: Reaction Status + Acid System + Process + Legend ─── -->
+<div id="left-panel">
+  <h3>Reaction Status</h3>
+  <div class="reading">
+    <label>Contactor Temperature</label>
+    <div><span class="value" id="r-ctemp">6.8</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-ctemp" style="width:50%;background:#38bdf8;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Mixing Intensity (RPM)</label>
+    <div><span class="value" id="r-rpm">1850</span><span class="unit">rpm</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-rpm" style="width:74%;background:#a78bfa;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Olefin / Isobutane Ratio</label>
+    <div><span class="value" id="r-oiratio">1.12</span><span class="unit">:1</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-oiratio" style="width:56%;background:#22c55e;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Acid / Hydrocarbon Ratio</label>
+    <div><span class="value" id="r-ahcratio">1.45</span><span class="unit">vol</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-ahcratio" style="width:72%;background:#f59e0b;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Space Velocity</label>
+    <div><span class="value" id="r-sv">0.32</span><span class="unit">h⁻¹</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-sv" style="width:40%;background:#06b6d4;"></div></div>
+  </div>
+
+  <h3>Acid System</h3>
+  <div class="reading">
+    <label>Acid Strength</label>
+    <div><span class="value" id="r-acidstr">89.4</span><span class="unit">wt%</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-acidstr" style="width:89%;background:#84cc16;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Acid Consumption</label>
+    <div><span class="value" id="r-acidcons">1.82</span><span class="unit">lb/bbl</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-acidcons" style="width:36%;background:#ef4444;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Acid Inventory</label>
+    <div><span class="value" id="r-acidinv">2840</span><span class="unit">bbl</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-acidinv" style="width:71%;background:#84cc16;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Settler Interface Level</label>
+    <div><span class="value" id="r-settint">48</span><span class="unit">%</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-settint" style="width:48%;background:#f59e0b;"></div></div>
+  </div>
+
+  <h3>Process Streams</h3>
+  <div class="reading">
+    <label>Olefin Feed</label>
+    <div><span class="value" id="r-olefin">4820</span><span class="unit">bbl/d</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-olefin" style="width:60%;background:#22c55e;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Isobutane Feed</label>
+    <div><span class="value" id="r-ic4">12500</span><span class="unit">bbl/d</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-ic4" style="width:78%;background:#3b82f6;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Alkylate Product</label>
+    <div><span class="value" id="r-alkout">6340</span><span class="unit">bbl/d</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-alkout" style="width:70%;background:#f59e0b;"></div></div>
+  </div>
+
+  <h3>Fluid Legend</h3>
+  <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div>Olefin Feed</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div>Isobutane</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d97706;"></div>Alkylate Product</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#84cc16;"></div>Sulfuric Acid</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#38bdf8;"></div>Propane Refrigerant</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#a78bfa;"></div>Caustic / Water Wash</div>
+</div>
+
+<!-- ─── Right Panel: Live Readings + Quality + Unit Info + Refrigeration ─── -->
+<div id="right-panel">
+  <h3>Live Readings</h3>
+  <div class="reading">
+    <label>Contactor Temp</label>
+    <div><span class="value" id="r-lc-temp">6.8</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-lc-temp" style="width:34%;background:#38bdf8;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Settler Temp</label>
+    <div><span class="value" id="r-sett-temp">8.2</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-sett-temp" style="width:41%;background:#38bdf8;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Fractionator Pressure</label>
+    <div><span class="value" id="r-frac-pres">4.8</span><span class="unit">barg</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-frac-pres" style="width:48%;background:#f59e0b;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Reflux Ratio</label>
+    <div><span class="value" id="r-reflux">6.2</span><span class="unit">:1</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-reflux" style="width:62%;background:#06b6d4;"></div></div>
+  </div>
+
+  <h3>Product Quality</h3>
+  <div class="info-row"><span class="lbl">Alkylate RON</span><span class="val" id="q-ron">94.6</span></div>
+  <div class="info-row"><span class="lbl">Motor Octane (MON)</span><span class="val" id="q-mon">91.8</span></div>
+  <div class="info-row"><span class="lbl">D-86 IBP</span><span class="val" id="q-ibp">38 °C</span></div>
+  <div class="info-row"><span class="lbl">D-86 FBP</span><span class="val" id="q-fbp">204 °C</span></div>
+  <div class="info-row"><span class="lbl">Acid Carryover</span><span class="val" id="q-acidppm" style="color:#22c55e;">2 ppm</span></div>
+
+  <h3>Unit Info</h3>
+  <div class="info-row"><span class="lbl">Process</span><span class="val">H₂SO₄ Alkylation</span></div>
+  <div class="info-row"><span class="lbl">Contactor</span><span class="val">Horizontal Agitated</span></div>
+  <div class="info-row"><span class="lbl">Design Capacity</span><span class="val">6,500 bbl/d</span></div>
+  <div class="info-row"><span class="lbl">Operating Temp</span><span class="val">5–10 °C</span></div>
+  <div class="info-row"><span class="lbl">Acid Range</span><span class="val">88–93 wt%</span></div>
+
+  <h3>Refrigeration</h3>
+  <div class="refrigerant-status"><div class="indicator"></div><span>Compressor</span><span class="rv">RUNNING</span></div>
+  <div class="info-row"><span class="lbl">Suction Pressure</span><span class="val" id="rf-suction">2.1 barg</span></div>
+  <div class="info-row"><span class="lbl">Discharge Pressure</span><span class="val" id="rf-discharge">14.6 barg</span></div>
+  <div class="info-row"><span class="lbl">Refrig. Duty</span><span class="val" id="rf-duty">28.4 MMBtu/h</span></div>
+</div>
+
+<!-- ─── Bottom Panel: Process Summary ─── -->
+<div id="bottom-panel">
+  <div class="process-stat"><div class="num" id="s-olefin">4820</div><div class="desc">Olefin Feed (bbl/d)</div></div>
+  <div class="process-stat"><div class="num" id="s-ctemp">6.8</div><div class="desc">Contact Temp (°C)</div></div>
+  <div class="process-stat"><div class="num" id="s-ron">94.6</div><div class="desc">Alkylate RON</div></div>
+  <div class="process-stat"><div class="num" id="s-acid">89.4</div><div class="desc">Acid Strength (wt%)</div></div>
+  <div class="process-stat"><div class="num" id="s-ic4ratio">2.6</div><div class="desc">iC₄/Olefin Ratio</div></div>
+  <div class="process-stat"><div class="num" id="s-yield">1.31</div><div class="desc">Alkylate Yield (vol)</div></div>
+</div>
+
+<!-- ─── Alert Ticker ─── -->
+<div id="alert-ticker">
+  <div class="label">ALERTS</div>
+  <div id="ticker-content">
+    <div id="ticker-scroll">
+      <span class="ticker-item ok">&#9679; R-500 alkylation unit operating normally — all parameters within limits</span>
+      <span class="ticker-item info">&#9679; Propane refrigeration compressor load at 72% — stable operation</span>
+      <span class="ticker-item warn">&#9679; Acid strength trending down — monitor for fresh acid addition</span>
+      <span class="ticker-item ok">&#9679; Alkylate RON 94.6 — well above 93.0 minimum specification</span>
+      <span class="ticker-item info">&#9679; Contactor impeller speed steady at 1850 RPM</span>
+      <span class="ticker-item ok">&#9679; De-isobutanizer reflux ratio optimized at 6.2:1</span>
+      <span class="ticker-item warn">&#9679; Caustic wash drum level at 68% — schedule product draw</span>
+      <span class="ticker-item ok">&#9679; Acid settler interface level stable at 48% — separation efficient</span>
+      <span class="ticker-item info">&#9679; Fresh acid storage at 1,200 bbl — next delivery in 3 days</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Tooltip ─── -->
+<div id="tooltip"></div>
+
+<!-- ─── Click Info Popup ─── -->
+<div id="click-popup">
+  <span class="close-btn" id="popup-close">&times;</span>
+  <h4 id="popup-title">Equipment Info</h4>
+  <div id="popup-content"></div>
+</div>
+
+<!-- ─── Canvas Container ─── -->
+<div id="canvas-container"></div>
+
+<!-- ─── 2. THREE.JS r147 CDN SETUP ─── -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   ALKY R-500 — SULFURIC ACID ALKYLATION UNIT — COMPLETE 3D SCENE
+   ═══════════════════════════════════════════════════════════════════ */
+
+// ─── Global State ───
+let scene, camera, renderer, controls, composer;
+let raycaster, mouse, clock;
+let impellerGroup = null;        // Rotating impeller blades
+let impellerShaft = null;        // Vertical shaft
+let contactorMesh = null;        // Clickable contactor
+let settlerMesh = null;          // Clickable settler
+let fractionatorMesh = null;     // Clickable fractionator
+let compressorMesh = null;       // Clickable compressor
+let audioCtx = null;
+let motorGain = null;
+let currentView = 'external';
+const interactiveObjects = [];
+
+// ─── Camera Presets ───
+const cameraPresets = {
+  external: { pos: [28, 16, 28], target: [2, 2, 0] },
+  internal: { pos: [2, 0.5, 1], target: [2, 0, 0] },
+  cutaway:  { pos: [22, 8, 18], target: [2, 2, 0] },
+  flow:     { pos: [18, 10, 18], target: [2, 2, 0] }
+};
+
+/* ═══════════════════════════════════════════════════════
+   INITIALIZATION
+   ═══════════════════════════════════════════════════════ */
+function init() {
+  const container = document.getElementById('canvas-container');
+  clock = new THREE.Clock();
+
+  // ─── Scene ───
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0e17);
+  scene.fog = new THREE.FogExp2(0x0a0e17, 0.008);
+
+  // ─── Camera ───
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 300);
+  camera.position.set(28, 16, 28);
+
+  // ─── Renderer ───
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+  container.appendChild(renderer.domElement);
+
+  // ─── Controls ───
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(2, 2, 0);
+  controls.minDistance = 3;
+  controls.maxDistance = 80;
+
+  // ─── Post-processing ───
+  composer = new THREE.EffectComposer(renderer);
+  composer.addPass(new THREE.RenderPass(scene, camera));
+  const bloomPass = new THREE.UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.35, 0.5, 0.85
+  );
+  composer.addPass(bloomPass);
+
+  // ─── Raycaster ───
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  // ─── Lights ───
+  setupLights();
+
+  // ─── Build Unit ───
+  buildAlkylationUnit();
+
+  // ─── Particles ───
+  buildParticles();
+
+  // ─── Ground ───
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(150, 150),
+    new THREE.MeshStandardMaterial({ color: 0x0d1220, roughness: 0.95, metalness: 0.1 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -3.5;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // ─── Events ───
+  window.addEventListener('resize', onResize);
+  renderer.domElement.addEventListener('click', onClick);
+  renderer.domElement.addEventListener('mousemove', onMouseMove);
+  document.getElementById('popup-close').addEventListener('click', () => {
+    document.getElementById('click-popup').style.display = 'none';
+  });
+  setupViewToggle();
+  initAudio();
+
+  simulateLoading();
+}
+
+/* ═══════════════════════════════════════════════════════
+   5-LIGHT SETUP
+   ═══════════════════════════════════════════════════════ */
+function setupLights() {
+  const keyLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+  keyLight.position.set(20, 25, 15);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.set(2048, 2048);
+  keyLight.shadow.camera.left = -30; keyLight.shadow.camera.right = 30;
+  keyLight.shadow.camera.top = 30; keyLight.shadow.camera.bottom = -30;
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0x8899cc, 0.4);
+  fillLight.position.set(-15, 10, -8);
+  scene.add(fillLight);
+
+  const rimLight = new THREE.DirectionalLight(0xffcc88, 0.35);
+  rimLight.position.set(-8, 15, -20);
+  scene.add(rimLight);
+
+  const ambientLight = new THREE.AmbientLight(0x303848, 0.5);
+  scene.add(ambientLight);
+
+  const underLight = new THREE.PointLight(0x2244aa, 0.3, 40);
+  underLight.position.set(2, -5, 0);
+  scene.add(underLight);
+}
+
+/* ═══════════════════════════════════════════════════════
+   MATERIALS
+   ═══════════════════════════════════════════════════════ */
+function mat(color, opts = {}) {
+  return new THREE.MeshStandardMaterial({
+    color, metalness: opts.metalness ?? 0.85, roughness: opts.roughness ?? 0.25,
+    transparent: opts.transparent ?? false, opacity: opts.opacity ?? 1.0,
+    side: opts.side ?? THREE.FrontSide, emissive: opts.emissive ?? 0x000000,
+    emissiveIntensity: opts.emissiveIntensity ?? 0
+  });
+}
+
+const M = {
+  shell:       () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2, transparent: true, opacity: 0.5 }),
+  shellSolid:  () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2 }),
+  darkSteel:   () => mat(0x383e45, { metalness: 0.9, roughness: 0.2 }),
+  stainless:   () => mat(0xc0c8d0, { metalness: 0.95, roughness: 0.15 }),
+  oshaYellow:  () => mat(0xf0c040, { metalness: 0.6, roughness: 0.35 }),
+  pipeOlefin:  () => mat(0x22c55e, { metalness: 0.5, roughness: 0.4 }),
+  pipeIC4:     () => mat(0x3b82f6, { metalness: 0.5, roughness: 0.4 }),
+  pipeAlkylate:() => mat(0xd97706, { metalness: 0.5, roughness: 0.4 }),
+  pipeAcid:    () => mat(0x84cc16, { metalness: 0.5, roughness: 0.4 }),
+  pipeRefrig:  () => mat(0x38bdf8, { metalness: 0.5, roughness: 0.4 }),
+  pipeCaustic: () => mat(0xa78bfa, { metalness: 0.5, roughness: 0.4 }),
+  pipeSteam:   () => mat(0xd4d4d4, { metalness: 0.7, roughness: 0.3 }),
+  concrete:    () => mat(0x606868, { metalness: 0.05, roughness: 0.95 }),
+  grating:     () => mat(0x505a64, { metalness: 0.7, roughness: 0.5, transparent: true, opacity: 0.6 }),
+  warningRed:  () => mat(0xcc2222, { metalness: 0.5, roughness: 0.4 }),
+  insulation:  () => mat(0xd4c4a8, { metalness: 0.1, roughness: 0.9, transparent: true, opacity: 0.35 }),
+  emulsion:    () => mat(0x8B8B50, { emissive: 0x6b6b30, emissiveIntensity: 0.3, transparent: true, opacity: 0.5 }),
+  acidFluid:   () => mat(0x84cc16, { emissive: 0x4a7a10, emissiveIntensity: 0.4, transparent: true, opacity: 0.55 }),
+  hydrocarbon: () => mat(0xd97706, { emissive: 0x8b5010, emissiveIntensity: 0.3, transparent: true, opacity: 0.45 }),
+  impeller:    () => mat(0xc0c8d0, { metalness: 0.95, roughness: 0.1, emissive: 0x334455, emissiveIntensity: 0.2 }),
+  motor:       () => mat(0x2a5090, { metalness: 0.7, roughness: 0.3, emissive: 0x112244, emissiveIntensity: 0.3 }),
+};
+
+/* ═══════════════════════════════════════════════════════
+   BUILD COMPLETE ALKYLATION UNIT
+   ═══════════════════════════════════════════════════════ */
+function buildAlkylationUnit() {
+  const unit = new THREE.Group();
+  unit.name = 'R-500 Alkylation Unit';
+
+  // ═══════════════════════════════════════════
+  // A. CONTACTOR / REACTOR (horizontal, r=2.0, L=8)
+  // ═══════════════════════════════════════════
+  const CX = 2, CY = 2, CZ = 0;  // Contactor center position
+  const CR = 2.0, CL = 8;
+  contactorMesh = new THREE.Group();
+  contactorMesh.name = 'contactor';
+
+  // Main horizontal shell
+  const cShell = new THREE.Mesh(
+    new THREE.CylinderGeometry(CR, CR, CL, 48, 1, true), M.shell()
+  );
+  cShell.rotation.z = Math.PI / 2;
+  cShell.castShadow = true;
+  contactorMesh.add(cShell);
+
+  // End caps (hemispherical)
+  const cCapGeo = new THREE.SphereGeometry(CR, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2);
+  const cLeftCap = new THREE.Mesh(cCapGeo, M.shellSolid());
+  cLeftCap.position.x = -CL / 2;
+  cLeftCap.rotation.z = Math.PI / 2;
+  contactorMesh.add(cLeftCap);
+  const cRightCap = new THREE.Mesh(cCapGeo, M.shellSolid());
+  cRightCap.position.x = CL / 2;
+  cRightCap.rotation.z = -Math.PI / 2;
+  contactorMesh.add(cRightCap);
+
+  // Weld seam rings
+  [-2, 0, 2].forEach(x => {
+    const wr = new THREE.Mesh(new THREE.TorusGeometry(CR + 0.02, 0.035, 8, 48),
+      mat(0xb0b8c0, { metalness: 0.9, roughness: 0.15 }));
+    wr.position.x = x; wr.rotation.y = Math.PI / 2;
+    contactorMesh.add(wr);
+  });
+
+  // Internal emulsion fluid
+  const emulsionFluid = new THREE.Mesh(
+    new THREE.CylinderGeometry(CR * 0.92, CR * 0.92, CL * 0.85, 32),
+    M.emulsion()
+  );
+  emulsionFluid.rotation.z = Math.PI / 2;
+  contactorMesh.add(emulsionFluid);
+
+  // ═══ IMPELLER (the centerpiece) ═══
+  impellerGroup = new THREE.Group();
+  impellerGroup.name = 'impeller';
+  // Vertical shaft
+  impellerShaft = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.08, 0.08, CR * 2.4, 12), M.stainless()
+  );
+  impellerGroup.add(impellerShaft);
+  // Shaft extends above vessel (motor coupling)
+  const shaftExt = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.1, 0.1, 1.5, 12), M.stainless()
+  );
+  shaftExt.position.y = CR * 1.2 + 0.75;
+  impellerGroup.add(shaftExt);
+  // Impeller blades (3 blades at each of 2 levels)
+  [-0.8, 0.8].forEach(zLevel => {
+    for (let b = 0; b < 4; b++) {
+      const angle = (b / 4) * Math.PI * 2;
+      const blade = new THREE.Mesh(
+        new THREE.BoxGeometry(1.2, 0.04, 0.25), M.impeller()
+      );
+      blade.position.set(0, Math.cos(angle) * 0.7, Math.sin(angle) * 0.7);
+      blade.rotation.y = -angle + 0.3; // Pitch angle
+      blade.position.z += zLevel * 0.5;
+      impellerGroup.add(blade);
+    }
+    // Hub at each level
+    const hub = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.18, 0.15, 12), M.stainless()
+    );
+    hub.rotation.z = Math.PI / 2;
+    hub.position.z = zLevel * 0.5;
+    impellerGroup.add(hub);
+  });
+  impellerGroup.position.set(0, 0, 0);
+  contactorMesh.add(impellerGroup);
+
+  // Motor housing on top
+  const motorHsg = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.5, 1.8, 16), M.motor()
+  );
+  motorHsg.position.set(0, CR + 1.0 + 0.9, 0);
+  contactorMesh.add(motorHsg);
+  // Motor base plate
+  const motorBase = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.7, 0.7, 0.12, 16), M.darkSteel()
+  );
+  motorBase.position.set(0, CR + 1.0, 0);
+  contactorMesh.add(motorBase);
+  // Motor indicator light
+  const motorLight = new THREE.Mesh(
+    new THREE.SphereGeometry(0.06, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0x22c55e })
+  );
+  motorLight.position.set(0.4, CR + 2.1, 0);
+  contactorMesh.add(motorLight);
+  const motorGlow = new THREE.PointLight(0x22c55e, 0.5, 3);
+  motorGlow.position.copy(motorLight.position);
+  contactorMesh.add(motorGlow);
+
+  // Cooling coils inside (propane refrigerant)
+  const coilPts = [];
+  for (let t = 0; t < Math.PI * 6; t += 0.15) {
+    coilPts.push(new THREE.Vector3(Math.cos(t) * 1.2, Math.sin(t) * 1.2, -1.5 + (t / (Math.PI * 6)) * 3));
+  }
+  const coilCurve = new THREE.CatmullRomCurve3(coilPts);
+  const coilTube = new THREE.Mesh(
+    new THREE.TubeGeometry(coilCurve, 80, 0.04, 6, false), M.pipeRefrig()
+  );
+  contactorMesh.add(coilTube);
+
+  // Feed nozzles: olefin, isobutane, recycle iC4
+  function addNozzle(x, y, z, dir, len, r, pipeMat) {
+    const grp = new THREE.Group();
+    const pipe = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 12), pipeMat);
+    pipe.position.set(x, y, z);
+    if (dir === 'left') pipe.rotation.z = Math.PI / 2;
+    else if (dir === 'right') pipe.rotation.z = -Math.PI / 2;
+    else if (dir === 'top') { /* default */ }
+    else if (dir === 'bottom') pipe.rotation.x = Math.PI;
+    else if (dir === 'front') pipe.rotation.x = Math.PI / 2;
+    else if (dir === 'back') pipe.rotation.x = -Math.PI / 2;
+    grp.add(pipe);
+    const flange = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.8, r * 1.8, 0.08, 12), M.darkSteel());
+    const fOff = (dir === 'bottom') ? -len / 2 : len / 2;
+    if (dir === 'left' || dir === 'right') flange.rotation.z = Math.PI / 2;
+    else if (dir === 'front' || dir === 'back') flange.rotation.x = Math.PI / 2;
+    grp.add(flange);
+    return grp;
+  }
+  contactorMesh.add(addNozzle(-CL / 2 - 0.6, 0.5, 0, 'left', 1.2, 0.2, M.pipeOlefin()));
+  contactorMesh.add(addNozzle(-CL / 2 - 0.6, -0.3, 0.8, 'left', 1.0, 0.18, M.pipeIC4()));
+  contactorMesh.add(addNozzle(0, CR + 0.4, 1.5, 'top', 1.0, 0.15, M.pipeIC4())); // recycle
+  contactorMesh.add(addNozzle(CL / 2 + 0.6, 0, 0, 'right', 1.2, 0.22, M.pipeAcid())); // acid return
+  contactorMesh.add(addNozzle(CL / 2 + 0.6, 0.8, 0, 'right', 1.2, 0.2, M.emulsion())); // product out
+
+  // Saddles
+  [-2.5, 2.5].forEach(xp => {
+    const saddle = new THREE.Group();
+    const cradle = new THREE.Mesh(
+      new THREE.CylinderGeometry(CR + 0.05, CR + 0.05, 0.5, 48, 1, true, -Math.PI / 3, Math.PI * 2 / 3),
+      M.darkSteel());
+    cradle.rotation.z = Math.PI / 2;
+    saddle.add(cradle);
+    [-0.6, 0, 0.6].forEach(zo => {
+      const rib = new THREE.Mesh(new THREE.BoxGeometry(0.5, CR * 1.6, 0.08), M.darkSteel());
+      rib.position.set(0, -(CR * 0.6), zo);
+      saddle.add(rib);
+    });
+    const base = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.25, 2.8), M.darkSteel());
+    base.position.y = -(CR + 0.9);
+    saddle.add(base);
+    const ped = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.6, 3.4), M.concrete());
+    ped.position.y = -(CR + 1.3);
+    saddle.add(ped);
+    saddle.position.x = xp;
+    contactorMesh.add(saddle);
+  });
+
+  contactorMesh.position.set(CX, CY, CZ);
+  unit.add(contactorMesh);
+
+  // ═══════════════════════════════════════════
+  // B. ACID SETTLER (horizontal, r=1.5, L=6)
+  // ═══════════════════════════════════════════
+  const SX = 12, SY = 2, SZ = 0;
+  const SR = 1.5, SL = 6;
+  settlerMesh = new THREE.Group();
+  settlerMesh.name = 'settler';
+
+  const sShell = new THREE.Mesh(new THREE.CylinderGeometry(SR, SR, SL, 48, 1, true), M.shell());
+  sShell.rotation.z = Math.PI / 2;
+  settlerMesh.add(sShell);
+  const sCapGeo = new THREE.SphereGeometry(SR, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2);
+  const sLCap = new THREE.Mesh(sCapGeo, M.shellSolid());
+  sLCap.position.x = -SL / 2; sLCap.rotation.z = Math.PI / 2;
+  settlerMesh.add(sLCap);
+  const sRCap = new THREE.Mesh(sCapGeo, M.shellSolid());
+  sRCap.position.x = SL / 2; sRCap.rotation.z = -Math.PI / 2;
+  settlerMesh.add(sRCap);
+
+  // Acid layer (bottom, dense green)
+  const acidLayer = new THREE.Mesh(
+    new THREE.CylinderGeometry(SR * 0.9, SR * 0.9, SL * 0.8, 32), M.acidFluid()
+  );
+  acidLayer.rotation.z = Math.PI / 2;
+  acidLayer.position.y = -(SR * 0.35);
+  settlerMesh.add(acidLayer);
+  // Hydrocarbon layer (top, amber)
+  const hcLayer = new THREE.Mesh(
+    new THREE.CylinderGeometry(SR * 0.88, SR * 0.88, SL * 0.8, 32), M.hydrocarbon()
+  );
+  hcLayer.rotation.z = Math.PI / 2;
+  hcLayer.position.y = SR * 0.35;
+  settlerMesh.add(hcLayer);
+
+  // Coalescing elements (internal baffles)
+  for (let i = 0; i < 3; i++) {
+    const baffle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.03, SR * 1.5, SR * 1.7), M.stainless()
+    );
+    baffle.position.set(-SL * 0.3 + i * SL * 0.3, 0, 0);
+    settlerMesh.add(baffle);
+  }
+
+  // Nozzles
+  settlerMesh.add(addNozzle(-SL / 2 - 0.5, 0.3, 0, 'left', 1.0, 0.2, M.emulsion())); // emulsion in
+  settlerMesh.add(addNozzle(SL / 2 + 0.5, 0.5, 0, 'right', 1.0, 0.18, M.pipeAlkylate())); // HC out to frac
+  settlerMesh.add(addNozzle(0, -(SR + 0.4), 0, 'bottom', 0.8, 0.15, M.pipeAcid())); // acid out
+
+  // Saddles
+  [-1.5, 1.5].forEach(xp => {
+    const saddle = new THREE.Group();
+    const cradle = new THREE.Mesh(
+      new THREE.CylinderGeometry(SR + 0.05, SR + 0.05, 0.4, 48, 1, true, -Math.PI / 3, Math.PI * 2 / 3),
+      M.darkSteel());
+    cradle.rotation.z = Math.PI / 2; saddle.add(cradle);
+    [-0.4, 0, 0.4].forEach(zo => {
+      const rib = new THREE.Mesh(new THREE.BoxGeometry(0.4, SR * 1.5, 0.06), M.darkSteel());
+      rib.position.set(0, -(SR * 0.55), zo); saddle.add(rib);
+    });
+    const base = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.2, 2.2), M.darkSteel());
+    base.position.y = -(SR + 0.75); saddle.add(base);
+    saddle.position.x = xp; settlerMesh.add(saddle);
+  });
+
+  settlerMesh.position.set(SX, SY, SZ);
+  unit.add(settlerMesh);
+
+  // ═══════════════════════════════════════════
+  // C. FRACTIONATOR / DE-ISOBUTANIZER (tall column, r=1.8, H=18)
+  // ═══════════════════════════════════════════
+  const FX = 20, FY = 11, FZ = 0;
+  const FR = 1.8, FH = 18;
+  fractionatorMesh = new THREE.Group();
+  fractionatorMesh.name = 'fractionator';
+
+  // Main column shell
+  const fShell = new THREE.Mesh(new THREE.CylinderGeometry(FR, FR, FH, 48, 1, true), M.shell());
+  fShell.castShadow = true;
+  fractionatorMesh.add(fShell);
+
+  // Top dome
+  const fDome = new THREE.Mesh(
+    new THREE.SphereGeometry(FR, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid()
+  );
+  fDome.position.y = FH / 2;
+  fractionatorMesh.add(fDome);
+
+  // Bottom head
+  const fBottom = new THREE.Mesh(
+    new THREE.SphereGeometry(FR, 48, 24, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.shellSolid()
+  );
+  fBottom.position.y = -FH / 2;
+  fractionatorMesh.add(fBottom);
+
+  // Tray representation (40+ trays — horizontal lines every ~0.4 units)
+  const trayMat = mat(0xa0a8b0, { metalness: 0.85, roughness: 0.2, transparent: true, opacity: 0.35 });
+  for (let y = -FH / 2 + 0.5; y < FH / 2 - 0.5; y += 0.45) {
+    const tray = new THREE.Mesh(
+      new THREE.CylinderGeometry(FR * 0.96, FR * 0.96, 0.02, 48), trayMat
+    );
+    tray.position.y = y;
+    fractionatorMesh.add(tray);
+  }
+
+  // Manways (4 along column)
+  [-5, -1.5, 3, 7].forEach(my => {
+    const mw = new THREE.Group();
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.4, 12), M.shellSolid());
+    neck.rotation.x = Math.PI / 2;
+    neck.position.set(FR + 0.25, my, 0);
+    mw.add(neck);
+    const cover = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.08, 12), M.darkSteel());
+    cover.rotation.x = Math.PI / 2;
+    cover.position.set(FR + 0.48, my, 0);
+    mw.add(cover);
+    fractionatorMesh.add(mw);
+  });
+
+  // Feed nozzle (mid-column)
+  fractionatorMesh.add(addNozzle(FR + 0.5, -2, 0, 'front', 0.8, 0.18, M.pipeAlkylate()));
+  // Overhead iC4 product out (top)
+  fractionatorMesh.add(addNozzle(-FR - 0.5, FH / 2 - 1, 0, 'left', 0.8, 0.15, M.pipeIC4()));
+  // Bottom alkylate product out
+  fractionatorMesh.add(addNozzle(0, -(FH / 2 + 0.5), 0, 'bottom', 1.0, 0.2, M.pipeAlkylate()));
+  // Reflux nozzle
+  fractionatorMesh.add(addNozzle(FR + 0.5, FH / 2 - 3, 0, 'front', 0.6, 0.12, M.pipeAlkylate()));
+
+  // Skirt
+  const skirt = new THREE.Mesh(
+    new THREE.CylinderGeometry(FR + 0.1, FR + 0.3, 2.0, 48, 1, true), M.darkSteel()
+  );
+  skirt.position.y = -(FH / 2 + 1.0);
+  fractionatorMesh.add(skirt);
+  // Skirt base ring
+  const skirtBase = new THREE.Mesh(
+    new THREE.TorusGeometry(FR + 0.3, 0.08, 8, 48), M.darkSteel()
+  );
+  skirtBase.position.y = -(FH / 2 + 2.0);
+  skirtBase.rotation.x = Math.PI / 2;
+  fractionatorMesh.add(skirtBase);
+
+  // Platforms at intervals
+  [4, 10, 16].forEach(py => {
+    const platG = new THREE.Group();
+    const pg = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.06, 2.5), M.grating());
+    platG.add(pg);
+    // Handrails
+    const rH = 1.0;
+    [[-1.25, 1.25], [-1.25, -1.25], [1.25, 1.25], [1.25, -1.25]].forEach(([rx, rz], idx) => {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, rH, 6), M.oshaYellow());
+      post.position.set(rx, rH / 2, rz);
+      platG.add(post);
+    });
+    // Top rails
+    [1.25, -1.25].forEach(zr => {
+      const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.5, 6), M.oshaYellow());
+      rail.rotation.z = Math.PI / 2; rail.position.set(0, rH, zr);
+      platG.add(rail);
+    });
+    platG.position.y = py;
+    fractionatorMesh.add(platG);
+  });
+
+  fractionatorMesh.position.set(FX, FY, FZ);
+  unit.add(fractionatorMesh);
+
+  // ═══════════════════════════════════════════
+  // D. REFRIGERATION SYSTEM
+  // ═══════════════════════════════════════════
+  const RX = -5, RZ = 8;
+  compressorMesh = new THREE.Group();
+  compressorMesh.name = 'compressor';
+
+  // Compressor body (large box)
+  const compBody = new THREE.Mesh(new THREE.BoxGeometry(3.0, 2.2, 2.5), M.darkSteel());
+  compBody.position.set(RX, 0, RZ);
+  compBody.castShadow = true;
+  compressorMesh.add(compBody);
+  // Motor on top
+  const compMotor = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 1.5, 16), M.motor());
+  compMotor.rotation.z = Math.PI / 2;
+  compMotor.position.set(RX, 1.8, RZ);
+  compressorMesh.add(compMotor);
+  // Suction/discharge nozzles
+  compressorMesh.add(addNozzle(RX - 1.8, -0.3, RZ, 'left', 0.8, 0.15, M.pipeRefrig()));
+  compressorMesh.add(addNozzle(RX + 1.8, -0.3, RZ, 'right', 0.8, 0.15, M.pipeRefrig()));
+  // Indicator light
+  const compLight = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0x22c55e }));
+  compLight.position.set(RX + 1.2, 0.8, RZ + 1.26);
+  compressorMesh.add(compLight);
+  const compGlow = new THREE.PointLight(0x22c55e, 0.4, 4);
+  compGlow.position.copy(compLight.position);
+  compressorMesh.add(compGlow);
+
+  unit.add(compressorMesh);
+
+  // Propane chiller/condenser (shell-and-tube)
+  const chillerX = -5, chillerZ = 14;
+  const chillerG = new THREE.Group();
+  const chBody = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 4.5, 24, 1, true), M.shell());
+  chBody.rotation.z = Math.PI / 2;
+  chBody.position.set(chillerX, 0.5, chillerZ);
+  chillerG.add(chBody);
+  // Tube sheets
+  [-2.25, 2.25].forEach(xo => {
+    const ts = new THREE.Mesh(new THREE.CircleGeometry(0.8, 24), M.darkSteel());
+    ts.rotation.y = xo < 0 ? Math.PI / 2 : -Math.PI / 2;
+    ts.position.set(chillerX + xo, 0.5, chillerZ);
+    chillerG.add(ts);
+  });
+  unit.add(chillerG);
+
+  // Refrigerant accumulator (horizontal, r=0.6, L=2)
+  const accX = -5, accZ = 19;
+  const accG = new THREE.Group();
+  const accBody = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 2.0, 24, 1, true), M.shell());
+  accBody.rotation.z = Math.PI / 2;
+  accBody.position.set(accX, 0.3, accZ);
+  accG.add(accBody);
+  const accLCap = new THREE.Mesh(new THREE.SphereGeometry(0.6, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+  accLCap.position.set(accX - 1, 0.3, accZ); accLCap.rotation.z = Math.PI / 2;
+  accG.add(accLCap);
+  const accRCap = new THREE.Mesh(new THREE.SphereGeometry(0.6, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+  accRCap.position.set(accX + 1, 0.3, accZ); accRCap.rotation.z = -Math.PI / 2;
+  accG.add(accRCap);
+  // Saddle
+  const accSaddle = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 1.6), M.darkSteel());
+  accSaddle.position.set(accX, -(0.6 + 0.1), accZ);
+  accG.add(accSaddle);
+  unit.add(accG);
+
+  // ═══════════════════════════════════════════
+  // E. ACID STORAGE TANK (r=1.0, H=4 with cone roof)
+  // ═══════════════════════════════════════════
+  const TX = 12, TZ = 8;
+  const acidTankG = new THREE.Group();
+  // Tank body
+  const atBody = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 4.0, 32, 1, true), M.shell());
+  atBody.position.y = 2;
+  acidTankG.add(atBody);
+  // Flat bottom
+  const atBottom = new THREE.Mesh(new THREE.CircleGeometry(1.0, 32), M.shellSolid());
+  atBottom.rotation.x = -Math.PI / 2;
+  atBottom.position.y = 0.01;
+  acidTankG.add(atBottom);
+  // Cone roof
+  const roofGeo = new THREE.ConeGeometry(1.15, 0.8, 32);
+  const roof = new THREE.Mesh(roofGeo, M.shellSolid());
+  roof.position.y = 4.4;
+  acidTankG.add(roof);
+  // Roof vent
+  const roofVent = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.4, 8), M.stainless());
+  roofVent.position.y = 5.0;
+  acidTankG.add(roofVent);
+  // Acid level inside (green fluid)
+  const acidLevel = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.95, 0.95, 3.2, 32), M.acidFluid()
+  );
+  acidLevel.position.y = 1.6;
+  acidTankG.add(acidLevel);
+  // Ladder
+  for (let i = 0; i < 12; i++) {
+    const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 6), M.oshaYellow());
+    rung.rotation.z = Math.PI / 2;
+    rung.position.set(1.1, 0.5 + i * 0.35, 0);
+    acidTankG.add(rung);
+  }
+  const ladderRail = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 5.5, 6), M.oshaYellow());
+  ladderRail.position.set(1.15, 2.75, 0.2);
+  acidTankG.add(ladderRail);
+  const ladderRail2 = ladderRail.clone();
+  ladderRail2.position.z = -0.2;
+  acidTankG.add(ladderRail2);
+
+  acidTankG.position.set(TX, 0, TZ);
+  unit.add(acidTankG);
+
+  // ═══════════════════════════════════════════
+  // F. PRODUCT TREATING
+  // ═══════════════════════════════════════════
+  // Caustic wash drum (r=0.5, L=2)
+  const cwX = 24, cwZ = 5;
+  const causticG = new THREE.Group();
+  const cwBody = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2.0, 24, 1, true), M.shell());
+  cwBody.rotation.z = Math.PI / 2;
+  cwBody.position.set(cwX, 0.5, cwZ);
+  causticG.add(cwBody);
+  causticG.position.set(0, 0, 0);
+  unit.add(causticG);
+
+  // Water wash drum
+  const wwG = new THREE.Group();
+  const wwBody = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2.0, 24, 1, true), M.shell());
+  wwBody.rotation.z = Math.PI / 2;
+  wwBody.position.set(cwX, 0.5, cwZ + 3);
+  wwG.add(wwBody);
+  unit.add(wwG);
+
+  // Alkylate product storage (small tank r=0.8, H=3)
+  const apsX = 28, apsZ = 4;
+  const apsG = new THREE.Group();
+  const apsBody = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 3.0, 24, 1, true), M.shell());
+  apsBody.position.y = 1.5;
+  apsG.add(apsBody);
+  const apsBottom = new THREE.Mesh(new THREE.CircleGeometry(0.8, 24), M.shellSolid());
+  apsBottom.rotation.x = -Math.PI / 2; apsBottom.position.y = 0.01;
+  apsG.add(apsBottom);
+  const apsRoof = new THREE.Mesh(new THREE.ConeGeometry(0.9, 0.5, 24), M.shellSolid());
+  apsRoof.position.y = 3.25;
+  apsG.add(apsRoof);
+  apsG.position.set(apsX, 0, apsZ);
+  unit.add(apsG);
+
+  // ═══════════════════════════════════════════
+  // G. INTERCONNECTING PIPING
+  // ═══════════════════════════════════════════
+  function addPipe(points, radius, pipeMat) {
+    const curve = new THREE.CatmullRomCurve3(points);
+    const tubeGeo = new THREE.TubeGeometry(curve, 32, radius, 8, false);
+    const pipe = new THREE.Mesh(tubeGeo, pipeMat);
+    pipe.castShadow = true;
+    unit.add(pipe);
+    return pipe;
+  }
+
+  // Contactor → Settler (emulsion transfer)
+  addPipe([
+    new THREE.Vector3(CX + CL / 2 + 0.6, CY + 0.8, CZ),
+    new THREE.Vector3(CX + CL / 2 + 2, CY + 0.8, CZ),
+    new THREE.Vector3(SX - SL / 2 - 2, SY + 0.3, SZ),
+    new THREE.Vector3(SX - SL / 2 - 0.5, SY + 0.3, SZ)
+  ], 0.2, M.emulsion());
+
+  // Settler → Fractionator (hydrocarbon to frac)
+  addPipe([
+    new THREE.Vector3(SX + SL / 2 + 0.5, SY + 0.5, SZ),
+    new THREE.Vector3(SX + SL / 2 + 2, SY + 0.5, SZ),
+    new THREE.Vector3(FX + FR + 0.5, FY - 2, FZ)
+  ], 0.18, M.pipeAlkylate());
+
+  // Settler → Contactor (acid recycle)
+  addPipe([
+    new THREE.Vector3(SX, SY - SR - 0.4, SZ),
+    new THREE.Vector3(SX, SY - SR - 1.5, SZ),
+    new THREE.Vector3(CX, CY - CR - 1.5, CZ - 3),
+    new THREE.Vector3(CX, CY - CR - 1.5, CZ),
+    new THREE.Vector3(CX, CY - CR - 0.5, CZ),
+    new THREE.Vector3(CX + CL / 2 + 0.6, CY, CZ)
+  ], 0.15, M.pipeAcid());
+
+  // Fractionator overhead → Contactor recycle iC4
+  addPipe([
+    new THREE.Vector3(FX - FR - 0.5, FY + FH / 2 - 1, FZ),
+    new THREE.Vector3(FX - FR - 2, FY + FH / 2 - 1, FZ),
+    new THREE.Vector3(FX - FR - 2, FY + FH / 2 + 2, FZ),
+    new THREE.Vector3(CX - 2, CY + CR + 3, CZ),
+    new THREE.Vector3(CX, CY + CR + 1, CZ + 1.5),
+    new THREE.Vector3(CX, CY + CR + 0.4, CZ + 1.5)
+  ], 0.14, M.pipeIC4());
+
+  // Fractionator bottom → Caustic wash → Water wash → Product storage
+  addPipe([
+    new THREE.Vector3(FX, FY - FH / 2 - 0.5, FZ),
+    new THREE.Vector3(FX, FY - FH / 2 - 2, FZ),
+    new THREE.Vector3(FX + 3, FY - FH / 2 - 2, FZ),
+    new THREE.Vector3(cwX - 1, 0.5, cwZ)
+  ], 0.18, M.pipeAlkylate());
+
+  addPipe([
+    new THREE.Vector3(cwX + 1, 0.5, cwZ),
+    new THREE.Vector3(cwX + 1.5, 0.5, cwZ + 1.5),
+    new THREE.Vector3(cwX - 1, 0.5, cwZ + 3)
+  ], 0.14, M.pipeCaustic());
+
+  addPipe([
+    new THREE.Vector3(cwX + 1, 0.5, cwZ + 3),
+    new THREE.Vector3(apsX - 1, 0.5, apsZ),
+    new THREE.Vector3(apsX - 0.8, 1.5, apsZ)
+  ], 0.14, M.pipeAlkylate());
+
+  // Contactor → Refrigeration (propane coils)
+  addPipe([
+    new THREE.Vector3(CX, CY + CR + 0.5, CZ - 1.5),
+    new THREE.Vector3(CX - 2, CY + CR + 2, CZ - 3),
+    new THREE.Vector3(RX, 1, RZ - 2),
+    new THREE.Vector3(RX, -0.3, RZ)
+  ], 0.12, M.pipeRefrig());
+
+  // Refrigerant piping: compressor → chiller → accumulator
+  addPipe([
+    new THREE.Vector3(RX + 1.8, -0.3, RZ),
+    new THREE.Vector3(RX + 2.5, -0.3, RZ),
+    new THREE.Vector3(RX + 2.5, 0.5, chillerZ),
+    new THREE.Vector3(chillerX + 2.25, 0.5, chillerZ)
+  ], 0.12, M.pipeRefrig());
+
+  addPipe([
+    new THREE.Vector3(chillerX - 2.25, 0.5, chillerZ),
+    new THREE.Vector3(accX + 1.2, 0.5, chillerZ + 1),
+    new THREE.Vector3(accX + 1, 0.3, accZ)
+  ], 0.1, M.pipeRefrig());
+
+  addPipe([
+    new THREE.Vector3(accX - 1, 0.3, accZ),
+    new THREE.Vector3(RX - 3, 0.3, accZ),
+    new THREE.Vector3(RX - 1.8, 0.3, RZ - 1),
+    new THREE.Vector3(RX - 1.8, -0.3, RZ)
+  ], 0.12, M.pipeRefrig());
+
+  // Olefin feed pipe (from left)
+  addPipe([
+    new THREE.Vector3(CX - CL / 2 - 6, CY + 0.5, CZ),
+    new THREE.Vector3(CX - CL / 2 - 3, CY + 0.5, CZ),
+    new THREE.Vector3(CX - CL / 2 - 0.6, CY + 0.5, CZ)
+  ], 0.2, M.pipeOlefin());
+
+  // Acid storage → Contactor (fresh acid)
+  addPipe([
+    new THREE.Vector3(TX, 1.5, TZ - 1.5),
+    new THREE.Vector3(TX - 3, 1, TZ - 3),
+    new THREE.Vector3(SX - 2, 1, SZ - 3),
+    new THREE.Vector3(SX, SY - SR - 0.8, SZ - 2)
+  ], 0.12, M.pipeAcid());
+
+  // ═══════════════════════════════════════════
+  // H. INSTRUMENTS
+  // ═══════════════════════════════════════════
+  // Contactor temp indicator
+  const tiGrp = new THREE.Group();
+  const tiBody = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.45, 0.2), M.darkSteel());
+  tiBody.position.set(CX - 1, CY + CR + 0.3, CZ - CR - 0.2);
+  tiGrp.add(tiBody);
+  const tiDisp = new THREE.Mesh(new THREE.PlaneGeometry(0.25, 0.12),
+    new THREE.MeshBasicMaterial({ color: 0x00ff88 }));
+  tiDisp.position.set(CX - 1, CY + CR + 0.3, CZ - CR - 0.08);
+  tiGrp.add(tiDisp);
+  unit.add(tiGrp);
+
+  // Pressure gauge on fractionator
+  const piGrp = new THREE.Group();
+  const piBody = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.25, 12), M.darkSteel());
+  piBody.position.set(FX + FR + 0.3, FY + 5, FZ);
+  piGrp.add(piBody);
+  const piFace = new THREE.Mesh(new THREE.CircleGeometry(0.1, 16),
+    new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  piFace.rotation.y = -Math.PI / 2;
+  piFace.position.set(FX + FR + 0.44, FY + 5, FZ);
+  piGrp.add(piFace);
+  unit.add(piGrp);
+
+  // Level instrument on acid storage
+  const ltGrp = new THREE.Group();
+  const ltBody = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.4, 0.2), M.darkSteel());
+  ltBody.position.set(TX + 1.2, 2.5, TZ);
+  ltGrp.add(ltBody);
+  const ltDisp = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.1),
+    new THREE.MeshBasicMaterial({ color: 0x84cc16 }));
+  ltDisp.position.set(TX + 1.2, 2.5, TZ + 0.11);
+  ltGrp.add(ltDisp);
+  unit.add(ltGrp);
+
+  // ═══════════════════════════════════════════
+  // I. PLATFORMS AND LADDERS
+  // ═══════════════════════════════════════════
+  // Main contactor platform
+  const cPlatG = new THREE.Group();
+  const cpGrating = new THREE.Mesh(new THREE.BoxGeometry(8, 0.06, 4), M.grating());
+  cpGrating.position.set(CX, CY + CR + 0.5, CZ);
+  cPlatG.add(cpGrating);
+  [[-4, -2], [-4, 2], [4, -2], [4, 2]].forEach(([rx, rz]) => {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.1, 6), M.oshaYellow());
+    post.position.set(CX + rx, CY + CR + 1.05, CZ + rz);
+    cPlatG.add(post);
+  });
+  [2, -2].forEach(zr => {
+    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 8, 6), M.oshaYellow());
+    rail.rotation.z = Math.PI / 2;
+    rail.position.set(CX, CY + CR + 1.1, CZ + zr);
+    cPlatG.add(rail);
+  });
+  unit.add(cPlatG);
+
+  // Stairway to contactor platform
+  const stairG = new THREE.Group();
+  for (let i = 0; i < 10; i++) {
+    const step = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.05, 0.28), M.grating());
+    step.position.set(CX - 4 - i * 0.3, CY + CR + 0.5 - i * 0.25, CZ - 2.5);
+    stairG.add(step);
+  }
+  unit.add(stairG);
+
+  // ═══ ADD TO SCENE ═══
+  unit.position.set(0, 0, 0);
+  scene.add(unit);
+}
+
+/* ═══════════════════════════════════════════════════════
+   PARTICLE SYSTEMS
+   ═══════════════════════════════════════════════════════ */
+const particleSystems = [];
+function buildParticles() {
+  // Olefin feed swirling into contactor
+  createParticleSystem('olefinFeed', 0x22c55e, 250, {
+    curve: [
+      new THREE.Vector3(-4, 2.5, 0), new THREE.Vector3(-2, 2.3, 0.3),
+      new THREE.Vector3(0, 2, -0.2), new THREE.Vector3(1, 2, 0.5),
+      new THREE.Vector3(2, 1.8, 0)
+    ], speed: 0.4, size: 0.08
+  });
+
+  // Isobutane feed into contactor
+  createParticleSystem('ic4Feed', 0x3b82f6, 200, {
+    curve: [
+      new THREE.Vector3(-4, 1.5, 1), new THREE.Vector3(-2, 1.8, 0.6),
+      new THREE.Vector3(0, 2, 0), new THREE.Vector3(2, 1.8, -0.3)
+    ], speed: 0.35, size: 0.07
+  });
+
+  // Emulsion contactor → settler
+  createParticleSystem('emulsionFlow', 0x9a9a50, 200, {
+    curve: [
+      new THREE.Vector3(6, 2.8, 0), new THREE.Vector3(8, 2.5, 0.2),
+      new THREE.Vector3(9, 2.3, -0.1), new THREE.Vector3(9.5, 2.3, 0)
+    ], speed: 0.35, size: 0.09
+  });
+
+  // Acid settling down (green)
+  createParticleSystem('acidSettle', 0x84cc16, 180, {
+    curve: [
+      new THREE.Vector3(12, 2.5, 0), new THREE.Vector3(12, 2, 0),
+      new THREE.Vector3(12, 1.2, 0.1), new THREE.Vector3(12, 0.5, -0.1)
+    ], speed: 0.25, size: 0.06
+  });
+
+  // Hydrocarbon rising (amber)
+  createParticleSystem('hcRise', 0xd97706, 180, {
+    curve: [
+      new THREE.Vector3(12, 1.0, 0), new THREE.Vector3(12, 1.8, 0.1),
+      new THREE.Vector3(12, 2.5, -0.1), new THREE.Vector3(12, 3.2, 0)
+    ], speed: 0.3, size: 0.07
+  });
+
+  // Fractionator vapor rise
+  createParticleSystem('fracVapor', 0xf59e0b, 200, {
+    curve: [
+      new THREE.Vector3(20, 3, 0), new THREE.Vector3(20, 8, 0.2),
+      new THREE.Vector3(20, 14, -0.1), new THREE.Vector3(20, 18, 0)
+    ], speed: 0.3, size: 0.06
+  });
+
+  // iC4 recycle loop
+  createParticleSystem('ic4Recycle', 0x3b82f6, 180, {
+    curve: [
+      new THREE.Vector3(18, 18, 0), new THREE.Vector3(14, 20, 1),
+      new THREE.Vector3(6, 18, 2), new THREE.Vector3(2, 7, 1.5),
+      new THREE.Vector3(2, 5, 1.5)
+    ], speed: 0.3, size: 0.06
+  });
+
+  // Propane refrigerant circulation
+  createParticleSystem('refrigCirc', 0x38bdf8, 200, {
+    curve: [
+      new THREE.Vector3(-5, -0.3, 8), new THREE.Vector3(-5, 0.5, 14),
+      new THREE.Vector3(-5, 0.3, 19), new THREE.Vector3(-8, 0.3, 19),
+      new THREE.Vector3(-8, -0.3, 6), new THREE.Vector3(-5, -0.3, 8)
+    ], speed: 0.35, size: 0.06
+  });
+
+  // Alkylate product out
+  createParticleSystem('alkylateOut', 0xd97706, 150, {
+    curve: [
+      new THREE.Vector3(20, 2, 0), new THREE.Vector3(22, 1, 1),
+      new THREE.Vector3(24, 0.5, 5), new THREE.Vector3(28, 1.5, 4)
+    ], speed: 0.25, size: 0.07
+  });
+
+  // Acid recycle
+  createParticleSystem('acidRecycle', 0x84cc16, 150, {
+    curve: [
+      new THREE.Vector3(12, 0.5, 0), new THREE.Vector3(12, -1, -3),
+      new THREE.Vector3(2, -1, -3), new THREE.Vector3(2, -0.5, 0),
+      new THREE.Vector3(6, 2, 0)
+    ], speed: 0.25, size: 0.05
+  });
+
+  // Swirling impeller particles inside contactor
+  createParticleSystem('impellerSwirl', 0xaaccff, 300, {
+    curve: [
+      new THREE.Vector3(2, 2, -1.5), new THREE.Vector3(2, 2.5, 0),
+      new THREE.Vector3(2, 1.5, 1.5), new THREE.Vector3(2, 2, -1.5)
+    ], speed: 0.8, size: 0.04
+  });
+}
+
+function createParticleSystem(name, color, count, opts) {
+  const points = [];
+  const velocities = [];
+  for (let i = 0; i < count; i++) {
+    const t = Math.random();
+    const p = opts.curve[0].clone().lerp(opts.curve[opts.curve.length - 1], t);
+    p.x += (Math.random() - 0.5) * 0.3;
+    p.y += (Math.random() - 0.5) * 0.3;
+    p.z += (Math.random() - 0.5) * 0.3;
+    points.push(p.x, p.y, p.z);
+    velocities.push({
+      offset: t,
+      speedVar: 0.7 + Math.random() * 0.6,
+      spread: (Math.random() - 0.5) * 0.25
+    });
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  const pMat = new THREE.PointsMaterial({
+    color, size: opts.size, transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+  });
+  const system = new THREE.Points(geo, pMat);
+  system.name = name;
+  system.userData = { curve: opts.curve, velocities, speed: opts.speed, count };
+  scene.add(system);
+  particleSystems.push(system);
+  return system;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RAYCASTER INTERACTION
+   ═══════════════════════════════════════════════════════ */
+const tooltip = document.getElementById('tooltip');
+
+function collectInteractive() {
+  [contactorMesh, settlerMesh, fractionatorMesh, compressorMesh].forEach(grp => {
+    if (!grp) return;
+    grp.traverse(child => {
+      if (child.isMesh) interactiveObjects.push(child);
+    });
+  });
+}
+
+function onClick(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    // Walk up to find named group
+    while (obj && obj.parent && !['contactor', 'settler', 'fractionator', 'compressor'].includes(obj.name)) {
+      obj = obj.parent;
+    }
+    if (!obj || !obj.name) return;
+    showPopup(obj.name);
+  }
+}
+
+function onMouseMove(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && obj.parent && !['contactor', 'settler', 'fractionator', 'compressor'].includes(obj.name)) {
+      obj = obj.parent;
+    }
+    if (obj && obj.name) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = event.clientX + 12 + 'px';
+      tooltip.style.top = event.clientY + 12 + 'px';
+      if (obj.name === 'contactor') tooltip.textContent = 'R-501 Contactor — Click for impeller speed & mixing info';
+      if (obj.name === 'settler') tooltip.textContent = 'V-502 Acid Settler — Click for separation efficiency';
+      if (obj.name === 'fractionator') tooltip.textContent = 'T-503 De-Isobutanizer — Click for column data';
+      if (obj.name === 'compressor') tooltip.textContent = 'K-501 Propane Compressor — Click for refrigeration data';
+      return;
+    }
+  }
+  tooltip.style.display = 'none';
+}
+
+function showPopup(type) {
+  const popup = document.getElementById('click-popup');
+  const title = document.getElementById('popup-title');
+  const content = document.getElementById('popup-content');
+  popup.style.display = 'block';
+  if (type === 'contactor') {
+    title.textContent = 'R-501 Contactor / Reactor';
+    content.innerHTML = `
+      <div class="popup-row"><span>Type</span><span class="pv">Horizontal Agitated</span></div>
+      <div class="popup-row"><span>Impeller Speed</span><span class="pv">${(1850 + Math.random() * 20).toFixed(0)} RPM</span></div>
+      <div class="popup-row"><span>Impeller Power</span><span class="pv">285 kW</span></div>
+      <div class="popup-row"><span>Mixing Intensity</span><span class="pv">High — turbulent regime</span></div>
+      <div class="popup-row"><span>Operating Temp</span><span class="pv">5–10 °C</span></div>
+      <div class="popup-row"><span>Operating Pressure</span><span class="pv">2.5 barg</span></div>
+      <div class="popup-row"><span>Residence Time</span><span class="pv">18–22 min</span></div>
+      <div class="popup-row"><span>Cooling Method</span><span class="pv">Autorefrigeration (propane)</span></div>
+      <div class="popup-row"><span>Acid/Hydrocarbon</span><span class="pv">1.4 vol/vol</span></div>
+    `;
+  } else if (type === 'settler') {
+    title.textContent = 'V-502 Acid Settler';
+    content.innerHTML = `
+      <div class="popup-row"><span>Type</span><span class="pv">Horizontal Gravity Separator</span></div>
+      <div class="popup-row"><span>Separation Efficiency</span><span class="pv">${(97 + Math.random() * 2).toFixed(1)}%</span></div>
+      <div class="popup-row"><span>Interface Level</span><span class="pv">48%</span></div>
+      <div class="popup-row"><span>Acid Phase</span><span class="pv">Bottom (SG 1.84)</span></div>
+      <div class="popup-row"><span>HC Phase</span><span class="pv">Top (SG 0.68)</span></div>
+      <div class="popup-row"><span>Residence Time</span><span class="pv">30–45 min</span></div>
+      <div class="popup-row"><span>Coalescing Elements</span><span class="pv">3 internal baffles</span></div>
+      <div class="popup-row"><span>Acid Carryover</span><span class="pv" style="color:#22c55e;">2 ppm</span></div>
+    `;
+  } else if (type === 'fractionator') {
+    title.textContent = 'T-503 De-Isobutanizer';
+    content.innerHTML = `
+      <div class="popup-row"><span>Number of Trays</span><span class="pv">42</span></div>
+      <div class="popup-row"><span>Operating Pressure</span><span class="pv">4.8 barg</span></div>
+      <div class="popup-row"><span>Top Temp</span><span class="pv">55 °C</span></div>
+      <div class="popup-row"><span>Bottom Temp</span><span class="pv">142 °C</span></div>
+      <div class="popup-row"><span>Reflux Ratio</span><span class="pv">6.2 : 1</span></div>
+      <div class="popup-row"><span>iC4 Recycle Purity</span><span class="pv">95 vol%</span></div>
+      <div class="popup-row"><span>Alkylate Draw</span><span class="pv">Bottom product</span></div>
+    `;
+  } else if (type === 'compressor') {
+    title.textContent = 'K-501 Propane Refrigeration';
+    content.innerHTML = `
+      <div class="popup-row"><span>Status</span><span class="pv" style="color:#22c55e;">RUNNING</span></div>
+      <div class="popup-row"><span>Suction Pressure</span><span class="pv">2.1 barg</span></div>
+      <div class="popup-row"><span>Discharge Pressure</span><span class="pv">14.6 barg</span></div>
+      <div class="popup-row"><span>Refrigeration Duty</span><span class="pv">28.4 MMBtu/h</span></div>
+      <div class="popup-row"><span>Motor Power</span><span class="pv">1850 kW</span></div>
+      <div class="popup-row"><span>Suction Temp</span><span class="pv">-8 °C</span></div>
+      <div class="popup-row"><span>Discharge Temp</span><span class="pv">62 °C</span></div>
+      <div class="popup-row"><span>Load</span><span class="pv">72%</span></div>
+    `;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   WEB AUDIO (compressor motor hum)
+   ═══════════════════════════════════════════════════════ */
+function initAudio() {
+  document.addEventListener('click', () => {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Compressor motor hum (lower than 60Hz transformer)
+    const osc1 = audioCtx.createOscillator();
+    osc1.type = 'sine'; osc1.frequency.value = 45;
+    motorGain = audioCtx.createGain(); motorGain.gain.value = 0.06;
+    const filt = audioCtx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 100;
+    osc1.connect(filt); filt.connect(motorGain); motorGain.connect(audioCtx.destination);
+    osc1.start();
+
+    // Harmonic
+    const osc2 = audioCtx.createOscillator();
+    osc2.type = 'sine'; osc2.frequency.value = 90;
+    const g2 = audioCtx.createGain(); g2.gain.value = 0.025;
+    osc2.connect(g2); g2.connect(audioCtx.destination); osc2.start();
+
+    // Background ambient noise
+    const bufSize = audioCtx.sampleRate * 2;
+    const noiseBuf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+    const nd = noiseBuf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) nd[i] = Math.random() * 2 - 1;
+    const nSrc = audioCtx.createBufferSource(); nSrc.buffer = noiseBuf; nSrc.loop = true;
+    const nf = audioCtx.createBiquadFilter(); nf.type = 'lowpass'; nf.frequency.value = 200;
+    const ng = audioCtx.createGain(); ng.gain.value = 0.02;
+    nSrc.connect(nf); nf.connect(ng); ng.connect(audioCtx.destination); nSrc.start();
+  }, { once: true });
+}
+
+/* ═══════════════════════════════════════════════════════
+   VIEW MODES
+   ═══════════════════════════════════════════════════════ */
+function setupViewToggle() {
+  document.querySelectorAll('#view-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      if (view === currentView) return;
+      currentView = view;
+      document.querySelectorAll('#view-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      animateCamera(cameraPresets[view]);
+    });
+  });
+}
+
+function animateCamera(preset) {
+  const startPos = camera.position.clone();
+  const endPos = new THREE.Vector3(...preset.pos);
+  const startTarget = controls.target.clone();
+  const endTarget = new THREE.Vector3(...preset.target);
+  const duration = 1200;
+  const startTime = performance.now();
+  function step(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    camera.position.lerpVectors(startPos, endPos, ease);
+    controls.target.lerpVectors(startTarget, endTarget, ease);
+    controls.update();
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ═══════════════════════════════════════════════════════
+   LIVE ANIMATED HUD READINGS
+   ═══════════════════════════════════════════════════════ */
+function updateHUD(time) {
+  // Contactor temp: 5-10°C
+  const ctemp = 6.8 + Math.sin(time * 0.3) * 1.5 + (Math.random() - 0.5) * 0.2;
+  document.getElementById('r-ctemp').textContent = ctemp.toFixed(1);
+  document.getElementById('bar-ctemp').style.width = ((ctemp / 20) * 100) + '%';
+  document.getElementById('r-lc-temp').textContent = ctemp.toFixed(1);
+  document.getElementById('bar-lc-temp').style.width = ((ctemp / 20) * 100) + '%';
+  document.getElementById('s-ctemp').textContent = ctemp.toFixed(1);
+
+  // RPM: 1820-1880
+  const rpm = 1850 + Math.sin(time * 0.2) * 20 + (Math.random() - 0.5) * 5;
+  document.getElementById('r-rpm').textContent = Math.round(rpm);
+  document.getElementById('bar-rpm').style.width = ((rpm / 2500) * 100) + '%';
+
+  // Olefin/iC4 ratio
+  const oiRatio = 1.12 + Math.sin(time * 0.15) * 0.08;
+  document.getElementById('r-oiratio').textContent = oiRatio.toFixed(2);
+  document.getElementById('bar-oiratio').style.width = ((oiRatio / 2) * 100) + '%';
+
+  // Acid/HC ratio
+  const ahcRatio = 1.45 + Math.sin(time * 0.12) * 0.1;
+  document.getElementById('r-ahcratio').textContent = ahcRatio.toFixed(2);
+  document.getElementById('bar-ahcratio').style.width = ((ahcRatio / 2) * 100) + '%';
+
+  // Space velocity
+  const sv = 0.32 + Math.sin(time * 0.1) * 0.03;
+  document.getElementById('r-sv').textContent = sv.toFixed(2);
+  document.getElementById('bar-sv').style.width = ((sv / 0.8) * 100) + '%';
+
+  // Acid strength: 88-93%
+  const acidStr = 89.4 + Math.sin(time * 0.08) * 1.5;
+  document.getElementById('r-acidstr').textContent = acidStr.toFixed(1);
+  document.getElementById('bar-acidstr').style.width = acidStr + '%';
+  document.getElementById('s-acid').textContent = acidStr.toFixed(1);
+
+  // Acid consumption
+  const acidCons = 1.82 + Math.sin(time * 0.1) * 0.15;
+  document.getElementById('r-acidcons').textContent = acidCons.toFixed(2);
+  document.getElementById('bar-acidcons').style.width = ((acidCons / 5) * 100) + '%';
+
+  // Acid inventory
+  const acidInv = 2840 + Math.sin(time * 0.05) * 50;
+  document.getElementById('r-acidinv').textContent = Math.round(acidInv);
+  document.getElementById('bar-acidinv').style.width = ((acidInv / 4000) * 100) + '%';
+
+  // Settler interface
+  const settInt = 48 + Math.sin(time * 0.07) * 5;
+  document.getElementById('r-settint').textContent = Math.round(settInt);
+  document.getElementById('bar-settint').style.width = settInt + '%';
+
+  // Olefin feed
+  const olefin = 4820 + Math.sin(time * 0.13) * 100 + (Math.random() - 0.5) * 20;
+  document.getElementById('r-olefin').textContent = Math.round(olefin);
+  document.getElementById('bar-olefin').style.width = ((olefin / 8000) * 100) + '%';
+  document.getElementById('s-olefin').textContent = Math.round(olefin);
+
+  // iC4 feed
+  const ic4 = 12500 + Math.sin(time * 0.11) * 200;
+  document.getElementById('r-ic4').textContent = Math.round(ic4);
+  document.getElementById('bar-ic4').style.width = ((ic4 / 16000) * 100) + '%';
+
+  // Alkylate out
+  const alkOut = 6340 + Math.sin(time * 0.14) * 80;
+  document.getElementById('r-alkout').textContent = Math.round(alkOut);
+  document.getElementById('bar-alkout').style.width = ((alkOut / 9000) * 100) + '%';
+
+  // Settler temp
+  const sTemp = 8.2 + Math.sin(time * 0.25) * 1.0;
+  document.getElementById('r-sett-temp').textContent = sTemp.toFixed(1);
+  document.getElementById('bar-sett-temp').style.width = ((sTemp / 20) * 100) + '%';
+
+  // Fractionator pressure
+  const fPres = 4.8 + Math.sin(time * 0.18) * 0.3;
+  document.getElementById('r-frac-pres').textContent = fPres.toFixed(1);
+  document.getElementById('bar-frac-pres').style.width = ((fPres / 10) * 100) + '%';
+
+  // Reflux ratio
+  const reflux = 6.2 + Math.sin(time * 0.16) * 0.4;
+  document.getElementById('r-reflux').textContent = reflux.toFixed(1);
+  document.getElementById('bar-reflux').style.width = ((reflux / 10) * 100) + '%';
+
+  // Alkylate RON
+  const ron = 94.6 + Math.sin(time * 0.09) * 0.8;
+  document.getElementById('q-ron').textContent = ron.toFixed(1);
+  document.getElementById('s-ron').textContent = ron.toFixed(1);
+
+  // MON
+  const mon = 91.8 + Math.sin(time * 0.09) * 0.6;
+  document.getElementById('q-mon').textContent = mon.toFixed(1);
+
+  // D-86
+  document.getElementById('q-ibp').textContent = (36 + Math.random() * 4).toFixed(0) + ' °C';
+  document.getElementById('q-fbp').textContent = (200 + Math.random() * 8).toFixed(0) + ' °C';
+
+  // Acid carryover
+  const acPpm = 1 + Math.random() * 3;
+  document.getElementById('q-acidppm').textContent = acPpm.toFixed(0) + ' ppm';
+  document.getElementById('q-acidppm').style.color = acPpm < 5 ? '#22c55e' : '#f59e0b';
+
+  // Refrigeration
+  document.getElementById('rf-suction').textContent = (2.1 + Math.sin(time * 0.2) * 0.15).toFixed(1) + ' barg';
+  document.getElementById('rf-discharge').textContent = (14.6 + Math.sin(time * 0.15) * 0.5).toFixed(1) + ' barg';
+  document.getElementById('rf-duty').textContent = (28.4 + Math.sin(time * 0.12) * 1.2).toFixed(1) + ' MMBtu/h';
+
+  // Bottom panel
+  document.getElementById('s-ic4ratio').textContent = (2.6 + Math.sin(time * 0.1) * 0.15).toFixed(1);
+  document.getElementById('s-yield').textContent = (1.31 + Math.sin(time * 0.08) * 0.04).toFixed(2);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATION LOOP
+   ═══════════════════════════════════════════════════════ */
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+
+  controls.update();
+
+  // ─── Rotate impeller ───
+  if (impellerGroup) {
+    impellerGroup.rotation.y += delta * 31.4; // ~1850 RPM visual (fast)
+  }
+
+  // ─── Animate particle systems ───
+  particleSystems.forEach(sys => {
+    const positions = sys.geometry.attributes.position.array;
+    const { curve, velocities, speed, count } = sys.userData;
+    for (let i = 0; i < count; i++) {
+      const v = velocities[i];
+      v.offset = (v.offset + delta * speed * v.speedVar) % 1;
+      const totalLen = curve.length - 1;
+      const segF = v.offset * totalLen;
+      const segI = Math.min(Math.floor(segF), totalLen - 1);
+      const segT = segF - segI;
+      const p = new THREE.Vector3().lerpVectors(curve[segI], curve[segI + 1], segT);
+      // Add swirl/spread
+      p.x += v.spread * Math.sin(elapsed * 2 + i);
+      p.y += v.spread * Math.cos(elapsed * 1.5 + i);
+      p.z += v.spread * Math.sin(elapsed * 1.8 + i * 0.5);
+      // Extra swirl for impeller particles
+      if (sys.name === 'impellerSwirl') {
+        const swirl = 0.4;
+        p.x += swirl * Math.cos(elapsed * 5 + i * 0.1);
+        p.z += swirl * Math.sin(elapsed * 5 + i * 0.1);
+      }
+      positions[i * 3] = p.x;
+      positions[i * 3 + 1] = p.y;
+      positions[i * 3 + 2] = p.z;
+    }
+    sys.geometry.attributes.position.needsUpdate = true;
+  });
+
+  // ─── Fluid slosh in settler ───
+  if (settlerMesh) {
+    settlerMesh.children.forEach((child, i) => {
+      if (child.material === M.acidFluid() || child.material === M.hydrocarbon()) {
+        child.position.y += Math.sin(elapsed * 0.6 + i * 1.5) * 0.001;
+      }
+    });
+  }
+
+  // ─── Live HUD ───
+  updateHUD(elapsed);
+
+  // ─── Render ───
+  if (composer && camera) { composer.render(); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY FUNCTIONS
+   ═══════════════════════════════════════════════════════ */
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function simulateLoading() {
+  const fill = document.getElementById('loader-fill');
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 15 + 5;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+      setTimeout(() => {
+        document.getElementById('loading-screen').classList.add('hidden');
+        collectInteractive();
+      }, 400);
+    }
+    fill.style.width = progress + '%';
+  }, 200);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════ */
+init();
+animate();
+</script>
+</body>
+</html>
+

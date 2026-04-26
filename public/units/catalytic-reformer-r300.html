@@ -1,0 +1,1763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ═══════════════════════════════════════════════════════════════════
+     CCR R-300 — Continuous Catalyst Regeneration Reformer
+     Standalone 3D Isolation Viewer
+     Three.js r147 | Dark Industrial Theme | Production-Ready
+     ═══════════════════════════════════════════════════════════════════ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R-300 | CCR Catalytic Reformer</title>
+<style>
+/* ─── 1. FULL CSS STYLING ─── */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{overflow:hidden;background:#2d3343;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#c8d6e5;}
+
+/* ─── Loading Screen ─── */
+#loading-screen{position:fixed;inset:0;z-index:9999;background:#2d3343;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.8s ease;}
+#loading-screen.hidden{opacity:0;pointer-events:none;}
+#loading-screen h1{font-size:1.4rem;color:#f0c040;margin-bottom:1.2rem;letter-spacing:0.08em;}
+.loader-bar{width:280px;height:4px;background:#1a2035;border-radius:2px;overflow:hidden;}
+.loader-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#f0c040,#e8a020);
+  border-radius:2px;transition:width 0.3s ease;}
+#loading-screen p{margin-top:1rem;font-size:0.8rem;color:#5a6a80;}
+
+/* ─── Topbar ─── */
+#topbar{position:fixed;top:0;left:0;right:0;height:48px;z-index:100;
+  background:linear-gradient(180deg,rgba(10,14,23,0.95),rgba(10,14,23,0.85));
+  border-bottom:1px solid #1e2a3a;display:flex;align-items:center;padding:0 16px;
+  backdrop-filter:blur(8px);}
+#topbar .tag{background:#f0c040;color:#0a0e17;font-weight:700;font-size:0.7rem;
+  padding:2px 8px;border-radius:3px;margin-right:12px;letter-spacing:0.06em;}
+#topbar h2{font-size:0.95rem;color:#e0e8f0;font-weight:600;}
+#topbar .unit-id{color:#f0c040;margin-left:8px;}
+#topbar .status{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:0.75rem;}
+#topbar .status .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;
+  box-shadow:0 0 6px #22c55e;animation:pulse-dot 2s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+/* ─── View Toggle Buttons ─── */
+#view-toggle{position:fixed;top:60px;right:16px;z-index:100;display:flex;flex-direction:column;gap:6px;}
+#view-toggle button{background:rgba(20,30,50,0.9);color:#8a9ab0;border:1px solid #1e2a3a;
+  padding:7px 14px;border-radius:4px;font-size:0.72rem;cursor:pointer;
+  transition:all 0.25s ease;letter-spacing:0.04em;font-weight:500;}
+#view-toggle button:hover,#view-toggle button.active{
+  background:rgba(240,192,64,0.15);color:#f0c040;border-color:#f0c040;}
+
+/* ─── Left Panel ─── */
+#left-panel{position:fixed;top:60px;left:16px;width:228px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:14px;backdrop-filter:blur(6px);overflow-y:auto;max-height:calc(100vh - 180px);}
+#left-panel h3{font-size:0.7rem;color:#f0c040;text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:8px;margin-top:12px;}
+#left-panel h3:first-child{margin-top:0;}
+.section-divider{height:1px;background:#1a2540;margin:10px 0;}
+.reading{margin-bottom:8px;}
+.reading label{display:block;font-size:0.62rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:2px;}
+.reading .value{font-size:1rem;color:#e0e8f0;font-weight:600;
+  font-variant-numeric:tabular-nums;}
+.reading .unit{font-size:0.65rem;color:#5a6a80;margin-left:4px;}
+.reading .bar{height:3px;background:#1a2540;border-radius:2px;margin-top:2px;overflow:hidden;}
+.reading .bar-fill{height:100%;border-radius:2px;transition:width 0.5s ease;}
+.reactor-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;
+  padding:4px 6px;background:rgba(30,40,60,0.4);border-radius:3px;font-size:0.68rem;color:#a0b0c0;}
+.reactor-row .rx-tag{color:#f0c040;font-weight:600;min-width:16px;}
+.reactor-row .rx-val{margin-left:auto;color:#e0e8f0;font-weight:600;font-variant-numeric:tabular-nums;}
+.reactor-row .rx-unit{color:#5a6a80;font-size:0.6rem;margin-left:2px;}
+.zone-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;
+  padding:3px 6px;background:rgba(30,40,60,0.3);border-radius:3px;font-size:0.65rem;color:#a0b0c0;}
+.zone-row .z-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.zone-row .z-name{min-width:70px;}
+.zone-row .z-val{margin-left:auto;color:#e0e8f0;font-weight:600;}
+.stream-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;
+  padding:3px 6px;background:rgba(30,40,60,0.3);border-radius:3px;font-size:0.65rem;color:#a0b0c0;}
+.stream-row .s-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.stream-row .s-val{margin-left:auto;color:#e0e8f0;font-weight:600;}
+
+/* ─── Right Panel ─── */
+#right-panel{position:fixed;top:60px;right:16px;width:220px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:14px;backdrop-filter:blur(6px);margin-top:168px;overflow-y:auto;max-height:calc(100vh - 280px);}
+#right-panel h3{font-size:0.7rem;color:#f0c040;text-transform:uppercase;
+  letter-spacing:0.1em;margin-bottom:8px;margin-top:10px;}
+#right-panel h3:first-child{margin-top:0;}
+.info-row{display:flex;justify-content:space-between;margin-bottom:4px;font-size:0.65rem;}
+.info-row .lbl{color:#5a6a80;}
+.info-row .val{color:#e0e8f0;font-weight:600;}
+.info-box{padding:8px;background:rgba(30,40,60,0.4);border-radius:4px;
+  border-left:3px solid #f0c040;margin-bottom:8px;}
+.info-box p{font-size:0.65rem;color:#8a9ab0;margin-bottom:3px;line-height:1.4;}
+.info-box .lbl{color:#5a6a80;}
+.quality-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:0.68rem;color:#a0b0c0;}
+.quality-row .q-val{margin-left:auto;color:#22c55e;font-weight:700;font-size:0.85rem;}
+
+/* ─── Bottom Panel ─── */
+#bottom-panel{position:fixed;bottom:40px;left:16px;right:16px;height:80px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:12px 18px;backdrop-filter:blur(6px);display:flex;gap:24px;align-items:center;}
+.process-stat{text-align:center;flex:1;}
+.process-stat .num{font-size:1.2rem;color:#e0e8f0;font-weight:700;
+  font-variant-numeric:tabular-nums;}
+.process-stat .desc{font-size:0.6rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.06em;margin-top:2px;}
+
+/* ─── Alert Ticker Bar ─── */
+#alert-ticker{position:fixed;bottom:0;left:0;right:0;height:32px;z-index:100;
+  background:rgba(15,20,35,0.95);border-top:1px solid #1e2a3a;overflow:hidden;
+  display:flex;align-items:center;}
+#alert-ticker .label{background:#f0c040;color:#0a0e17;font-size:0.65rem;
+  font-weight:700;padding:0 10px;height:100%;display:flex;align-items:center;
+  letter-spacing:0.08em;white-space:nowrap;}
+#ticker-content{flex:1;overflow:hidden;white-space:nowrap;}
+#ticker-scroll{display:inline-block;animation:ticker-scroll 50s linear infinite;
+  font-size:0.72rem;color:#8a9ab0;padding-left:20px;}
+@keyframes ticker-scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+.ticker-item{margin-right:60px;}
+.ticker-item.warn{color:#f59e0b;}
+.ticker-item.info{color:#38bdf8;}
+.ticker-item.ok{color:#22c55e;}
+
+/* ─── Canvas Container ─── */
+#canvas-container{position:fixed;inset:0;z-index:1;}
+canvas{display:block;}
+
+/* ─── Tooltip ─── */
+#tooltip{position:fixed;z-index:200;background:rgba(10,14,23,0.95);border:1px solid #f0c040;
+  color:#e0e8f0;font-size:0.72rem;padding:8px 12px;border-radius:4px;pointer-events:none;
+  display:none;max-width:240px;line-height:1.5;}
+#tooltip .tt-title{color:#f0c040;font-weight:700;font-size:0.75rem;margin-bottom:4px;}
+#tooltip .tt-row{display:flex;justify-content:space-between;gap:12px;}
+#tooltip .tt-label{color:#5a6a80;}
+#tooltip .tt-val{color:#e0e8f0;font-weight:600;}
+
+/* ─── Scrollbar styling ─── */
+#left-panel::-webkit-scrollbar,#right-panel::-webkit-scrollbar{width:4px;}
+#left-panel::-webkit-scrollbar-track,#right-panel::-webkit-scrollbar-track{background:transparent;}
+#left-panel::-webkit-scrollbar-thumb,#right-panel::-webkit-scrollbar-thumb{background:#1a2540;border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- ─── Loading Screen ─── -->
+<div id="loading-screen">
+  <h1>R-300 CCR REFORMER</h1>
+  <div class="loader-bar"><div class="loader-bar-fill" id="loader-fill"></div></div>
+  <p>Initializing 3D isolation viewer...</p>
+</div>
+
+<!-- ─── Topbar ─── -->
+<div id="topbar">
+  <span class="TAG">PROCESS UNIT</span>
+  <h2>CCR Catalytic Reformer<span class="unit-id">R-300</span></h2>
+  <div class="status"><div class="dot"></div><span>ONLINE</span></div>
+</div>
+
+<!-- ─── View Toggle ─── -->
+<div id="view-toggle">
+  <button class="active" data-view="external">External</button>
+  <button data-view="internal">Internal</button>
+  <button data-view="cutaway">Cutaway</button>
+  <button data-view="flow">Flow</button>
+</div>
+
+<!-- ─── Left Panel ─── -->
+<div id="left-panel">
+  <h3>Reaction Status</h3>
+  <div class="reactor-row"><span class="rx-tag">R1</span>Inlet <span class="rx-val" id="r1-in">493</span><span class="rx-unit">°C</span></div>
+  <div class="reactor-row"><span class="rx-tag">R1</span>Outlet <span class="rx-val" id="r1-out">438</span><span class="rx-unit">°C</span></div>
+  <div class="reactor-row"><span class="rx-tag">R2</span>Inlet <span class="rx-val" id="r2-in">493</span><span class="rx-unit">°C</span></div>
+  <div class="reactor-row"><span class="rx-tag">R2</span>Outlet <span class="rx-val" id="r2-out">445</span><span class="rx-unit">°C</span></div>
+  <div class="reactor-row"><span class="rx-tag">R3</span>Inlet <span class="rx-val" id="r3-in">493</span><span class="rx-unit">°C</span></div>
+  <div class="reactor-row"><span class="rx-tag">R3</span>Outlet <span class="rx-val" id="r3-out">452</span><span class="rx-unit">°C</span></div>
+  <div class="reactor-row"><span class="rx-tag">R4</span>Inlet <span class="rx-val" id="r4-in">493</span><span class="rx-unit">°C</span></div>
+  <div class="reactor-row"><span class="rx-tag">R4</span>Outlet <span class="rx-val" id="r4-out">460</span><span class="rx-unit">°C</span></div>
+  <div class="reading">
+    <label>Weighted Avg Inlet Temp (WAIT)</label>
+    <div><span class="value" id="r-wait">493.0</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-wait" style="width:82%;background:#ef4444;"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+  <h3>CCR Status</h3>
+  <div class="zone-row"><div class="z-dot" style="background:#ef4444;"></div><span class="z-name">Burn Zone</span><span class="z-val" id="z-burn">525°C</span></div>
+  <div class="zone-row"><div class="z-dot" style="background:#f59e0b;"></div><span class="z-name">Halogenation</span><span class="z-val" id="z-halo">480°C</span></div>
+  <div class="zone-row"><div class="z-dot" style="background:#38bdf8;"></div><span class="z-name">Drying</span><span class="z-val" id="z-dry">260°C</span></div>
+  <div class="reading">
+    <label>Catalyst Circulation</label>
+    <div><span class="value" id="r-catcirc">1420</span><span class="unit">kg/hr</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-catcirc" style="width:71%;background:#a78bfa;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Coke on Catalyst</label>
+    <div><span class="value" id="r-coke">4.8</span><span class="unit">wt%</span></div>
+    <div class="bar"><div class="bar-fill" id="bar-coke" style="width:24%;background:#f59e0b;"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+  <h3>Process Streams</h3>
+  <div class="stream-row"><div class="s-dot" style="background:#8B4513;"></div>Naphtha Feed<span class="s-val" id="s-naphtha">185 m³/h</span></div>
+  <div class="stream-row"><div class="s-dot" style="background:#38bdf8;"></div>H2 Recycle<span class="s-val" id="s-h2rec">48,200 Nm³/h</span></div>
+  <div class="stream-row"><div class="s-dot" style="background:#3b82f6;"></div>Reformate Out<span class="s-val" id="s-reformate">172 m³/h</span></div>
+  <div class="stream-row"><div class="s-dot" style="background:#22c55e;"></div>Net H2 Export<span class="s-val" id="s-h2exp">6,800 Nm³/h</span></div>
+  <div class="stream-row"><div class="s-dot" style="background:#a78bfa;"></div>LPG Product<span class="s-val" id="s-lpg">12.5 t/h</span></div>
+
+  <div class="section-divider"></div>
+  <h3>Fluid Legend</h3>
+  <div class="stream-row"><div class="s-dot" style="background:#8B4513;"></div>Naphtha Feed</div>
+  <div class="stream-row"><div class="s-dot" style="background:#ff6633;"></div>Reactor Effluent</div>
+  <div class="stream-row"><div class="s-dot" style="background:#38bdf8;"></div>H2 Recycle Gas</div>
+  <div class="stream-row"><div class="s-dot" style="background:#c4956a;"></div>Spent Catalyst</div>
+  <div class="stream-row"><div class="s-dot" style="background:#f0d080;"></div>Regen Catalyst</div>
+  <div class="stream-row"><div class="s-dot" style="background:#22c55e;"></div>Product H2</div>
+  <div class="stream-row"><div class="s-dot" style="background:#3b82f6;"></div>Reformate</div>
+  <div class="stream-row"><div class="s-dot" style="background:#a78bfa;"></div>LPG</div>
+  <div class="stream-row"><div class="s-dot" style="background:#88aacc;"></div>Combustion Air</div>
+</div>
+
+<!-- ─── Right Panel ─── -->
+<div id="right-panel">
+  <h3>Live Readings</h3>
+  <div class="reading">
+    <label>WAIT</label>
+    <div><span class="value" id="r2-wait">493.0</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar2-wait" style="width:82%;background:#ef4444;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Reactor Pressure</label>
+    <div><span class="value" id="r2-rpres">8.5</span><span class="unit">barg</span></div>
+    <div class="bar"><div class="bar-fill" id="bar2-rpres" style="width:42%;background:#38bdf8;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Separator Pressure</label>
+    <div><span class="value" id="r2-seppres">6.8</span><span class="unit">barg</span></div>
+    <div class="bar"><div class="bar-fill" id="bar2-seppres" style="width:34%;background:#38bdf8;"></div></div>
+  </div>
+  <div class="reading">
+    <label>H2/Oil Ratio</label>
+    <div><span class="value" id="r2-h2oil">5.8</span><span class="unit">Nm³/m³</span></div>
+    <div class="bar"><div class="bar-fill" id="bar2-h2oil" style="width:58%;background:#22c55e;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Feed Rate</label>
+    <div><span class="value" id="r2-feed">185</span><span class="unit">m³/h</span></div>
+    <div class="bar"><div class="bar-fill" id="bar2-feed" style="width:74%;background:#22c55e;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Research Octane (RON)</label>
+    <div><span class="value" id="r2-ron">98.2</span><span class="unit">RON</span></div>
+    <div class="bar"><div class="bar-fill" id="bar2-ron" style="width:89%;background:#f0c040;"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+  <h3>Catalyst Performance</h3>
+  <div class="reading">
+    <label>Regen Temperature</label>
+    <div><span class="value" id="r2-regent">525</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar2-regent" style="width:88%;background:#ef4444;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Burn Zone ΔT</label>
+    <div><span class="value" id="r2-dt">82</span><span class="unit">°C</span></div>
+    <div class="bar"><div class="bar-fill" id="bar2-dt" style="width:68%;background:#f59e0b;"></div></div>
+  </div>
+  <div class="reading">
+    <label>Catalyst Age</label>
+    <div><span class="value" id="r2-age">42</span><span class="unit">months</span></div>
+  </div>
+  <div class="reading">
+    <label>Chloride Content</label>
+    <div><span class="value" id="r2-cl">1.15</span><span class="unit">wt%</span></div>
+  </div>
+
+  <div class="section-divider"></div>
+  <h3>Unit Info</h3>
+  <div class="info-box">
+    <p><span class="lbl">Type:</span> UOP CCR Platforming</p>
+    <p><span class="lbl">Reactors:</span> 4 radial-flow + 1 regenerator</p>
+    <p><span class="lbl">Catalyst:</span> Pt-Sn/Al₂O₃ (R-234)</p>
+    <p><span class="lbl">Pressure:</span> 8.5 barg (reactors)</p>
+    <p><span class="lbl">Total Vol:</span> 4 × 340 m³ reactors</p>
+  </div>
+
+  <div class="section-divider"></div>
+  <h3>Product Quality</h3>
+  <div class="quality-row">RON <span class="q-val" id="q-ron">98.2</span></div>
+  <div class="quality-row">RVP <span class="q-val" id="q-rvp">4.2 psi</span></div>
+  <div class="quality-row">Aromatics Yield <span class="q-val" id="q-aro">72.5%</span></div>
+  <div class="quality-row">C5+ Yield <span class="q-val" id="q-c5">87.3%</span></div>
+</div>
+
+<!-- ─── Bottom Panel ─── -->
+<div id="bottom-panel">
+  <div class="process-stat"><div class="num" id="b-feed">185</div><div class="desc">Feed Rate (m³/h)</div></div>
+  <div class="process-stat"><div class="num" id="b-wait">493.0</div><div class="desc">WAIT (°C)</div></div>
+  <div class="process-stat"><div class="num" id="b-seppres">6.8</div><div class="desc">Sep. Press. (barg)</div></div>
+  <div class="process-stat"><div class="num" id="b-ron">98.2</div><div class="desc">Product RON</div></div>
+  <div class="process-stat"><div class="num" id="b-h2exp">6,800</div><div class="desc">Net H₂ Export (Nm³/h)</div></div>
+  <div class="process-stat"><div class="num" id="b-catcirc">1420</div><div class="desc">Cat. Circ. (kg/hr)</div></div>
+</div>
+
+<!-- ─── Alert Ticker ─── -->
+<div id="alert-ticker">
+  <div class="label">ALERTS</div>
+  <div id="ticker-content">
+    <div id="ticker-scroll">
+      <span class="ticker-item ok">&#9679; R-300 CCR unit operating normally — WAIT on target at 493°C</span>
+      <span class="ticker-item info">&#9679; Catalyst regeneration cycle completed — chloride injection adjusted</span>
+      <span class="ticker-item ok">&#9679; All 4 reactor inlet temperatures within ±2°C of target</span>
+      <span class="ticker-item info">&#9679; H2 recycle compressor K-301 running at 82% load — normal</span>
+      <span class="ticker-item warn">&#9679; Regenerator burn zone ΔT trending up — monitor coke rate</span>
+      <span class="ticker-item ok">&#9679; Stabilizer overhead C5+ product RON steady at 98.2</span>
+      <span class="ticker-item info">&#9679; Net hydrogen export rate 6,800 Nm³/h — PSA unit demand satisfied</span>
+      <span class="ticker-item ok">&#9679; Inter-heater H-302A/B firing rate stable — fuel gas 2.4 t/h</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Tooltip ─── -->
+<div id="tooltip"></div>
+
+<!-- ─── Canvas Container ─── -->
+<div id="canvas-container"></div>
+
+<!-- ─── 2. THREE.JS r147 CDN SETUP ─── -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   CCR R-300 — CATALYTIC REFORMER COMPLETE 3D SCENE
+   ═══════════════════════════════════════════════════════════════════ */
+
+// ─── Global State ───
+let scene, camera, renderer, controls, composer;
+let raycaster, mouse, clock;
+let reactorMeshes = [];         // 4 reactor vessel groups (clickable)
+let regeneratorMesh = null;     // Regenerator tower (clickable)
+let flameMeshes = [];           // Inter-heater flame meshes (animated)
+let particleSystems = [];
+let currentView = 'external';
+let audioCtx = null;
+let burnerGain = null;
+
+// Reactor positions along X-axis
+const reactorPositions = [-12, -4, 4, 12];
+const heaterPositions = [-8, 0, 8];
+const regenPos = { x: 20, z: -6 };
+const separatorPos = { x: 22, z: 8 };
+const stabilizerPos = { x: 28, z: 2 };
+
+// Vessel Dimensions (Global Scope to prevent ReferenceErrors in particle systems)
+const RxR = 1.5, RxH = 8;
+const regenR = 1.2, regenH = 12;
+const stabR = 0.7, stabH = 8;
+
+// ─── Camera Presets ───
+const cameraPresets = {
+  external: { pos: [30, 18, 30], target: [5, 4, 0] },
+  internal: { pos: [-12, 6, 2], target: [-12, 4, 0] },
+  cutaway:  { pos: [25, 10, 25], target: [5, 3, 0] },
+  flow:     { pos: [18, 12, 20], target: [5, 4, 0] }
+};
+
+/* ═══════════════════════════════════════════════════════
+   INITIALIZATION
+   ═══════════════════════════════════════════════════════ */
+function init() {
+  const container = document.getElementById('canvas-container');
+  clock = new THREE.Clock();
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x2d3343);
+  scene.fog = new THREE.FogExp2(0x2d3343, 0.005);
+
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 300);
+  camera.position.set(30, 18, 30);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  container.appendChild(renderer.domElement);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(5, 4, 0);
+  controls.minDistance = 5;
+  controls.maxDistance = 80;
+
+  composer = new THREE.EffectComposer(renderer);
+  composer.addPass(new THREE.RenderPass(scene, camera));
+  const bloomPass = new THREE.UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight), 0.5, 0.4, 0.85
+  );
+  composer.addPass(bloomPass);
+
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  setupLights();
+  buildCCRReformer();
+  buildParticles();
+
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(150, 150),
+    new THREE.MeshStandardMaterial({ color: 0x1e2536, roughness: 0.95, metalness: 0.1 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.5;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  window.addEventListener('resize', onResize);
+  renderer.domElement.addEventListener('click', onClick);
+  renderer.domElement.addEventListener('mousemove', onMouseMove);
+  setupViewToggle();
+  initAudio();
+  simulateLoading();
+}
+
+/* ═══════════════════════════════════════════════════════
+   LIGHT SETUP
+   ═══════════════════════════════════════════════════════ */
+function setupLights() {
+  const keyLight = new THREE.DirectionalLight(0xffeedd, 1.5);
+  keyLight.position.set(20, 25, 15);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.set(2048, 2048);
+  keyLight.shadow.camera.left = -30; keyLight.shadow.camera.right = 30;
+  keyLight.shadow.camera.top = 30; keyLight.shadow.camera.bottom = -30;
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0x8899cc, 0.4);
+  fillLight.position.set(-15, 10, -8);
+  scene.add(fillLight);
+
+  const rimLight = new THREE.DirectionalLight(0xffcc88, 0.35);
+  rimLight.position.set(-8, 12, -20);
+  scene.add(rimLight);
+
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+  scene.add(ambientLight);
+
+  const underLight = new THREE.PointLight(0x2244aa, 0.3, 40);
+  underLight.position.set(5, -3, 0);
+  scene.add(underLight);
+
+  // Warm glow from heater flames
+  heaterPositions.forEach(hx => {
+    const heaterGlow = new THREE.PointLight(0xff6622, 0.8, 8);
+    heaterGlow.position.set(hx, 3, 0);
+    scene.add(heaterGlow);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   MATERIALS
+   ═══════════════════════════════════════════════════════ */
+function mat(color, opts = {}) {
+  return new THREE.MeshStandardMaterial({
+    color, metalness: opts.metalness ?? 0.85, roughness: opts.roughness ?? 0.25,
+    transparent: opts.transparent ?? false, opacity: opts.opacity ?? 1.0,
+    side: opts.side ?? THREE.FrontSide, emissive: opts.emissive ?? 0x000000,
+    emissiveIntensity: opts.emissiveIntensity ?? 0
+  });
+}
+
+const M = {
+  shell:       () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2, transparent: true, opacity: 0.5 }),
+  shellSolid:  () => mat(0xd5dce0, { metalness: 0.8, roughness: 0.2 }),
+  darkSteel:   () => mat(0x383e45, { metalness: 0.9, roughness: 0.2 }),
+  stainless:   () => mat(0xc0c8d0, { metalness: 0.95, roughness: 0.15 }),
+  oshaYellow:  () => mat(0xf0c040, { metalness: 0.6, roughness: 0.35 }),
+  concrete:    () => mat(0x606868, { metalness: 0.05, roughness: 0.95 }),
+  grating:     () => mat(0x505a64, { metalness: 0.7, roughness: 0.5, transparent: true, opacity: 0.6 }),
+  insulation:  () => mat(0xd4c4a8, { metalness: 0.1, roughness: 0.9, transparent: true, opacity: 0.3 }),
+  furnace:     () => mat(0x8B4513, { metalness: 0.6, roughness: 0.4, transparent: true, opacity: 0.7 }),
+  furnaceSolid:() => mat(0x8B4513, { metalness: 0.6, roughness: 0.4 }),
+  catalyst:    () => mat(0xc4956a, { metalness: 0.3, roughness: 0.8 }),
+  catalystBed: () => mat(0xb08050, { emissive: 0x604020, emissiveIntensity: 0.2, transparent: true, opacity: 0.6 }),
+  screenPipe:  () => mat(0xa0b0c0, { metalness: 0.9, roughness: 0.15, transparent: true, opacity: 0.5 }),
+  flame:       () => new THREE.MeshBasicMaterial({ color: 0xff6622 }),
+  flameCore:   () => new THREE.MeshBasicMaterial({ color: 0xffdd44 }),
+  warningRed:  () => mat(0xcc2222, { metalness: 0.5, roughness: 0.4 }),
+  pipeNaphtha: () => mat(0x8B4513, { metalness: 0.5, roughness: 0.4 }),
+  pipeEffluent:() => mat(0xff6633, { metalness: 0.5, roughness: 0.4 }),
+  pipeH2:      () => mat(0x38bdf8, { metalness: 0.5, roughness: 0.4 }),
+  pipeProduct: () => mat(0x3b82f6, { metalness: 0.5, roughness: 0.4 }),
+  pipeLPG:     () => mat(0xa78bfa, { metalness: 0.5, roughness: 0.4 }),
+  pipeH2exp:   () => mat(0x22c55e, { metalness: 0.5, roughness: 0.4 }),
+  pipeAir:     () => mat(0x88aacc, { metalness: 0.5, roughness: 0.4 }),
+  pipeSteam:   () => mat(0xd4d4d4, { metalness: 0.7, roughness: 0.3 }),
+  regenShell:  () => mat(0xc0b0a0, { metalness: 0.7, roughness: 0.25, transparent: true, opacity: 0.5 }),
+  colTray:     () => mat(0x8090a0, { metalness: 0.85, roughness: 0.2, transparent: true, opacity: 0.4 }),
+};
+
+/* ═══════════════════════════════════════════════════════
+   BUILD CCR REFORMER — COMPLETE 3D MODEL
+   ═══════════════════════════════════════════════════════ */
+function buildCCRReformer() {
+  const unit = new THREE.Group();
+  unit.name = 'R-300 CCR Reformer';
+
+  // ─── Helper: Add nozzle ───
+  function addNozzle(x, y, z, dir, len, r, pipeMat) {
+    const grp = new THREE.Group();
+    const pipe = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 12), pipeMat);
+    pipe.position.set(x, y, z);
+    if (dir === 'left') pipe.rotation.z = Math.PI / 2;
+    else if (dir === 'right') pipe.rotation.z = -Math.PI / 2;
+    else if (dir === 'front') pipe.rotation.x = Math.PI / 2;
+    else if (dir === 'back') pipe.rotation.x = -Math.PI / 2;
+    else if (dir === 'bottom') pipe.rotation.x = Math.PI;
+    grp.add(pipe);
+    const flange = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.8, r * 1.8, 0.08, 12), M.darkSteel());
+    const fOff = dir === 'bottom' ? -len / 2 : len / 2;
+    flange.position.set(x, y + fOff, z);
+    grp.add(flange);
+    return grp;
+  }
+
+  // ─── Helper: Add pipe via CatmullRomCurve3 ───
+  function addPipe(points, radius, pipeMat) {
+    const curve = new THREE.CatmullRomCurve3(points);
+    const tubeGeo = new THREE.TubeGeometry(curve, 32, radius, 8, false);
+    const pipe = new THREE.Mesh(tubeGeo, pipeMat);
+    pipe.castShadow = true;
+    unit.add(pipe);
+    return pipe;
+  }
+
+  // ─── Helper: Platform with handrails ───
+  function addPlatform(x, y, z, w, d) {
+    const grp = new THREE.Group();
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(w, 0.08, d), M.grating());
+    deck.position.set(x, y, z);
+    grp.add(deck);
+    const rH = 1.1;
+    const posts = [];
+    for (let px = x - w/2 + 0.5; px <= x + w/2 - 0.5; px += 1.5) {
+      posts.push([px, z + d/2]);
+      posts.push([px, z - d/2]);
+    }
+    posts.forEach(([rx, rz]) => {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, rH, 6), M.oshaYellow());
+      post.position.set(rx, y + rH / 2, rz);
+      grp.add(post);
+    });
+    [z + d/2, z - d/2].forEach(zr => {
+      const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, w, 6), M.oshaYellow());
+      rail.rotation.z = Math.PI / 2;
+      rail.position.set(x, y + rH, zr);
+      grp.add(rail);
+    });
+    return grp;
+  }
+
+  // ─── Helper: Ladder ───
+  function addLadder(x, z, yBot, yTop) {
+    const grp = new THREE.Group();
+    const h = yTop - yBot;
+    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, h, 6), M.oshaYellow());
+    rail.position.set(x, yBot + h/2, z);
+    grp.add(rail);
+    const rail2 = rail.clone();
+    rail2.position.z = z + 0.5;
+    grp.add(rail2);
+    for (let ry = yBot + 0.4; ry < yTop; ry += 0.4) {
+      const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.5, 6), M.oshaYellow());
+      rung.rotation.x = Math.PI / 2;
+      rung.position.set(x, ry, z + 0.25);
+      grp.add(rung);
+    }
+    return grp;
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // 4 REACTOR VESSELS (vertical cylinders r=1.5, H=8)
+  // ══════════════════════════════════════════════════════════
+
+  reactorPositions.forEach((rx, idx) => {
+    const reactor = new THREE.Group();
+    reactor.name = 'reactor_' + idx;
+    reactor.userData = { type: 'reactor', index: idx };
+
+    // Reactor shell (transparent to show internals)
+    const shellGeo = new THREE.CylinderGeometry(RxR, RxR, RxH, 36, 1, true);
+    const shellMesh = new THREE.Mesh(shellGeo, M.shell());
+    shellMesh.castShadow = true;
+    reactor.add(shellMesh);
+
+    // Top/bottom hemispherical caps
+    const topCap = new THREE.Mesh(
+      new THREE.SphereGeometry(RxR, 36, 18, 0, Math.PI * 2, 0, Math.PI / 2),
+      M.shellSolid()
+    );
+    topCap.position.y = RxH / 2;
+    reactor.add(topCap);
+
+    const botCap = new THREE.Mesh(
+      new THREE.SphereGeometry(RxR, 36, 18, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
+      M.shellSolid()
+    );
+    botCap.position.y = -RxH / 2;
+    reactor.add(botCap);
+
+    // Weld seam rings
+    [-2, 0, 2].forEach(wy => {
+      const weld = new THREE.Mesh(
+        new THREE.TorusGeometry(RxR + 0.02, 0.03, 8, 36),
+        mat(0xb0b8c0, { metalness: 0.9, roughness: 0.15 })
+      );
+      weld.position.y = wy;
+      weld.rotation.x = Math.PI / 2;
+      reactor.add(weld);
+    });
+
+    // Insulation cladding
+    const insMat = M.insulation();
+    [-3, -1, 1, 3].forEach(iy => {
+      const ins = new THREE.Mesh(
+        new THREE.CylinderGeometry(RxR + 0.06, RxR + 0.06, 1.8, 36, 1, true),
+        insMat
+      );
+      ins.position.y = iy;
+      reactor.add(ins);
+    });
+
+    // ── Catalyst bed (outer annular packed section) ──
+    const bedH = RxH * 0.7;
+    const bedOuter = new THREE.Mesh(
+      new THREE.CylinderGeometry(RxR * 0.92, RxR * 0.92, bedH, 32, 1, true),
+      M.catalystBed()
+    );
+    bedOuter.position.y = 0;
+    reactor.add(bedOuter);
+
+    // Central screen pipe (internal center pipe)
+    const screenR = 0.35;
+    const screenPipe = new THREE.Mesh(
+      new THREE.CylinderGeometry(screenR, screenR, bedH + 0.5, 16, 1, true),
+      M.screenPipe()
+    );
+    reactor.add(screenPipe);
+    // Screen wire representation
+    for (let sy = -bedH/2; sy < bedH/2; sy += 0.3) {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(screenR + 0.01, 0.01, 6, 16),
+        M.stainless()
+      );
+      ring.position.y = sy;
+      ring.rotation.x = Math.PI / 2;
+      reactor.add(ring);
+    }
+
+    // Top/bottom catalyst support grids
+    [bedH/2 + 0.1, -bedH/2 - 0.1].forEach(gy => {
+      const grid = new THREE.Mesh(
+        new THREE.CylinderGeometry(RxR * 0.9, RxR * 0.9, 0.06, 32, 1, false),
+        M.stainless()
+      );
+      grid.position.y = gy;
+      reactor.add(grid);
+    });
+
+    // Nozzles: inlet (top), outlet (bottom)
+    reactor.add(addNozzle(0, RxH/2 + 0.5, 0, 'top', 1.0, 0.25, M.pipeEffluent()));
+    reactor.add(addNozzle(0, -RxH/2 - 0.5, 0, 'bottom', 1.0, 0.25, M.pipeEffluent()));
+
+    // Foundation skirt
+    const skirt = new THREE.Mesh(
+      new THREE.CylinderGeometry(RxR * 0.8, RxR * 0.95, 2.0, 24, 1, true),
+      M.darkSteel()
+    );
+    skirt.position.y = -RxH / 2 - 1.0;
+    reactor.add(skirt);
+    // Skirt base ring
+    const skirtBase = new THREE.Mesh(
+      new THREE.TorusGeometry(RxR * 0.95, 0.06, 8, 24),
+      M.darkSteel()
+    );
+    skirtBase.position.y = -RxH / 2 - 2.0;
+    skirtBase.rotation.x = Math.PI / 2;
+    reactor.add(skirtBase);
+
+    reactor.position.set(rx, RxH / 2 + 2, 0);
+    reactorMeshes.push(reactor);
+    unit.add(reactor);
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // 3 INTER-HEATERS (box furnaces r=0.8, H=3) with flames
+  // ══════════════════════════════════════════════════════════
+  heaterPositions.forEach((hx, idx) => {
+    const heater = new THREE.Group();
+    heater.name = 'heater_' + idx;
+
+    // Furnace box body
+    const fW = 1.6, fH = 3.0, fD = 1.6;
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(fW, fH, fD),
+      M.furnace()
+    );
+    body.position.y = fH / 2 + 0.5;
+    body.castShadow = true;
+    heater.add(body);
+
+    // Furnace solid end caps
+    const endPlate = new THREE.Mesh(
+      new THREE.BoxGeometry(fW + 0.05, fH, 0.08),
+      M.furnaceSolid()
+    );
+    endPlate.position.set(0, fH / 2 + 0.5, fD / 2);
+    heater.add(endPlate);
+    const endPlate2 = endPlate.clone();
+    endPlate2.position.z = -fD / 2;
+    heater.add(endPlate2);
+
+    // Refractory lining (inner glow)
+    const lining = new THREE.Mesh(
+      new THREE.BoxGeometry(fW * 0.9, fH * 0.9, fD * 0.9),
+      mat(0xff4400, { emissive: 0xff3300, emissiveIntensity: 0.15, transparent: true, opacity: 0.3 })
+    );
+    lining.position.y = fH / 2 + 0.5;
+    heater.add(lining);
+
+    // Burner flames (2 per heater)
+    [-0.35, 0.35].forEach((bz, bIdx) => {
+      const flameGrp = new THREE.Group();
+      // Outer flame
+      const flameOuter = new THREE.Mesh(
+        new THREE.ConeGeometry(0.18, 1.2, 8),
+        M.flame()
+      );
+      flameOuter.position.set(0, 2.2, bz);
+      flameGrp.add(flameOuter);
+      // Inner core
+      const flameInner = new THREE.Mesh(
+        new THREE.ConeGeometry(0.08, 0.7, 6),
+        M.flameCore()
+      );
+      flameInner.position.set(0, 2.0, bz);
+      flameGrp.add(flameInner);
+      // Burner nozzle
+      const burner = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.06, 0.08, 0.3, 8),
+        M.stainless()
+      );
+      burner.position.set(0, 1.6, bz);
+      flameGrp.add(burner);
+      flameMeshes.push(flameGrp);
+      heater.add(flameGrp);
+    });
+
+    // Stack/chimney
+    const stack = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.2, 0.25, 2.5, 12),
+      M.darkSteel()
+    );
+    stack.position.y = fH + 2.5 + 0.5;
+    heater.add(stack);
+
+    heater.position.set(hx, 0, 0);
+    unit.add(heater);
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // PIPING: Feed → R1 → H1 → R2 → H2 → R3 → H3 → R4 → Separator
+  // ══════════════════════════════════════════════════════════
+  const yPipe = 6.5; // Pipe elevation at reactor tops
+  const yHeater = 2.0; // Pipe elevation at heater tops
+
+  // Feed inlet to R1
+  addPipe([
+    new THREE.Vector3(-20, yPipe + 0.5, 0),
+    new THREE.Vector3(-16, yPipe + 0.5, 0),
+    new THREE.Vector3(-12, yPipe + 0.5, 0)
+  ], 0.22, M.pipeNaphtha());
+
+  // R1 out → down → H1
+  addPipe([
+    new THREE.Vector3(-12, 2.2, 0),
+    new THREE.Vector3(-12, 2.0, 1.0),
+    new THREE.Vector3(-10, 2.0, 1.0),
+    new THREE.Vector3(-8, yHeater + 0.5, 0)
+  ], 0.2, M.pipeEffluent());
+
+  // H1 → R2
+  addPipe([
+    new THREE.Vector3(-8, yHeater + 1.2, 0),
+    new THREE.Vector3(-8, yPipe + 0.5, 0),
+    new THREE.Vector3(-4, yPipe + 0.5, 0)
+  ], 0.2, M.pipeEffluent());
+
+  // R2 → H2
+  addPipe([
+    new THREE.Vector3(-4, 2.2, 0),
+    new THREE.Vector3(-4, 2.0, -1.0),
+    new THREE.Vector3(-2, 2.0, -1.0),
+    new THREE.Vector3(0, yHeater + 0.5, 0)
+  ], 0.2, M.pipeEffluent());
+
+  // H2 → R3
+  addPipe([
+    new THREE.Vector3(0, yHeater + 1.2, 0),
+    new THREE.Vector3(0, yPipe + 0.5, 0),
+    new THREE.Vector3(4, yPipe + 0.5, 0)
+  ], 0.2, M.pipeEffluent());
+
+  // R3 → H3
+  addPipe([
+    new THREE.Vector3(4, 2.2, 0),
+    new THREE.Vector3(4, 2.0, 1.0),
+    new THREE.Vector3(6, 2.0, 1.0),
+    new THREE.Vector3(8, yHeater + 0.5, 0)
+  ], 0.2, M.pipeEffluent());
+
+  // H3 → R4
+  addPipe([
+    new THREE.Vector3(8, yHeater + 1.2, 0),
+    new THREE.Vector3(8, yPipe + 0.5, 0),
+    new THREE.Vector3(12, yPipe + 0.5, 0)
+  ], 0.2, M.pipeEffluent());
+
+  // R4 → Separator
+  addPipe([
+    new THREE.Vector3(12, 2.2, 0),
+    new THREE.Vector3(12, 2.0, 2.0),
+    new THREE.Vector3(16, 2.0, 2.0),
+    new THREE.Vector3(20, 2.0, separatorPos.z)
+  ], 0.2, M.pipeEffluent());
+
+  // ══════════════════════════════════════════════════════════
+  // CCR REGENERATOR TOWER (r=1.2, H=12)
+  // ══════════════════════════════════════════════════════════
+  const regen = new THREE.Group();
+  regen.name = 'regenerator';
+  regen.userData = { type: 'regenerator' };
+
+  // Regenerator shell
+  const regenShell = new THREE.Mesh(
+    new THREE.CylinderGeometry(regenR, regenR, regenH, 32, 1, true),
+    M.regenShell()
+  );
+  regenShell.castShadow = true;
+  regen.add(regenShell);
+
+  // Top/bottom caps
+  const rTopCap = new THREE.Mesh(
+    new THREE.SphereGeometry(regenR, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+    M.shellSolid()
+  );
+  rTopCap.position.y = regenH / 2;
+  regen.add(rTopCap);
+  const rBotCap = new THREE.Mesh(
+    new THREE.SphereGeometry(regenR, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
+    M.shellSolid()
+  );
+  rBotCap.position.y = -regenH / 2;
+  regen.add(rBotCap);
+
+  // Zone internals with color coding
+  // Burning zone (top 40%) - reddish
+  const burnZone = new THREE.Mesh(
+    new THREE.CylinderGeometry(regenR * 0.85, regenR * 0.85, regenH * 0.35, 24, 1, true),
+    mat(0xff4444, { emissive: 0x882222, emissiveIntensity: 0.3, transparent: true, opacity: 0.25 })
+  );
+  burnZone.position.y = regenH * 0.15;
+  regen.add(burnZone);
+
+  // Halogenation zone (middle 30%) - amber
+  const haloZone = new THREE.Mesh(
+    new THREE.CylinderGeometry(regenR * 0.85, regenR * 0.85, regenH * 0.28, 24, 1, true),
+    mat(0xffaa22, { emissive: 0x885511, emissiveIntensity: 0.2, transparent: true, opacity: 0.2 })
+  );
+  haloZone.position.y = -regenH * 0.15;
+  regen.add(haloZone);
+
+  // Drying zone (bottom 30%) - blue
+  const dryZone = new THREE.Mesh(
+    new THREE.CylinderGeometry(regenR * 0.85, regenR * 0.85, regenH * 0.28, 24, 1, true),
+    mat(0x4488ff, { emissive: 0x223366, emissiveIntensity: 0.2, transparent: true, opacity: 0.2 })
+  );
+  dryZone.position.y = -regenH * 0.36;
+  regen.add(dryZone);
+
+  // Zone divider plates
+  [regenH * 0.32, -regenH * 0.02].forEach(dy => {
+    const plate = new THREE.Mesh(
+      new THREE.CylinderGeometry(regenR * 0.9, regenR * 0.9, 0.08, 32),
+      M.stainless()
+    );
+    plate.position.y = dy;
+    regen.add(plate);
+  });
+
+  // Zone labels (small indicator lights)
+  const burnLight = new THREE.PointLight(0xff4444, 0.6, 3);
+  burnLight.position.set(regenR + 0.3, regenH * 0.2, 0);
+  regen.add(burnLight);
+  const haloLight = new THREE.PointLight(0xffaa22, 0.4, 3);
+  haloLight.position.set(regenR + 0.3, -regenH * 0.1, 0);
+  regen.add(haloLight);
+  const dryLight = new THREE.PointLight(0x4488ff, 0.3, 3);
+  dryLight.position.set(regenR + 0.3, -regenH * 0.35, 0);
+  regen.add(dryLight);
+
+  // Weld seams
+  [-4, -2, 0, 2, 4].forEach(wy => {
+    const weld = new THREE.Mesh(
+      new THREE.TorusGeometry(regenR + 0.02, 0.025, 6, 32),
+      mat(0xb0b8c0, { metalness: 0.9, roughness: 0.15 })
+    );
+    weld.position.y = wy;
+    weld.rotation.x = Math.PI / 2;
+    regen.add(weld);
+  });
+
+  // Regenerator skirt
+  const regenSkirt = new THREE.Mesh(
+    new THREE.CylinderGeometry(regenR * 0.7, regenR * 0.9, 2.5, 24, 1, true),
+    M.darkSteel()
+  );
+  regenSkirt.position.y = -regenH / 2 - 1.25;
+  regen.add(regenSkirt);
+
+  // Air injection nozzle
+  regen.add(addNozzle(0, regenH * 0.3, 0, 'front', 0.8, 0.15, M.pipeAir()));
+
+  regen.position.set(regenPos.x, regenH / 2 + 2, regenPos.z);
+  regeneratorMesh = regen;
+  unit.add(regen);
+
+  // ══════════════════════════════════════════════════════════
+  // CATALYST TRANSFER LINES
+  // ══════════════════════════════════════════════════════════
+  // R4 bottom → lift line → regenerator top (pneumatic)
+  addPipe([
+    new THREE.Vector3(12, 1.5, 0),
+    new THREE.Vector3(12, 1.5, -2.0),
+    new THREE.Vector3(16, 1.5, -2.0),
+    new THREE.Vector3(regenPos.x, 2.0, regenPos.z - 0.5),
+    new THREE.Vector3(regenPos.x, regenH + 2.5, regenPos.z)
+  ], 0.15, mat(0xc4956a, { metalness: 0.4, roughness: 0.5 }));
+
+  // Regen bottom → transfer → R1 top (gravity return)
+  addPipe([
+    new THREE.Vector3(regenPos.x, 1.5, regenPos.z),
+    new THREE.Vector3(regenPos.x, 1.5, -3.0),
+    new THREE.Vector3(-16, 1.5, -3.0),
+    new THREE.Vector3(-16, yPipe + 0.5, -1.0),
+    new THREE.Vector3(-12, yPipe + 0.5, -1.0)
+  ], 0.15, mat(0xf0d080, { metalness: 0.5, roughness: 0.4 }));
+
+  // R1→R2, R2→R3, R3→R4 catalyst downcomers (small pipes)
+  for (let i = 0; i < 3; i++) {
+    const x1 = reactorPositions[i];
+    const x2 = reactorPositions[i + 1];
+    const yB = 2.2; // reactor bottom
+    addPipe([
+      new THREE.Vector3(x1 + 1.6, yB, 0),
+      new THREE.Vector3(x1 + 1.6, yB - 0.5, 0),
+      new THREE.Vector3(x2 - 1.6, yB - 0.5, 0),
+      new THREE.Vector3(x2 - 1.6, yB, 0)
+    ], 0.1, mat(0xc4956a, { metalness: 0.4, roughness: 0.5 }));
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // HP SEPARATOR (horizontal vessel r=0.8, L=3)
+  // ══════════════════════════════════════════════════════════
+  const sep = new THREE.Group();
+  sep.name = 'separator';
+  const sepR = 0.8, sepL = 3.0;
+
+  const sepShell = new THREE.Mesh(
+    new THREE.CylinderGeometry(sepR, sepR, sepL, 24, 1, true),
+    M.shell()
+  );
+  sepShell.rotation.z = Math.PI / 2;
+  sepShell.castShadow = true;
+  sep.add(sepShell);
+
+  // End caps
+  const sepCap1 = new THREE.Mesh(
+    new THREE.SphereGeometry(sepR, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+    M.shellSolid()
+  );
+  sepCap1.position.x = -sepL / 2;
+  sepCap1.rotation.z = Math.PI / 2;
+  sep.add(sepCap1);
+  const sepCap2 = new THREE.Mesh(
+    new THREE.SphereGeometry(sepR, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+    M.shellSolid()
+  );
+  sepCap2.position.x = sepL / 2;
+  sepCap2.rotation.z = -Math.PI / 2;
+  sep.add(sepCap2);
+
+  // Saddle supports
+  [-0.8, 0.8].forEach(sx => {
+    const saddle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, sepR * 0.8, 1.6),
+      M.darkSteel()
+    );
+    saddle.position.set(sx, -(sepR + 0.2), 0);
+    sep.add(saddle);
+  });
+
+  // Nozzles
+  sep.add(addNozzle(0, sepR + 0.4, 0, 'top', 0.8, 0.2, M.pipeH2exp()));    // H2 out top
+  sep.add(addNozzle(0, -(sepR + 0.4), 0, 'bottom', 0.6, 0.18, M.pipeProduct())); // Reformate out bottom
+  sep.add(addNozzle(-sepL / 2 - 0.4, 0, 0, 'left', 0.8, 0.2, M.pipeEffluent())); // Inlet
+
+  sep.position.set(separatorPos.x, 2.5, separatorPos.z);
+  unit.add(sep);
+
+  // ══════════════════════════════════════════════════════════
+  // RECYCLE COMPRESSOR (box)
+  // ══════════════════════════════════════════════════════════
+  const comp = new THREE.Group();
+  comp.name = 'compressor';
+  const compBody = new THREE.Mesh(
+    new THREE.BoxGeometry(2.0, 1.5, 1.5),
+    M.darkSteel()
+  );
+  compBody.position.set(separatorPos.x - 3, 1.0, separatorPos.z);
+  compBody.castShadow = true;
+  comp.add(compBody);
+
+  // Motor
+  const motor = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.4, 0.4, 1.2, 12),
+    M.stainless()
+  );
+  motor.rotation.z = Math.PI / 2;
+  motor.position.set(separatorPos.x - 3, 1.2, separatorPos.z + 1.3);
+  comp.add(motor);
+
+  // Indicator light
+  const compLight = new THREE.Mesh(
+    new THREE.SphereGeometry(0.06, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0x22c55e })
+  );
+  compLight.position.set(separatorPos.x - 3, 1.85, separatorPos.z + 0.5);
+  comp.add(compLight);
+  const compGlow = new THREE.PointLight(0x22c55e, 0.4, 3);
+  compGlow.position.copy(compLight.position);
+  comp.add(compGlow);
+  unit.add(comp);
+
+  // H2 recycle pipe: separator top → compressor → R1 feed
+  addPipe([
+    new THREE.Vector3(separatorPos.x, 3.5, separatorPos.z),
+    new THREE.Vector3(separatorPos.x - 3, 3.5, separatorPos.z),
+    new THREE.Vector3(separatorPos.x - 3, 2.0, separatorPos.z)
+  ], 0.15, M.pipeH2());
+  addPipe([
+    new THREE.Vector3(separatorPos.x - 3, 1.8, separatorPos.z - 0.5),
+    new THREE.Vector3(separatorPos.x - 3, 1.8, -2.0),
+    new THREE.Vector3(-16, 1.8, -2.0),
+    new THREE.Vector3(-20, yPipe + 0.3, -2.0),
+    new THREE.Vector3(-20, yPipe + 0.5, 0)
+  ], 0.15, M.pipeH2());
+
+  // Net H2 export pipe
+  addPipe([
+    new THREE.Vector3(separatorPos.x, 3.5, separatorPos.z),
+    new THREE.Vector3(separatorPos.x, 5.0, separatorPos.z),
+    new THREE.Vector3(separatorPos.x + 5, 5.0, separatorPos.z)
+  ], 0.18, M.pipeH2exp());
+
+  // Reformate out pipe → stabilizer
+  addPipe([
+    new THREE.Vector3(separatorPos.x, 1.5, separatorPos.z),
+    new THREE.Vector3(separatorPos.x, 1.5, stabilizerPos.z),
+    new THREE.Vector3(stabilizerPos.x, 1.5, stabilizerPos.z)
+  ], 0.18, M.pipeProduct());
+
+  // ══════════════════════════════════════════════════════════
+  // STABILIZER COLUMN (r=0.7, H=8)
+  // ══════════════════════════════════════════════════════════
+  const stab = new THREE.Group();
+  stab.name = 'stabilizer';
+
+  const stabShell = new THREE.Mesh(
+    new THREE.CylinderGeometry(stabR, stabR, stabH, 24, 1, true),
+    M.shell()
+  );
+  stabShell.castShadow = true;
+  stab.add(stabShell);
+
+  // Top/bottom caps
+  const sTopCap = new THREE.Mesh(
+    new THREE.SphereGeometry(stabR, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+    M.shellSolid()
+  );
+  sTopCap.position.y = stabH / 2;
+  stab.add(sTopCap);
+  const sBotCap = new THREE.Mesh(
+    new THREE.SphereGeometry(stabR, 24, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
+    M.shellSolid()
+  );
+  sBotCap.position.y = -stabH / 2;
+  stab.add(sBotCap);
+
+  // Internal trays (6)
+  for (let t = -2.5; t <= 2.5; t += 1.0) {
+    const tray = new THREE.Mesh(
+      new THREE.CylinderGeometry(stabR * 0.88, stabR * 0.88, 0.04, 24),
+      M.colTray()
+    );
+    tray.position.y = t;
+    stab.add(tray);
+  }
+
+  // Skirt
+  const stabSkirt = new THREE.Mesh(
+    new THREE.CylinderGeometry(stabR * 0.7, stabR * 0.85, 1.5, 16, 1, true),
+    M.darkSteel()
+  );
+  stabSkirt.position.y = -stabH / 2 - 0.75;
+  stab.add(stabSkirt);
+
+  // Top dome + vent
+  stab.add(addNozzle(0, stabH / 2 + 0.4, 0, 'top', 0.8, 0.12, M.pipeLPG()));
+  // Feed nozzle
+  stab.add(addNozzle(0, -1.0, 0, 'back', 0.8, 0.15, M.pipeProduct()));
+  // Bottoms nozzle
+  stab.add(addNozzle(0, -stabH / 2 - 0.4, 0, 'bottom', 0.6, 0.15, M.pipeProduct()));
+
+  stab.position.set(stabilizerPos.x, stabH / 2 + 1, stabilizerPos.z);
+  unit.add(stab);
+
+  // ── Reboiler ──
+  const reboiler = new THREE.Group();
+  const rebBody = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.4, 0.4, 2.0, 16, 1, true),
+    M.shell()
+  );
+  rebBody.rotation.z = Math.PI / 2;
+  reboiler.add(rebBody);
+  const rebEnd1 = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+  rebEnd1.position.x = -1; rebEnd1.rotation.z = Math.PI / 2; reboiler.add(rebEnd1);
+  const rebEnd2 = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.shellSolid());
+  rebEnd2.position.x = 1; rebEnd2.rotation.z = -Math.PI / 2; reboiler.add(rebEnd2);
+  reboiler.position.set(stabilizerPos.x, 1.2, stabilizerPos.z + 2);
+  unit.add(reboiler);
+  // Reboiler piping
+  addPipe([
+    new THREE.Vector3(stabilizerPos.x, 1.0, stabilizerPos.z + 0.7),
+    new THREE.Vector3(stabilizerPos.x, 1.2, stabilizerPos.z + 2),
+    new THREE.Vector3(stabilizerPos.x + 1, 1.2, stabilizerPos.z + 2)
+  ], 0.1, M.pipeSteam());
+  addPipe([
+    new THREE.Vector3(stabilizerPos.x - 1, 1.2, stabilizerPos.z + 2),
+    new THREE.Vector3(stabilizerPos.x - 2, 1.2, stabilizerPos.z + 2),
+    new THREE.Vector3(stabilizerPos.x - 2, 2.0, stabilizerPos.z),
+    new THREE.Vector3(stabilizerPos.x, 3.0, stabilizerPos.z)
+  ], 0.1, M.pipeSteam());
+
+  // ── Condenser ──
+  const condenser = new THREE.Group();
+  const condBody = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.3, 1.5, 12, 1, true),
+    M.shell()
+  );
+  condBody.rotation.z = Math.PI / 2;
+  condenser.add(condBody);
+  condenser.position.set(stabilizerPos.x + 1.5, stabH + 2.5, stabilizerPos.z);
+  unit.add(condenser);
+  addPipe([
+    new THREE.Vector3(stabilizerPos.x, stabH + 2.5, stabilizerPos.z),
+    new THREE.Vector3(stabilizerPos.x + 0.8, stabH + 2.5, stabilizerPos.z)
+  ], 0.1, M.pipeLPG());
+
+  // ── Reflux Drum ──
+  const reflux = new THREE.Group();
+  const refluxBody = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.3, 1.2, 12, 1, true),
+    M.shell()
+  );
+  refluxBody.rotation.z = Math.PI / 2;
+  reflux.add(refluxBody);
+  reflux.position.set(stabilizerPos.x + 1.5, stabH + 0.8, stabilizerPos.z - 1);
+  unit.add(reflux);
+  addPipe([
+    new THREE.Vector3(stabilizerPos.x + 1.5, stabH + 2.0, stabilizerPos.z),
+    new THREE.Vector3(stabilizerPos.x + 1.5, stabH + 1.2, stabilizerPos.z - 1)
+  ], 0.08, M.pipeLPG());
+
+  // ══════════════════════════════════════════════════════════
+  // PLATFORMS & LADDERS
+  // ══════════════════════════════════════════════════════════
+  // Reactor top platforms
+  reactorPositions.forEach((rx, idx) => {
+    unit.add(addPlatform(rx, RxH + 2, 0, 4.5, 4.5));
+  });
+
+  // Regenerator top platform
+  unit.add(addPlatform(regenPos.x, regenH + 2.5, regenPos.z, 4.0, 4.0));
+
+  // Stabilizer top platform
+  unit.add(addPlatform(stabilizerPos.x, stabH + 1.5, stabilizerPos.z, 3.5, 3.5));
+
+  // Ladders: Reactor sides + regenerator
+  reactorPositions.forEach((rx, idx) => {
+    unit.add(addLadder(rx - RxR - 0.4, 0, 0.5, RxH + 2));
+  });
+  unit.add(addLadder(regenPos.x - regenR - 0.4, regenPos.z, 0.5, regenH + 2.5));
+
+  // Air inlet pipe to regenerator
+  addPipe([
+    new THREE.Vector3(regenPos.x - 5, regenH * 0.2 + 2, regenPos.z),
+    new THREE.Vector3(regenPos.x - 3, regenH * 0.2 + 2, regenPos.z),
+    new THREE.Vector3(regenPos.x + regenR + 0.2, regenH * 0.2 + 2, regenPos.z)
+  ], 0.15, M.pipeAir());
+
+  // ── Add to Scene ──
+  scene.add(unit);
+}
+
+/* ═══════════════════════════════════════════════════════
+   PARTICLE SYSTEMS
+   ═══════════════════════════════════════════════════════ */
+function buildParticles() {
+  const yRx = 6.5; // Reactor top elevation
+
+  // 1) Feed + H2 into R1 (brown + blue)
+  createParticleSystem('feedIn', 0x8B4513, 250, {
+    curve: [
+      new THREE.Vector3(-20, yRx + 0.5, 0), new THREE.Vector3(-16, yRx + 0.5, 0),
+      new THREE.Vector3(-12, yRx + 0.5, 0), new THREE.Vector3(-12, yRx, 0)
+    ], speed: 0.5, size: 0.09
+  });
+
+  // 2) Through each reactor (effluent - orange)
+  reactorPositions.forEach((rx, idx) => {
+    createParticleSystem('reactorFlow_' + idx, 0xff6633, 150, {
+      curve: [
+        new THREE.Vector3(rx, yRx + 0.3, 0), new THREE.Vector3(rx, yRx - 2, 0),
+        new THREE.Vector3(rx, yRx - 4, 0), new THREE.Vector3(rx, 2.5, 0)
+      ], speed: 0.35, size: 0.08
+    });
+  });
+
+  // 3) Catalyst descending in regenerator (brown)
+  createParticleSystem('regenCatDown', 0xc4956a, 200, {
+    curve: [
+      new THREE.Vector3(regenPos.x, regenH + 1.5, regenPos.z),
+      new THREE.Vector3(regenPos.x, regenH * 0.3 + 2, regenPos.z),
+      new THREE.Vector3(regenPos.x, 2, regenPos.z),
+      new THREE.Vector3(regenPos.x, 1.0, regenPos.z)
+    ], speed: 0.15, size: 0.06
+  });
+
+  // 4) Regenerated catalyst return to R1 (bright gold)
+  createParticleSystem('regenCatReturn', 0xf0d080, 150, {
+    curve: [
+      new THREE.Vector3(regenPos.x, 1.5, regenPos.z),
+      new THREE.Vector3(regenPos.x, 1.5, -3.0),
+      new THREE.Vector3(-14, 1.5, -3.0),
+      new THREE.Vector3(-14, yRx + 0.3, -1.0),
+      new THREE.Vector3(-12, yRx + 0.3, -1.0)
+    ], speed: 0.25, size: 0.07
+  });
+
+  // 5) Spent catalyst to regenerator lift line
+  createParticleSystem('catLift', 0xc4956a, 120, {
+    curve: [
+      new THREE.Vector3(12, 1.5, 0),
+      new THREE.Vector3(12, 1.5, -2.0),
+      new THREE.Vector3(16, 1.5, -2.0),
+      new THREE.Vector3(regenPos.x, 3, regenPos.z - 0.5),
+      new THREE.Vector3(regenPos.x, regenH + 1.5, regenPos.z)
+    ], speed: 0.3, size: 0.06
+  });
+
+  // 6) Reformate product to stabilizer
+  createParticleSystem('reformate', 0x3b82f6, 150, {
+    curve: [
+      new THREE.Vector3(separatorPos.x, 1.5, separatorPos.z),
+      new THREE.Vector3(separatorPos.x, 1.5, stabilizerPos.z),
+      new THREE.Vector3(stabilizerPos.x, 1.5, stabilizerPos.z)
+    ], speed: 0.35, size: 0.08
+  });
+
+  // 7) H2 export
+  createParticleSystem('h2Export', 0x22c55e, 100, {
+    curve: [
+      new THREE.Vector3(separatorPos.x, 3.5, separatorPos.z),
+      new THREE.Vector3(separatorPos.x, 5.0, separatorPos.z),
+      new THREE.Vector3(separatorPos.x + 5, 5.0, separatorPos.z)
+    ], speed: 0.45, size: 0.07
+  });
+
+  // 8) H2 recycle loop
+  createParticleSystem('h2Recycle', 0x38bdf8, 120, {
+    curve: [
+      new THREE.Vector3(separatorPos.x, 3.5, separatorPos.z),
+      new THREE.Vector3(separatorPos.x - 3, 3.5, separatorPos.z),
+      new THREE.Vector3(separatorPos.x - 3, 1.8, separatorPos.z - 2.0),
+      new THREE.Vector3(-16, 1.8, -2.0),
+      new THREE.Vector3(-20, yRx + 0.3, -2.0),
+      new THREE.Vector3(-20, yRx + 0.5, 0),
+      new THREE.Vector3(-18, yRx + 0.5, 0)
+    ], speed: 0.3, size: 0.07
+  });
+
+  // 9) Air into regenerator
+  createParticleSystem('airIn', 0x88aacc, 80, {
+    curve: [
+      new THREE.Vector3(regenPos.x - 5, regenH * 0.2 + 2, regenPos.z),
+      new THREE.Vector3(regenPos.x - 3, regenH * 0.2 + 2, regenPos.z),
+      new THREE.Vector3(regenPos.x + regenR, regenH * 0.2 + 2, regenPos.z)
+    ], speed: 0.4, size: 0.06
+  });
+
+  // 10) LPG product out from stabilizer
+  createParticleSystem('lpgOut', 0xa78bfa, 80, {
+    curve: [
+      new THREE.Vector3(stabilizerPos.x, stabH + 2.5, stabilizerPos.z),
+      new THREE.Vector3(stabilizerPos.x + 2, stabH + 3, stabilizerPos.z),
+      new THREE.Vector3(stabilizerPos.x + 4, stabH + 3, stabilizerPos.z)
+    ], speed: 0.35, size: 0.07
+  });
+
+  // 11) Inter-heater flow (feed through heaters)
+  heaterPositions.forEach((hx, idx) => {
+    createParticleSystem('heaterFlow_' + idx, 0xff8844, 100, {
+      curve: [
+        new THREE.Vector3(hx - 2, 2.0, 0),
+        new THREE.Vector3(hx, 3.0, 0),
+        new THREE.Vector3(hx, 2.0, 0),
+        new THREE.Vector3(hx + 2, 2.0, 0)
+      ], speed: 0.5, size: 0.1
+    });
+  });
+}
+
+// ─── Reusable Particle System Builder ───
+function createParticleSystem(name, color, count, opts) {
+  const points = [];
+  const velocities = [];
+  for (let i = 0; i < count; i++) {
+    const t = Math.random();
+    const p = opts.curve[0].clone().lerp(opts.curve[opts.curve.length - 1], t);
+    p.x += (Math.random() - 0.5) * 0.25;
+    p.y += (Math.random() - 0.5) * 0.25;
+    p.z += (Math.random() - 0.5) * 0.25;
+    points.push(p.x, p.y, p.z);
+    velocities.push({
+      offset: t,
+      speedVar: 0.7 + Math.random() * 0.6,
+      spread: (Math.random() - 0.5) * 0.15
+    });
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  const pMat = new THREE.PointsMaterial({
+    color: color, size: opts.size, transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+  });
+  const system = new THREE.Points(geo, pMat);
+  system.name = name;
+  system.userData = { curve: opts.curve, velocities, speed: opts.speed, count };
+  scene.add(system);
+  particleSystems.push(system);
+  return system;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RAYCASTER INTERACTION
+   ═══════════════════════════════════════════════════════ */
+const tooltip = document.getElementById('tooltip');
+const interactiveObjects = [];
+
+function collectInteractive() {
+  reactorMeshes.forEach(rx => {
+    rx.traverse(child => {
+      if (child.isMesh) { child.userData.type = 'reactor'; child.userData.reactorIndex = rx.userData.index; interactiveObjects.push(child); }
+    });
+  });
+  if (regeneratorMesh) {
+    regeneratorMesh.traverse(child => {
+      if (child.isMesh) { child.userData.type = 'regenerator'; interactiveObjects.push(child); }
+    });
+  }
+}
+
+function onClick(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && !obj.userData.type) obj = obj.parent;
+    if (!obj) return;
+    if (obj.userData.type === 'reactor') showReactorInfo(obj.userData.reactorIndex);
+    if (obj.userData.type === 'regenerator') showRegenInfo();
+  }
+}
+
+function onMouseMove(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && !obj.userData.type) obj = obj.parent;
+    if (obj) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = event.clientX + 12 + 'px';
+      tooltip.style.top = event.clientY + 12 + 'px';
+      if (obj.userData.type === 'reactor') {
+        const idx = obj.userData.reactorIndex;
+        const inT = (490 + Math.random() * 6).toFixed(0);
+        const outT = (435 + idx * 7 + Math.random() * 4).toFixed(0);
+        tooltip.innerHTML = `<div class="tt-title">R-${idx + 1} Reactor</div>
+          <div class="tt-row"><span class="tt-label">Inlet:</span><span class="tt-val">${inT}°C</span></div>
+          <div class="tt-row"><span class="tt-label">Outlet:</span><span class="tt-val">${outT}°C</span></div>
+          <div class="tt-row"><span class="tt-label">Click for details</span></div>`;
+      }
+      if (obj.userData.type === 'regenerator') {
+        tooltip.innerHTML = `<div class="tt-title">CCR Regenerator</div>
+          <div class="tt-row"><span class="tt-label">Burn Zone:</span><span class="tt-val">525°C</span></div>
+          <div class="tt-row"><span class="tt-label">Status:</span><span class="tt-val" style="color:#22c55e;">Active</span></div>
+          <div class="tt-row"><span class="tt-label">Click for details</span></div>`;
+      }
+      return;
+    }
+  }
+  tooltip.style.display = 'none';
+}
+
+function showReactorInfo(idx) {
+  const temps = [
+    { in: 493, out: 438 }, { in: 493, out: 445 },
+    { in: 493, out: 452 }, { in: 493, out: 460 }
+  ];
+  const t = temps[idx];
+  const deltaT = t.out - t.in;
+  // Flash the corresponding reactor row in left panel
+  const rows = document.querySelectorAll('.reactor-row');
+  const startIdx = idx * 2;
+  for (let i = startIdx; i < startIdx + 2; i++) {
+    if (rows[i]) {
+      rows[i].style.background = 'rgba(240,192,64,0.3)';
+      setTimeout(() => { rows[i].style.background = 'rgba(30,40,60,0.4)'; }, 1500);
+    }
+  }
+}
+
+function showRegenInfo() {
+  const zoneRows = document.querySelectorAll('.zone-row');
+  zoneRows.forEach(z => {
+    z.style.background = 'rgba(240,192,64,0.3)';
+    setTimeout(() => { z.style.background = 'rgba(30,40,60,0.3)'; }, 1500);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   WEB AUDIO (furnace rumble)
+   ═══════════════════════════════════════════════════════ */
+function initAudio() {
+  document.addEventListener('click', () => {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Low furnace rumble
+    const rumble = audioCtx.createOscillator();
+    rumble.type = 'sawtooth';
+    rumble.frequency.value = 55;
+    burnerGain = audioCtx.createGain();
+    burnerGain.gain.value = 0.04;
+    const rumbleFilter = audioCtx.createBiquadFilter();
+    rumbleFilter.type = 'lowpass';
+    rumbleFilter.frequency.value = 100;
+    rumble.connect(rumbleFilter);
+    rumbleFilter.connect(burnerGain);
+    burnerGain.connect(audioCtx.destination);
+    rumble.start();
+
+    // Add harmonic
+    const rumble2 = audioCtx.createOscillator();
+    rumble2.type = 'sine';
+    rumble2.frequency.value = 110;
+    const rumble2G = audioCtx.createGain();
+    rumble2G.gain.value = 0.02;
+    rumble2.connect(rumble2G);
+    rumble2G.connect(audioCtx.destination);
+    rumble2.start();
+  }, { once: true });
+}
+
+/* ═══════════════════════════════════════════════════════
+   VIEW MODES
+   ═══════════════════════════════════════════════════════ */
+function setupViewToggle() {
+  document.querySelectorAll('#view-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      if (view === currentView) return;
+      currentView = view;
+      document.querySelectorAll('#view-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      animateCamera(cameraPresets[view]);
+    });
+  });
+}
+
+function animateCamera(preset) {
+  const startPos = camera.position.clone();
+  const endPos = new THREE.Vector3(...preset.pos);
+  const startTarget = controls.target.clone();
+  const endTarget = new THREE.Vector3(...preset.target);
+  const duration = 1200;
+  const startTime = performance.now();
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    camera.position.lerpVectors(startPos, endPos, ease);
+    controls.target.lerpVectors(startTarget, endTarget, ease);
+    controls.update();
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ═══════════════════════════════════════════════════════
+   LIVE ANIMATED HUD READINGS
+   ═══════════════════════════════════════════════════════ */
+function updateHUD(time) {
+  // Reactor temperatures (vary slightly)
+  const rTemps = [
+    { in: 493, out: 438 }, { in: 493, out: 445 },
+    { in: 493, out: 452 }, { in: 493, out: 460 }
+  ];
+  rTemps.forEach((rt, i) => {
+    const inV = rt.in + (Math.random() - 0.5) * 3;
+    const outV = rt.out + (Math.random() - 0.5) * 2;
+    document.getElementById(`r${i+1}-in`).textContent = inV.toFixed(0);
+    document.getElementById(`r${i+1}-out`).textContent = outV.toFixed(0);
+  });
+
+  // WAIT
+  const wait = 493 + Math.sin(time * 0.2) * 1.5 + (Math.random() - 0.5) * 0.3;
+  document.getElementById('r-wait').textContent = wait.toFixed(1);
+  document.getElementById('bar-wait').style.width = ((wait / 600) * 100) + '%';
+  document.getElementById('r2-wait').textContent = wait.toFixed(1);
+  document.getElementById('bar2-wait').style.width = ((wait / 600) * 100) + '%';
+  document.getElementById('b-wait').textContent = wait.toFixed(1);
+
+  // CCR zones
+  const burnT = 525 + Math.sin(time * 0.15) * 5 + (Math.random() - 0.5) * 2;
+  const haloT = 480 + Math.sin(time * 0.12 + 1) * 3;
+  const dryT = 260 + Math.sin(time * 0.1 + 2) * 5;
+  document.getElementById('z-burn').textContent = burnT.toFixed(0) + '°C';
+  document.getElementById('z-halo').textContent = haloT.toFixed(0) + '°C';
+  document.getElementById('z-dry').textContent = dryT.toFixed(0) + '°C';
+
+  // Catalyst circulation
+  const catCirc = 1420 + Math.sin(time * 0.08) * 40;
+  document.getElementById('r-catcirc').textContent = catCirc.toFixed(0);
+  document.getElementById('bar-catcirc').style.width = ((catCirc / 2000) * 100) + '%';
+  document.getElementById('b-catcirc').textContent = catCirc.toFixed(0);
+
+  // Coke on catalyst
+  const coke = 4.8 + Math.sin(time * 0.05) * 0.4;
+  document.getElementById('r-coke').textContent = coke.toFixed(1);
+  document.getElementById('bar-coke').style.width = ((coke / 20) * 100) + '%';
+
+  // Right panel readings
+  const rpres = 8.5 + Math.sin(time * 0.18) * 0.2 + (Math.random() - 0.5) * 0.05;
+  document.getElementById('r2-rpres').textContent = rpres.toFixed(1);
+  document.getElementById('bar2-rpres').style.width = ((rpres / 20) * 100) + '%';
+
+  const seppres = 6.8 + Math.sin(time * 0.15) * 0.15;
+  document.getElementById('r2-seppres').textContent = seppres.toFixed(1);
+  document.getElementById('bar2-seppres').style.width = ((seppres / 20) * 100) + '%';
+  document.getElementById('b-seppres').textContent = seppres.toFixed(1);
+
+  const h2oil = 5.8 + Math.sin(time * 0.1) * 0.3;
+  document.getElementById('r2-h2oil').textContent = h2oil.toFixed(1);
+  document.getElementById('bar2-h2oil').style.width = ((h2oil / 10) * 100) + '%';
+
+  const feed = 185 + Math.sin(time * 0.07) * 5;
+  document.getElementById('r2-feed').textContent = feed.toFixed(0);
+  document.getElementById('bar2-feed').style.width = ((feed / 250) * 100) + '%';
+  document.getElementById('b-feed').textContent = feed.toFixed(0);
+
+  const ron = 98.2 + Math.sin(time * 0.06) * 0.3;
+  document.getElementById('r2-ron').textContent = ron.toFixed(1);
+  document.getElementById('bar2-ron').style.width = ((ron / 110) * 100) + '%';
+  document.getElementById('b-ron').textContent = ron.toFixed(1);
+
+  // Catalyst performance
+  const regenT = 525 + Math.sin(time * 0.14) * 4;
+  document.getElementById('r2-regent').textContent = regenT.toFixed(0);
+  document.getElementById('bar2-regent').style.width = ((regenT / 600) * 100) + '%';
+
+  const dT = 82 + Math.sin(time * 0.09) * 3;
+  document.getElementById('r2-dt').textContent = dT.toFixed(0);
+  document.getElementById('bar2-dt').style.width = ((dT / 120) * 100) + '%';
+
+  const cl = 1.15 + Math.sin(time * 0.04) * 0.05;
+  document.getElementById('r2-cl').textContent = cl.toFixed(2);
+
+  // Product quality
+  document.getElementById('q-ron').textContent = ron.toFixed(1);
+  const rvp = 4.2 + Math.sin(time * 0.05) * 0.2;
+  document.getElementById('q-rvp').textContent = rvp.toFixed(1) + ' psi';
+  const aro = 72.5 + Math.sin(time * 0.04) * 0.4;
+  document.getElementById('q-aro').textContent = aro.toFixed(1) + '%';
+  const c5 = 87.3 + Math.sin(time * 0.03) * 0.3;
+  document.getElementById('q-c5').textContent = c5.toFixed(1) + '%';
+
+  // Process streams
+  document.getElementById('s-naphtha').textContent = feed.toFixed(0) + ' m³/h';
+  const h2rec = 48200 + Math.sin(time * 0.06) * 300;
+  document.getElementById('s-h2rec').textContent = h2rec.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' Nm³/h';
+  const reform = 172 + Math.sin(time * 0.07) * 3;
+  document.getElementById('s-reformate').textContent = reform.toFixed(0) + ' m³/h';
+  const h2exp = 6800 + Math.sin(time * 0.05) * 200;
+  document.getElementById('s-h2exp').textContent = h2exp.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' Nm³/h';
+  document.getElementById('b-h2exp').textContent = h2exp.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const lpg = 12.5 + Math.sin(time * 0.04) * 0.3;
+  document.getElementById('s-lpg').textContent = lpg.toFixed(1) + ' t/h';
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATION LOOP
+   ═══════════════════════════════════════════════════════ */
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+
+  controls.update();
+
+  // ─── Animate particle systems ───
+  particleSystems.forEach(sys => {
+    const positions = sys.geometry.attributes.position.array;
+    const { curve, velocities, speed, count } = sys.userData;
+    for (let i = 0; i < count; i++) {
+      const v = velocities[i];
+      v.offset = (v.offset + delta * speed * v.speedVar) % 1;
+      const totalLen = curve.length - 1;
+      const segF = v.offset * totalLen;
+      const segI = Math.min(Math.floor(segF), totalLen - 1);
+      const segT = segF - segI;
+      const p = new THREE.Vector3().lerpVectors(curve[segI], curve[segI + 1], segT);
+      p.x += v.spread * Math.sin(elapsed * 2 + i);
+      p.y += v.spread * Math.cos(elapsed * 1.5 + i);
+      p.z += v.spread * Math.sin(elapsed * 1.8 + i * 0.5);
+      positions[i * 3] = p.x;
+      positions[i * 3 + 1] = p.y;
+      positions[i * 3 + 2] = p.z;
+    }
+    sys.geometry.attributes.position.needsUpdate = true;
+  });
+
+  // ─── Animate inter-heater flames ───
+  flameMeshes.forEach((fGrp, i) => {
+    fGrp.children.forEach(child => {
+      if (child.geometry && child.geometry.type === 'ConeGeometry') {
+        child.scale.y = 0.8 + 0.3 * Math.sin(elapsed * 8 + i * 2);
+        child.scale.x = 0.9 + 0.2 * Math.sin(elapsed * 6 + i * 1.5);
+        child.position.y += Math.sin(elapsed * 10 + i) * 0.003;
+      }
+    });
+  });
+
+  // ─── Animate regenerator zone lights ───
+  const regenGroup = scene.getObjectByName('regenerator');
+  if (regenGroup) {
+    regenGroup.children.forEach(child => {
+      if (child.isPointLight) {
+        if (child.color.getHex() === 0xff4444) {
+          child.intensity = 0.4 + 0.3 * Math.sin(elapsed * 2);
+        } else if (child.color.getHex() === 0xffaa22) {
+          child.intensity = 0.3 + 0.2 * Math.sin(elapsed * 1.5 + 1);
+        } else if (child.color.getHex() === 0x4488ff) {
+          child.intensity = 0.2 + 0.15 * Math.sin(elapsed * 1.2 + 2);
+        }
+      }
+    });
+  }
+
+  // ─── Live HUD ───
+  updateHUD(elapsed);
+
+  // ─── Render ───
+  if (composer && camera) { composer.render(); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY
+   ═══════════════════════════════════════════════════════ */
+function onResize() {
+  if (camera) {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  if (renderer) {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+  if (composer) {
+    composer.setSize(window.innerWidth, window.innerHeight);
+  }
+}
+
+function simulateLoading() {
+  const fill = document.getElementById('loader-fill');
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 15 + 5;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+      setTimeout(() => {
+        document.getElementById('loading-screen').classList.add('hidden');
+        collectInteractive();
+      }, 400);
+    }
+    fill.style.width = progress + '%';
+  }, 200);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('Initializing 3D Reformer viewer...');
+  try {
+    init();
+    animate();
+  } catch (error) {
+    console.error('Initialization error:', error);
+    const loader = document.getElementById('loading-screen');
+    if (loader) loader.classList.add('hidden');
+  }
+});
+</script>
+</body>
+</html>
+
