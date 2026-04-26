@@ -156,28 +156,97 @@ function Index() {
   );
 }
 
-function UnitModel({ type }: { type: PlantNode['model'] }) {
-  const base = 'relative drop-shadow-[0_16px_18px_color-mix(in_oklab,var(--background)_70%,transparent)]';
+function UnitModel({ id, type }: { id: string; type: PlantNode['model'] }) {
+  const isDistillation = id === 'adu-c101' || id === 'vdu-c102' || id === 'delayed-coker-v700';
+  const isTreatingTower = id === 'amine-treating-t800' || id === 'sour-water-stripper-t900' || id === 'lpg-recovery-t950';
 
   if (type === 'tower') {
-    return <span className={`${base} h-16 w-7 rounded-t-full border border-border bg-plant-steel shadow-[inset_-8px_0_16px_color-mix(in_oklab,var(--background)_38%,transparent)] before:absolute before:-left-2 before:top-3 before:h-1 before:w-11 before:bg-warning/70 after:absolute after:-right-2 after:bottom-5 after:h-1 after:w-11 after:bg-flow/70`} />;
+    return (
+      <span className={`equipment-model tower-model ${isDistillation ? 'tower-model--tall' : ''} ${isTreatingTower ? 'tower-model--treating' : ''}`}>
+        <i className="tower-shell" />
+        <i className="tower-cap" />
+        <i className="tower-tray tower-tray-1" />
+        <i className="tower-tray tower-tray-2" />
+        <i className="tower-tray tower-tray-3" />
+        <i className="tower-platform tower-platform-top" />
+        <i className="tower-platform tower-platform-mid" />
+        <i className="tower-pipe tower-pipe-left" />
+        <i className="tower-pipe tower-pipe-right" />
+      </span>
+    );
   }
 
   if (type === 'furnace') {
-    return <span className={`${base} h-12 w-12 rounded-sm border border-border bg-destructive/80 shadow-[inset_-8px_0_18px_color-mix(in_oklab,var(--background)_35%,transparent)] before:absolute before:left-2 before:top-2 before:h-7 before:w-2 before:bg-warning after:absolute after:right-2 after:top-2 after:h-7 after:w-2 after:bg-warning`} />;
+    return (
+      <span className="equipment-model furnace-model">
+        <i className="furnace-stack" />
+        <i className="furnace-box" />
+        <i className="furnace-door furnace-door-left" />
+        <i className="furnace-door furnace-door-right" />
+        <i className="furnace-flame furnace-flame-1" />
+        <i className="furnace-flame furnace-flame-2" />
+      </span>
+    );
   }
 
   if (type === 'tank') {
-    return <span className={`${base} h-12 w-16 rounded-[50%/18%] border border-border bg-plant-steel before:absolute before:left-0 before:top-2 before:h-10 before:w-full before:rounded-[50%/18%] before:border before:border-border before:bg-card/50 after:absolute after:left-2 after:top-1 after:h-2 after:w-12 after:rounded-full after:bg-flow/40`} />;
+    return (
+      <span className="equipment-model tank-farm-model">
+        <i className="storage-tank storage-tank-left" />
+        <i className="storage-tank storage-tank-mid" />
+        <i className="storage-tank storage-tank-right" />
+        <i className="tank-roof tank-roof-left" />
+        <i className="tank-roof tank-roof-mid" />
+        <i className="tank-roof tank-roof-right" />
+      </span>
+    );
   }
 
   if (type === 'exchanger') {
-    return <span className={`${base} h-8 w-16 rounded-full border border-border bg-flow/70 before:absolute before:left-2 before:top-1 before:h-6 before:w-1 before:bg-background/60 after:absolute after:right-2 after:top-1 after:h-6 after:w-1 after:bg-background/60`} />;
+    return (
+      <span className="equipment-model exchanger-model">
+        <i className="exchanger-shell" />
+        <i className="exchanger-head exchanger-head-left" />
+        <i className="exchanger-head exchanger-head-right" />
+        <i className="exchanger-tube exchanger-tube-1" />
+        <i className="exchanger-tube exchanger-tube-2" />
+      </span>
+    );
   }
 
   if (type === 'mixer') {
-    return <span className={`${base} h-11 w-14 rounded-md border border-border bg-warning/80 before:absolute before:left-1/2 before:top-1 h-11 before:h-9 before:w-1 before:-translate-x-1/2 before:bg-background/50 after:absolute after:left-3 after:top-4 after:h-1 after:w-8 after:bg-background/50`} />;
+    return (
+      <span className="equipment-model mixer-model">
+        <i className="mixer-vessel" />
+        <i className="mixer-blade mixer-blade-vertical" />
+        <i className="mixer-blade mixer-blade-horizontal" />
+        <i className="mixer-inlet" />
+        <i className="mixer-outlet" />
+      </span>
+    );
   }
 
-  return <span className={`${base} h-11 w-11 rounded-full border border-border bg-flow/75 shadow-[inset_-8px_0_16px_color-mix(in_oklab,var(--background)_35%,transparent)] before:absolute before:left-1/2 before:top-[-12px] before:h-4 before:w-3 before:-translate-x-1/2 before:rounded-sm before:bg-plant-steel after:absolute after:left-1/2 after:bottom-[-8px] after:h-3 after:w-8 after:-translate-x-1/2 after:rounded-full after:bg-border`} />;
+  if (type === 'vessel') {
+    return (
+      <span className="equipment-model vessel-model">
+        <i className="vessel-shell" />
+        <i className="vessel-nozzle" />
+        <i className="vessel-saddle vessel-saddle-left" />
+        <i className="vessel-saddle vessel-saddle-right" />
+        <i className="vessel-flowline" />
+      </span>
+    );
+  }
+
+  return (
+    <span className="equipment-model reactor-model">
+      <i className="reactor-shell" />
+      <i className="reactor-dome" />
+      <i className="reactor-nozzle" />
+      <i className="reactor-band reactor-band-top" />
+      <i className="reactor-band reactor-band-mid" />
+      <i className="reactor-leg reactor-leg-left" />
+      <i className="reactor-leg reactor-leg-right" />
+    </span>
+  );
 }
