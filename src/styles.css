@@ -284,6 +284,18 @@
   }
 }
 
+@keyframes flame-flicker {
+  0%,
+  100% {
+    transform: scaleY(0.85);
+    opacity: 0.72;
+  }
+  50% {
+    transform: scaleY(1.15);
+    opacity: 1;
+  }
+}
+
 @keyframes pulse-live {
   0%,
   100% {
