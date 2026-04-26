@@ -180,6 +180,76 @@
     animation-delay: var(--delay);
   }
 
+  .equipment-model {
+    position: relative;
+    display: block;
+    width: 6rem;
+    height: 5.75rem;
+    transform-style: preserve-3d;
+    filter: drop-shadow(0 1rem 0.9rem color-mix(in oklab, var(--background) 68%, transparent));
+  }
+
+  .equipment-model i {
+    position: absolute;
+    display: block;
+    border-color: var(--border);
+  }
+
+  .tower-shell,
+  .reactor-shell,
+  .vessel-shell,
+  .storage-tank,
+  .exchanger-shell {
+    background: linear-gradient(90deg, color-mix(in oklab, var(--plant-steel) 85%, var(--background)), var(--plant-steel), color-mix(in oklab, var(--plant-steel) 70%, var(--foreground)));
+    border: 1px solid var(--border);
+    box-shadow: inset -0.7rem 0 1rem color-mix(in oklab, var(--background) 30%, transparent), inset 0.45rem 0 0.6rem color-mix(in oklab, var(--foreground) 16%, transparent);
+  }
+
+  .tower-shell { left: 2.18rem; bottom: 0.5rem; width: 1.75rem; height: 4.7rem; border-radius: 999px 999px 0.25rem 0.25rem; }
+  .tower-model--tall .tower-shell { height: 5.35rem; bottom: 0.15rem; }
+  .tower-cap { left: 2.36rem; top: 0.02rem; width: 1.38rem; height: 0.7rem; border-radius: 999px 999px 0 0; background: color-mix(in oklab, var(--plant-steel) 78%, var(--background)); border: 1px solid var(--border); }
+  .tower-tray { left: 2.24rem; width: 1.64rem; height: 1px; background: color-mix(in oklab, var(--foreground) 28%, transparent); }
+  .tower-tray-1 { top: 1.65rem; } .tower-tray-2 { top: 2.55rem; } .tower-tray-3 { top: 3.45rem; }
+  .tower-platform { height: 0.22rem; border-radius: 999px; background: var(--warning); box-shadow: 0 0 0.4rem color-mix(in oklab, var(--warning) 35%, transparent); }
+  .tower-platform-top { left: 1.42rem; top: 1.28rem; width: 3.25rem; } .tower-platform-mid { left: 1.7rem; top: 3.35rem; width: 2.75rem; background: var(--flow); }
+  .tower-pipe { width: 0.22rem; border-radius: 999px; background: var(--flow); } .tower-pipe-left { left: 1.9rem; top: 2.1rem; height: 2.35rem; transform: rotate(-14deg); } .tower-pipe-right { right: 1.85rem; top: 2.45rem; height: 2.1rem; transform: rotate(18deg); }
+  .tower-model--treating .tower-shell { height: 4rem; bottom: 0.8rem; }
+
+  .furnace-box { left: 1.55rem; bottom: 0.45rem; width: 3rem; height: 3.1rem; border: 1px solid var(--border); border-radius: 0.28rem; background: linear-gradient(135deg, var(--destructive), color-mix(in oklab, var(--destructive) 65%, var(--background))); box-shadow: inset -0.55rem 0 1rem color-mix(in oklab, var(--background) 34%, transparent); }
+  .furnace-stack { left: 2.55rem; top: 0.3rem; width: 0.95rem; height: 2rem; border: 1px solid var(--border); border-radius: 0.2rem 0.2rem 0 0; background: var(--plant-steel); }
+  .furnace-door { top: 2.65rem; width: 0.45rem; height: 1.85rem; border-radius: 999px; background: var(--warning); box-shadow: 0 0 0.8rem color-mix(in oklab, var(--warning) 55%, transparent); }
+  .furnace-door-left { left: 2.08rem; } .furnace-door-right { right: 2.08rem; }
+  .furnace-flame { bottom: 0.68rem; width: 0.45rem; height: 0.75rem; border-radius: 999px 999px 0.2rem 0.2rem; background: var(--warning); animation: flame-flicker 0.9s ease-in-out infinite; }
+  .furnace-flame-1 { left: 2.35rem; } .furnace-flame-2 { right: 2.35rem; animation-delay: -0.35s; }
+
+  .reactor-shell { left: 2rem; bottom: 0.55rem; width: 2.25rem; height: 3.7rem; border-radius: 999px 999px 0.8rem 0.8rem; }
+  .reactor-dome { left: 2.18rem; top: 1rem; width: 1.88rem; height: 0.95rem; border: 1px solid var(--border); border-radius: 999px 999px 0 0; background: color-mix(in oklab, var(--flow) 62%, var(--plant-steel)); }
+  .reactor-nozzle { left: 2.78rem; top: 0.35rem; width: 0.6rem; height: 0.85rem; border-radius: 0.18rem; background: var(--plant-steel); }
+  .reactor-band { left: 1.9rem; width: 2.45rem; height: 0.18rem; border-radius: 999px; background: var(--flow); }
+  .reactor-band-top { top: 2.55rem; } .reactor-band-mid { top: 3.55rem; background: color-mix(in oklab, var(--warning) 70%, var(--flow)); }
+  .reactor-leg { bottom: 0.25rem; width: 0.2rem; height: 0.65rem; background: var(--border); } .reactor-leg-left { left: 2.35rem; transform: rotate(12deg); } .reactor-leg-right { right: 2.35rem; transform: rotate(-12deg); }
+
+  .vessel-shell { left: 1rem; top: 2.1rem; width: 4.25rem; height: 1.8rem; border-radius: 999px; background: linear-gradient(180deg, var(--flow), color-mix(in oklab, var(--flow) 70%, var(--plant-steel))); }
+  .vessel-nozzle { left: 2.76rem; top: 1.2rem; width: 0.58rem; height: 1rem; border-radius: 0.2rem; background: var(--plant-steel); }
+  .vessel-saddle { bottom: 1.1rem; width: 0.75rem; height: 0.32rem; border-radius: 999px 999px 0.1rem 0.1rem; background: var(--border); } .vessel-saddle-left { left: 1.7rem; } .vessel-saddle-right { right: 1.7rem; }
+  .vessel-flowline { left: 0.75rem; top: 2.95rem; width: 4.75rem; height: 1px; background: color-mix(in oklab, var(--foreground) 38%, transparent); }
+
+  .exchanger-shell { left: 0.85rem; top: 2.35rem; width: 4.6rem; height: 1.28rem; border-radius: 999px; background: linear-gradient(180deg, color-mix(in oklab, var(--flow) 85%, var(--foreground)), var(--flow)); }
+  .exchanger-head { top: 2.43rem; width: 0.55rem; height: 1.12rem; border: 1px solid var(--border); background: var(--plant-steel); }
+  .exchanger-head-left { left: 0.75rem; border-radius: 999px 0 0 999px; } .exchanger-head-right { right: 0.75rem; border-radius: 0 999px 999px 0; }
+  .exchanger-tube { left: 1.45rem; width: 3.4rem; height: 1px; background: color-mix(in oklab, var(--background) 50%, transparent); }
+  .exchanger-tube-1 { top: 2.78rem; } .exchanger-tube-2 { top: 3.18rem; }
+
+  .mixer-vessel { left: 1.55rem; top: 1.8rem; width: 3.2rem; height: 2.8rem; border: 1px solid var(--border); border-radius: 0.45rem; background: linear-gradient(135deg, var(--warning), color-mix(in oklab, var(--warning) 66%, var(--plant-steel))); box-shadow: inset -0.6rem 0 1rem color-mix(in oklab, var(--background) 25%, transparent); }
+  .mixer-blade { background: color-mix(in oklab, var(--background) 55%, transparent); transform-origin: center; }
+  .mixer-blade-vertical { left: 3.05rem; top: 2.12rem; width: 0.18rem; height: 2.15rem; } .mixer-blade-horizontal { left: 2.35rem; top: 3.05rem; width: 1.55rem; height: 0.18rem; }
+  .mixer-inlet { left: 1rem; top: 2.65rem; width: 1rem; height: 0.2rem; border-radius: 999px; background: var(--flow); } .mixer-outlet { right: 1rem; top: 3.55rem; width: 1rem; height: 0.2rem; border-radius: 999px; background: var(--flow); }
+
+  .storage-tank { bottom: 0.55rem; width: 1.85rem; height: 2.6rem; border-radius: 50% / 13%; }
+  .storage-tank-left { left: 0.4rem; transform: scale(0.85); } .storage-tank-mid { left: 2.05rem; height: 3.15rem; } .storage-tank-right { right: 0.35rem; transform: scale(0.9); }
+  .tank-roof { height: 0.38rem; border: 1px solid var(--border); border-radius: 50%; background: color-mix(in oklab, var(--flow) 36%, var(--plant-steel)); }
+  .tank-roof-left { left: 0.54rem; top: 2.45rem; width: 1.58rem; } .tank-roof-mid { left: 2.05rem; top: 1.9rem; width: 1.85rem; } .tank-roof-right { right: 0.45rem; top: 2.34rem; width: 1.65rem; }
+
   .pipeline-flow {
     stroke-dasharray: 12 18;
     animation: pipeline-flow 1.2s linear infinite;
@@ -211,6 +281,18 @@
   }
   50% {
     transform: translateZ(10px);
+  }
+}
+
+@keyframes flame-flicker {
+  0%,
+  100% {
+    transform: scaleY(0.85);
+    opacity: 0.72;
+  }
+  50% {
+    transform: scaleY(1.15);
+    opacity: 1;
   }
 }
 
