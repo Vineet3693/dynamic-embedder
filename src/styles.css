@@ -59,6 +59,11 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-live: var(--live);
+  --color-warning: var(--warning);
+  --color-flow: var(--flow);
+  --color-plant-floor: var(--plant-floor);
+  --color-plant-steel: var(--plant-steel);
 }
 
 :root {
@@ -95,6 +100,11 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+  --live: oklch(0.74 0.19 149);
+  --warning: oklch(0.82 0.15 84);
+  --flow: oklch(0.74 0.14 213);
+  --plant-floor: oklch(0.2 0.035 259);
+  --plant-steel: oklch(0.54 0.035 252);
 }
 
 .dark {
@@ -130,6 +140,11 @@
   --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+  --live: oklch(0.76 0.18 149);
+  --warning: oklch(0.84 0.15 84);
+  --flow: oklch(0.75 0.15 213);
+  --plant-floor: oklch(0.16 0.038 259);
+  --plant-steel: oklch(0.62 0.04 252);
 }
 
 @layer base {
@@ -140,5 +155,71 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+  }
+}
+
+@layer components {
+  .refinery-viewport {
+    perspective: 1400px;
+    perspective-origin: 50% 34%;
+  }
+
+  .refinery-plane {
+    transform-style: preserve-3d;
+    transform: rotateX(58deg) rotateZ(-8deg);
+  }
+
+  .unit-node-3d {
+    transform-style: preserve-3d;
+    transform: translate3d(var(--x), var(--y), 0) rotateZ(8deg) rotateX(-58deg);
+  }
+
+  .unit-model-3d {
+    transform-style: preserve-3d;
+    animation: unit-live-float 4.6s ease-in-out infinite;
+    animation-delay: var(--delay);
+  }
+
+  .pipeline-flow {
+    stroke-dasharray: 12 18;
+    animation: pipeline-flow 1.2s linear infinite;
+  }
+
+  .pulse-live {
+    animation: pulse-live 1.8s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .unit-model-3d,
+    .pipeline-flow,
+    .pulse-live {
+      animation: none;
+    }
+  }
+}
+
+@keyframes pipeline-flow {
+  to {
+    stroke-dashoffset: -30;
+  }
+}
+
+@keyframes unit-live-float {
+  0%,
+  100% {
+    transform: translateZ(0);
+  }
+  50% {
+    transform: translateZ(10px);
+  }
+}
+
+@keyframes pulse-live {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
   }
 }
