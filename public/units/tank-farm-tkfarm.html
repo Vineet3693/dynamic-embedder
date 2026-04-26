@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ═══════════════════════════════════════════════════════════════════
+     TK-FARM — Product Storage / Tank Farm
+     Floating Roof Storage Systems | Standalone 3D Viewer
+     Three.js r147 | Dark Industrial Theme | Production-Ready
+     ═══════════════════════════════════════════════════════════════════ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TK-FARM | Product Storage — Floating Roof Systems</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{overflow:hidden;background:#0a0e17;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#c8d6e5;}
+
+#loading-screen{position:fixed;inset:0;z-index:9999;background:#0a0e17;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.8s ease;}
+#loading-screen.hidden{opacity:0;pointer-events:none;}
+#loading-screen h1{font-size:1.4rem;color:#f0c040;margin-bottom:1.2rem;letter-spacing:0.08em;}
+.loader-bar{width:280px;height:4px;background:#1a2035;border-radius:2px;overflow:hidden;}
+.loader-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#f0c040,#e8a020);
+  border-radius:2px;transition:width 0.3s ease;}
+#loading-screen p{margin-top:1rem;font-size:0.8rem;color:#5a6a80;}
+
+#topbar{position:fixed;top:0;left:0;right:0;height:48px;z-index:100;
+  background:linear-gradient(180deg,rgba(10,14,23,0.95),rgba(10,14,23,0.85));
+  border-bottom:1px solid #1e2a3a;display:flex;align-items:center;padding:0 16px;
+  backdrop-filter:blur(8px);}
+#topbar .tag{background:#f0c040;color:#0a0e17;font-weight:700;font-size:0.7rem;
+  padding:2px 8px;border-radius:3px;margin-right:12px;letter-spacing:0.06em;}
+#topbar h2{font-size:0.95rem;color:#e0e8f0;font-weight:600;}
+#topbar .unit-id{color:#f0c040;margin-left:8px;}
+#topbar .status{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:0.75rem;}
+#topbar .status .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;
+  box-shadow:0 0 6px #22c55e;animation:pulse-dot 2s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+#view-toggle{position:fixed;top:60px;right:16px;z-index:100;display:flex;flex-direction:column;gap:6px;}
+#view-toggle button{background:rgba(20,30,50,0.9);color:#8a9ab0;border:1px solid #1e2a3a;
+  padding:7px 14px;border-radius:4px;font-size:0.72rem;cursor:pointer;
+  transition:all 0.25s ease;letter-spacing:0.04em;font-weight:500;}
+#view-toggle button:hover,#view-toggle button.active{
+  background:rgba(240,192,64,0.15);color:#f0c040;border-color:#f0c040;}
+
+/* ─── Left Panel ─── */
+#left-panel{position:fixed;top:60px;left:16px;width:225px;z-index:100;
+  max-height:calc(100vh - 140px);overflow-y:auto;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:12px;backdrop-filter:blur(6px);}
+#left-panel::-webkit-scrollbar{width:3px;}
+#left-panel::-webkit-scrollbar-thumb{background:#2a3a50;border-radius:2px;}
+.panel-card{margin-bottom:10px;padding:8px;background:rgba(20,30,50,0.6);border-radius:4px;
+  border-left:3px solid #f0c040;}
+.panel-card h3{font-size:0.65rem;color:#f0c040;text-transform:uppercase;
+  letter-spacing:0.08em;margin-bottom:6px;}
+.tank-row{display:flex;justify-content:space-between;align-items:center;
+  padding:3px 0;border-bottom:1px solid rgba(30,40,60,0.5);font-size:0.68rem;}
+.tank-row:last-child{border-bottom:none;}
+.tank-row .tk-name{color:#a0b0c0;}
+.tank-row .tk-val{font-weight:600;color:#e0e8f0;font-variant-numeric:tabular-nums;}
+.tank-row .tk-val.green{color:#22c55e;}
+.tank-row .tk-val.yellow{color:#f59e0b;}
+.tank-row .tk-val.grey{color:#5a6a80;}
+.status-badge{display:inline-block;padding:1px 5px;border-radius:3px;font-size:0.6rem;
+  font-weight:600;text-transform:uppercase;}
+.status-badge.receiving{background:rgba(34,197,94,0.15);color:#22c55e;}
+.status-badge.sending{background:rgba(245,158,11,0.15);color:#f59e0b;}
+.status-badge.idle{background:rgba(100,116,139,0.15);color:#64748b;}
+.stream-row{display:flex;justify-content:space-between;padding:2px 0;font-size:0.65rem;color:#8a9ab0;}
+.stream-row .stream-active{color:#22c55e;}
+.legend-item{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:0.65rem;color:#8a9ab0;}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+
+/* ─── Right Panel ─── */
+#right-panel{position:fixed;top:60px;right:16px;width:210px;z-index:100;
+  max-height:calc(100vh - 140px);overflow-y:auto;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:12px;backdrop-filter:blur(6px);margin-top:148px;}
+#right-panel::-webkit-scrollbar{width:3px;}
+#right-panel::-webkit-scrollbar-thumb{background:#2a3a50;border-radius:2px;}
+.reading{margin-bottom:8px;}
+.reading label{display:block;font-size:0.6rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.05em;margin-bottom:1px;}
+.reading .value{font-size:1rem;color:#e0e8f0;font-weight:600;font-variant-numeric:tabular-nums;}
+.reading .unit{font-size:0.65rem;color:#5a6a80;margin-left:3px;}
+.inv-bar{height:4px;background:#1a2540;border-radius:2px;margin-top:2px;overflow:hidden;}
+.inv-bar-fill{height:100%;border-radius:2px;transition:width 0.5s ease;}
+.safety-row{display:flex;justify-content:space-between;padding:2px 0;font-size:0.65rem;
+  border-bottom:1px solid rgba(30,40,60,0.4);}
+.safety-row .safe-ok{color:#22c55e;}
+.safety-row .safe-warn{color:#f59e0b;}
+
+/* ─── Bottom Panel ─── */
+#bottom-panel{position:fixed;bottom:40px;left:16px;right:16px;height:70px;z-index:100;
+  background:rgba(12,18,30,0.92);border:1px solid #1a2540;border-radius:6px;
+  padding:10px 18px;backdrop-filter:blur(6px);display:flex;gap:20px;align-items:center;}
+.process-stat{text-align:center;flex:1;}
+.process-stat .num{font-size:1.15rem;color:#e0e8f0;font-weight:700;font-variant-numeric:tabular-nums;}
+.process-stat .desc{font-size:0.55rem;color:#5a6a80;text-transform:uppercase;
+  letter-spacing:0.05em;margin-top:1px;}
+
+/* ─── Alert Ticker ─── */
+#alert-ticker{position:fixed;bottom:0;left:0;right:0;height:32px;z-index:100;
+  background:rgba(15,20,35,0.95);border-top:1px solid #1e2a3a;overflow:hidden;
+  display:flex;align-items:center;}
+#alert-ticker .label{background:#f0c040;color:#0a0e17;font-size:0.65rem;
+  font-weight:700;padding:0 10px;height:100%;display:flex;align-items:center;
+  letter-spacing:0.08em;white-space:nowrap;}
+#ticker-content{flex:1;overflow:hidden;white-space:nowrap;}
+#ticker-scroll{display:inline-block;animation:ticker-scroll 60s linear infinite;
+  font-size:0.7rem;color:#8a9ab0;padding-left:20px;}
+@keyframes ticker-scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+.ticker-item{margin-right:50px;}
+.ticker-item.warn{color:#f59e0b;}
+.ticker-item.info{color:#38bdf8;}
+.ticker-item.ok{color:#22c55e;}
+
+/* ─── Canvas Container ─── */
+#canvas-container{position:fixed;inset:0;z-index:1;}
+canvas{display:block;}
+
+/* ─── Tooltip ─── */
+#tooltip{position:fixed;z-index:200;background:rgba(10,14,23,0.95);border:1px solid #f0c040;
+  color:#e0e8f0;font-size:0.7rem;padding:5px 9px;border-radius:4px;pointer-events:none;
+  display:none;max-width:180px;}
+
+/* ─── Tank Popup ─── */
+#tank-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:300;
+  background:rgba(12,18,30,0.96);border:1px solid #f0c040;border-radius:8px;
+  padding:20px 24px;min-width:300px;display:none;backdrop-filter:blur(10px);}
+#tank-popup h4{font-size:0.9rem;color:#f0c040;margin-bottom:12px;letter-spacing:0.04em;}
+#tank-popup .popup-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:0.75rem;}
+#tank-popup .popup-grid .pk-label{color:#5a6a80;text-transform:uppercase;font-size:0.6rem;letter-spacing:0.05em;}
+#tank-popup .popup-grid .pk-value{color:#e0e8f0;font-weight:600;}
+#tank-popup .close-btn{position:absolute;top:8px;right:12px;background:none;border:none;
+  color:#5a6a80;cursor:pointer;font-size:1.1rem;}
+#tank-popup .close-btn:hover{color:#e0e8f0;}
+#popup-overlay{position:fixed;inset:0;z-index:299;background:rgba(0,0,0,0.4);display:none;}
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <h1>TK-FARM TANK FARM</h1>
+  <div class="loader-bar"><div class="loader-bar-fill" id="loader-fill"></div></div>
+  <p>Initializing 3D tank farm viewer...</p>
+</div>
+
+<div id="topbar">
+  <span class="tag">STORAGE AREA</span>
+  <h2>Product Storage — Tank Farm<span class="unit-id">TK-FARM</span></h2>
+  <div class="status"><div class="dot"></div><span>ONLINE</span></div>
+</div>
+
+<div id="view-toggle">
+  <button class="active" data-view="external">External</button>
+  <button data-view="internal">Internal</button>
+  <button data-view="cutaway">Cutaway</button>
+  <button data-view="flow">Flow</button>
+</div>
+
+<!-- ─── LEFT PANEL ─── -->
+<div id="left-panel">
+  <div class="panel-card">
+    <h3>Tank Levels</h3>
+    <div class="tank-row"><span class="tk-name">TK-101 Crude</span><span class="tk-val" id="lv-101">72%</span></div>
+    <div class="tank-row"><span class="tk-name">TK-102 Gasoline</span><span class="tk-val" id="lv-102">55%</span></div>
+    <div class="tank-row"><span class="tk-name">TK-103 Diesel</span><span class="tk-val" id="lv-103">63%</span></div>
+    <div class="tank-row"><span class="tk-name">TK-104 Jet Fuel</span><span class="tk-val" id="lv-104">44%</span></div>
+    <div class="tank-row"><span class="tk-name">TK-105 Fuel Oil</span><span class="tk-val" id="lv-105">88%</span></div>
+  </div>
+  <div class="panel-card">
+    <h3>Tank Status</h3>
+    <div class="tank-row"><span class="tk-name">TK-101</span><span class="status-badge receiving" id="st-101">Receiving</span></div>
+    <div class="tank-row"><span class="tk-name">TK-102</span><span class="status-badge idle" id="st-102">Idle</span></div>
+    <div class="tank-row"><span class="tk-name">TK-103</span><span class="status-badge sending" id="st-103">Sending</span></div>
+    <div class="tank-row"><span class="tk-name">TK-104</span><span class="status-badge receiving" id="st-104">Receiving</span></div>
+    <div class="tank-row"><span class="tk-name">TK-105</span><span class="status-badge sending" id="st-105">Sending</span></div>
+  </div>
+  <div class="panel-card">
+    <h3>Process Streams</h3>
+    <div class="stream-row"><span>Crude Receipt</span><span class="stream-active" id="ps-crude">850 m³/h</span></div>
+    <div class="stream-row"><span>Gasoline Shipment</span><span id="ps-gas">Standby</span></div>
+    <div class="stream-row"><span>Diesel Shipment</span><span class="stream-active" id="ps-diesel">320 m³/h</span></div>
+    <div class="stream-row"><span>Jet Fuel Receipt</span><span class="stream-active" id="ps-jet">180 m³/h</span></div>
+    <div class="stream-row"><span>Fuel Oil Transfer</span><span class="stream-active" id="ps-foil">95 m³/h</span></div>
+    <div class="stream-row"><span>LPG Circulation</span><span id="ps-lpg">Normal</span></div>
+  </div>
+  <div class="panel-card">
+    <h3>Fluid Legend</h3>
+    <div class="legend-item"><div class="legend-dot" style="background:#3d2b1f;"></div>Crude Oil</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f5e6a0;"></div>Gasoline</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#c8940a;"></div>Diesel</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#d4b860;"></div>Jet Fuel</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1a1a1a;border:1px solid #333;"></div>Fuel Oil</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#22d3ee;"></div>LPG</div>
+  </div>
+</div>
+
+<!-- ─── RIGHT PANEL ─── -->
+<div id="right-panel">
+  <div class="panel-card">
+    <h3>Live Readings</h3>
+    <div class="reading"><label>Total Storage</label><div><span class="value" id="r-total">1352</span><span class="unit">m³</span></div></div>
+    <div class="reading"><label>Avg Tank Temp</label><div><span class="value" id="r-avgtemp">38.2</span><span class="unit">°C</span></div></div>
+    <div class="reading"><label>Ambient Temp</label><div><span class="value" id="r-ambtemp">28</span><span class="unit">°C</span></div></div>
+    <div class="reading"><label>Active Pumps</label><div><span class="value" id="r-pumps">3</span><span class="unit">of 4</span></div></div>
+  </div>
+  <div class="panel-card">
+    <h3>Inventory Summary</h3>
+    <div class="tank-row"><span class="tk-name">Crude</span><span class="tk-val" id="inv-crude">452 m³</span></div>
+    <div class="inv-bar"><div class="inv-bar-fill" id="invb-crude" style="width:72%;background:#3d2b1f;"></div></div>
+    <div class="tank-row"><span class="tk-name">Gasoline</span><span class="tk-val" id="inv-gas">194 m³</span></div>
+    <div class="inv-bar"><div class="inv-bar-fill" id="invb-gas" style="width:55%;background:#f5e6a0;"></div></div>
+    <div class="tank-row"><span class="tk-name">Diesel</span><span class="tk-val" id="inv-diesel">301 m³</span></div>
+    <div class="inv-bar"><div class="inv-bar-fill" id="invb-diesel" style="width:63%;background:#c8940a;"></div></div>
+    <div class="tank-row"><span class="tk-name">Jet Fuel</span><span class="tk-val" id="inv-jet">102 m³</span></div>
+    <div class="inv-bar"><div class="inv-bar-fill" id="invb-jet" style="width:44%;background:#d4b860;"></div></div>
+    <div class="tank-row"><span class="tk-name">Fuel Oil</span><span class="tk-val" id="inv-foil">265 m³</span></div>
+    <div class="inv-bar"><div class="inv-bar-fill" id="invb-foil" style="width:88%;background:#444;"></div></div>
+    <div class="tank-row"><span class="tk-name">LPG</span><span class="tk-val" id="inv-lpg">38 tons</span></div>
+    <div class="inv-bar"><div class="inv-bar-fill" id="invb-lpg" style="width:63%;background:#22d3ee;"></div></div>
+  </div>
+  <div class="panel-card">
+    <h3>Tank Farm Info</h3>
+    <div class="safety-row"><span>Total Tanks</span><span style="color:#e0e8f0;">7</span></div>
+    <div class="safety-row"><span>Total Capacity</span><span style="color:#e0e8f0;">2100 m³</span></div>
+    <div class="safety-row"><span>Bund Wall Height</span><span style="color:#e0e8f0;">1.5 m</span></div>
+    <div class="safety-row"><span>Fire System</span><span style="color:#e0e8f0;">Foam / Monitor</span></div>
+    <div class="safety-row"><span>Farm Area</span><span style="color:#e0e8f0;">4800 m²</span></div>
+  </div>
+  <div class="panel-card">
+    <h3>Safety</h3>
+    <div class="safety-row"><span>HL Alarms (>90%)</span><span class="safe-warn" id="safe-hl">TK-105: 88%</span></div>
+    <div class="safety-row"><span>LL Alarms (<15%)</span><span class="safe-ok" id="safe-ll">None</span></div>
+    <div class="safety-row"><span>Bund Drain</span><span class="safe-ok" id="safe-bund">Open / Clear</span></div>
+    <div class="safety-row"><span>Fire System</span><span class="safe-ok" id="safe-fire">Ready</span></div>
+  </div>
+</div>
+
+<!-- ─── BOTTOM PANEL ─── -->
+<div id="bottom-panel">
+  <div class="process-stat"><div class="num" id="s-total">1352</div><div class="desc">Total Inventory m³</div></div>
+  <div class="process-stat"><div class="num" id="s-crude">72%</div><div class="desc">Crude Level</div></div>
+  <div class="process-stat"><div class="num" id="s-gas">55%</div><div class="desc">Gasoline Level</div></div>
+  <div class="process-stat"><div class="num" id="s-diesel">63%</div><div class="desc">Diesel Level</div></div>
+  <div class="process-stat"><div class="num" id="s-jet">44%</div><div class="desc">Jet Fuel Level</div></div>
+  <div class="process-stat"><div class="num" id="s-pumps">3</div><div class="desc">Active Pumps</div></div>
+</div>
+
+<!-- ─── ALERT TICKER ─── -->
+<div id="alert-ticker">
+  <div class="label">TK-FARM ALERTS</div>
+  <div id="ticker-content">
+    <div id="ticker-scroll">
+      <span class="ticker-item ok">&#9679; TK-FARM all tanks operating within normal parameters</span>
+      <span class="ticker-item warn">&#9679; TK-105 Fuel Oil level at 88% — approaching high alarm (90%)</span>
+      <span class="ticker-item info">&#9679; TK-101 Crude receiving at 850 m³/h — estimated full in 3.2 hrs</span>
+      <span class="ticker-item ok">&#9679; TK-102 Gasoline idle — scheduled shipment at 18:00</span>
+      <span class="ticker-item info">&#9679; TK-103 Diesel sending to pipeline at 320 m³/h</span>
+      <span class="ticker-item warn">&#9679; TK-104 Jet Fuel receiving from CDU — level rising</span>
+      <span class="ticker-item ok">&#9679; Fire foam system tested and ready — last test 2024-11-15</span>
+      <span class="ticker-item info">&#9679; Bund wall inspection completed — no defects found</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Popup ─── -->
+<div id="popup-overlay"></div>
+<div id="tank-popup">
+  <button class="close-btn" id="popup-close">&times;</button>
+  <h4 id="popup-title">TK-101 Crude Storage</h4>
+  <div class="popup-grid">
+    <div><div class="pk-label">Contents</div><div class="pk-value" id="pk-contents">Crude Oil</div></div>
+    <div><div class="pk-label">Level</div><div class="pk-value" id="pk-level">72%</div></div>
+    <div><div class="pk-label">Volume</div><div class="pk-value" id="pk-vol">452 m³</div></div>
+    <div><div class="pk-label">Capacity</div><div class="pk-value" id="pk-cap">628 m³</div></div>
+    <div><div class="pk-label">Temperature</div><div class="pk-value" id="pk-temp">42.5 °C</div></div>
+    <div><div class="pk-label">Status</div><div class="pk-value" id="pk-status">Receiving</div></div>
+    <div><div class="pk-label">Fill Rate</div><div class="pk-value" id="pk-rate">+85 m³/h</div></div>
+    <div><div class="pk-label">Roof Type</div><div class="pk-value" id="pk-roof">Floating</div></div>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+<div id="canvas-container"></div>
+
+<!-- ─── THREE.JS r147 CDN ─── -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   TK-FARM — PRODUCT STORAGE TANK FARM — COMPLETE 3D SCENE
+   ═══════════════════════════════════════════════════════════════════ */
+
+let scene, camera, renderer, controls, composer;
+let raycaster, mouse, clock;
+let currentView = 'external';
+const floatingRoofs = [];  // {mesh, tankData, legGroup}
+const shellMeshes = [];    // tank shell meshes for view modes
+const fluidMeshes = [];    // fluid cylinders inside tanks
+const interactiveObjects = [];
+const particleSystems = [];
+
+// ─── Tank Data ───
+const tankData = [
+  { id:'TK-101', name:'Crude Storage', r:5, H:8, x:-12, z:0, level:72,
+    capacity:628, product:'Crude Oil', color:0x3d2b1f, temp:42.5, status:'receiving', rate:85, coneRoof:false },
+  { id:'TK-102', name:'Gasoline Storage', r:4, H:7, x:0, z:0, level:55,
+    capacity:352, product:'Gasoline', color:0xf5e6a0, temp:28.3, status:'idle', rate:0, coneRoof:false },
+  { id:'TK-103', name:'Diesel Storage', r:4.5, H:7.5, x:12, z:0, level:63,
+    capacity:477, product:'Diesel', color:0xc8940a, temp:35.1, status:'sending', rate:-60, coneRoof:false },
+  { id:'TK-104', name:'Jet Fuel Storage', r:3.5, H:6, x:-6, z:10, level:44,
+    capacity:231, product:'Jet Fuel', color:0xd4b860, temp:22.8, status:'receiving', rate:45, coneRoof:false },
+  { id:'TK-105', name:'Fuel Oil Storage', r:4, H:6, x:6, z:10, level:88,
+    capacity:301, product:'Fuel Oil', color:0x1a1a1a, temp:68.4, status:'sending', rate:-35, coneRoof:true },
+];
+
+const cameraPresets = {
+  external: { pos: [35, 20, 30], target: [0, 2, 2] },
+  internal: { pos: [-12, 3, 2], target: [-12, 2, 0] },
+  cutaway:  { pos: [28, 12, 24], target: [0, 2, 2] },
+  flow:     { pos: [22, 14, 20], target: [0, 2, 2] }
+};
+
+/* ═══════════════════════════════════════════
+   INITIALIZATION
+   ═══════════════════════════════════════════ */
+function init() {
+  const container = document.getElementById('canvas-container');
+  clock = new THREE.Clock();
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0e17);
+  scene.fog = new THREE.FogExp2(0x0a0e17, 0.008);
+
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 300);
+  camera.position.set(35, 20, 30);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+  container.appendChild(renderer.domElement);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.target.set(0, 2, 2);
+  controls.minDistance = 5;
+  controls.maxDistance = 80;
+
+  composer = new THREE.EffectComposer(renderer);
+  composer.addPass(new THREE.RenderPass(scene, camera));
+  const bloom = new THREE.UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight), 0.35, 0.5, 0.85);
+  composer.addPass(bloom);
+
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  setupLights();
+  buildTankFarm();
+  buildParticles();
+
+  window.addEventListener('resize', onResize);
+  renderer.domElement.addEventListener('click', onClick);
+  renderer.domElement.addEventListener('mousemove', onMouseMove);
+  document.getElementById('popup-close').addEventListener('click', closePopup);
+  document.getElementById('popup-overlay').addEventListener('click', closePopup);
+  setupViewToggle();
+  simulateLoading();
+}
+
+/* ═══════════════════════════════════════════
+   5-LIGHT SETUP
+   ═══════════════════════════════════════════ */
+function setupLights() {
+  const key = new THREE.DirectionalLight(0xffeedd, 1.3);
+  key.position.set(20, 25, 15);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.left = -30; key.shadow.camera.right = 30;
+  key.shadow.camera.top = 30; key.shadow.camera.bottom = -30;
+  scene.add(key);
+
+  const fill = new THREE.DirectionalLight(0x8899cc, 0.4);
+  fill.position.set(-15, 10, -8);
+  scene.add(fill);
+
+  const rim = new THREE.DirectionalLight(0xffcc88, 0.35);
+  rim.position.set(-8, 12, -20);
+  scene.add(rim);
+
+  const amb = new THREE.AmbientLight(0x303848, 0.5);
+  scene.add(amb);
+
+  const under = new THREE.PointLight(0x2244aa, 0.3, 50);
+  under.position.set(0, -2, 0);
+  scene.add(under);
+}
+
+/* ═══════════════════════════════════════════
+   MATERIALS
+   ═══════════════════════════════════════════ */
+function mat(c, o = {}) {
+  return new THREE.MeshStandardMaterial({
+    color: c, metalness: o.m ?? 0.85, roughness: o.r ?? 0.25,
+    transparent: o.t ?? false, opacity: o.o ?? 1.0,
+    side: o.s ?? THREE.FrontSide, emissive: o.e ?? 0x000000,
+    emissiveIntensity: o.ei ?? 0
+  });
+}
+
+const M = {
+  shell:    () => mat(0xb0b8c0, { m:0.7, r:0.3 }),
+  shellT:   () => mat(0xb0b8c0, { m:0.7, r:0.3, t:true, o:0.45 }),
+  darkSteel:() => mat(0x383e45, { m:0.9, r:0.2 }),
+  stainless:() => mat(0xc0c8d0, { m:0.95, r:0.15 }),
+  oshaY:    () => mat(0xf0c040, { m:0.6, r:0.35 }),
+  concrete: () => mat(0x606868, { m:0.05, r:0.95 }),
+  grating:  () => mat(0x505a64, { m:0.7, r:0.5, t:true, o:0.6 }),
+  pipe:     () => mat(0x607080, { m:0.7, r:0.3 }),
+  rubber:   () => mat(0x222222, { m:0.1, r:0.95 }),
+  warningR: () => mat(0xcc2222, { m:0.5, r:0.4 }),
+  fluid:    (c) => mat(c, { m:0.2, r:0.6, t:true, o:0.75, e:c, ei:0.15 }),
+  roofDeck: () => mat(0x889098, { m:0.6, r:0.4 }),
+};
+
+/* ═══════════════════════════════════════════
+   BUILD TANK FARM
+   ═══════════════════════════════════════════ */
+function buildTankFarm() {
+  // ─── Ground Concrete Pad ───
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(80, 50),
+    new THREE.MeshStandardMaterial({ color: 0x2a3038, roughness: 0.95, metalness: 0.05 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.05;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // ─── Build 5 Storage Tanks ───
+  tankData.forEach(td => buildFloatingRoofTank(td));
+
+  // ─── 2 LPG Bullets ───
+  buildLPGBullet(0, -10, 0);
+  buildLPGBullet(5, -10, 1);
+
+  // ─── Bund/Dyke Walls ───
+  buildBundWalls();
+
+  // ─── Pump House ───
+  buildPumpHouse();
+
+  // ─── Fire Water Monitor ───
+  buildFireMonitor(-18, 5);
+  buildFireMonitor(16, 12);
+
+  // ─── Pipe Network ───
+  buildPipeNetwork();
+
+  // ─── Pipe Bridge / Pipe Rack between tanks ───
+  buildPipeRack();
+
+  // ─── Area Lighting Poles ───
+  buildAreaLighting();
+
+  // ─── Access Road ───
+  buildAccessRoad();
+
+  // ─── Collect interactive tank meshes ───
+  shellMeshes.forEach(m => { m.userData.type = 'tank'; interactiveObjects.push(m); });
+}
+
+/* ─── Floating Roof Tank Builder ─── */
+function buildFloatingRoofTank(td) {
+  const g = new THREE.Group();
+  g.name = td.id;
+  const R = td.r, H = td.H;
+
+  // Concrete ringwall foundation
+  const ringwall = new THREE.Mesh(
+    new THREE.TorusGeometry(R + 0.8, 0.5, 8, 48),
+    M.concrete()
+  );
+  ringwall.rotation.x = Math.PI / 2;
+  ringwall.position.y = 0.1;
+  g.add(ringwall);
+  const ringBase = new THREE.Mesh(
+    new THREE.RingGeometry(R - 0.3, R + 1.3, 48),
+    M.concrete()
+  );
+  ringBase.rotation.x = -Math.PI / 2;
+  ringBase.position.y = -0.15;
+  g.add(ringBase);
+
+  // Cylindrical shell (open top for floating roof tanks)
+  const shellGeo = new THREE.CylinderGeometry(R, R, H, 48, 1, !td.coneRoof);
+  const shellMat = M.shell();
+  const shell = new THREE.Mesh(shellGeo, shellMat);
+  shell.position.y = H / 2;
+  shell.castShadow = true;
+  g.add(shell);
+  shellMeshes.push(shell);
+
+  // Transparent shell for internal/cutaway view
+  const shellTGeo = new THREE.CylinderGeometry(R * 1.002, R * 1.002, H, 48, 1, true);
+  const shellT = new THREE.Mesh(shellTGeo, M.shellT());
+  shellT.position.y = H / 2;
+  shellT.visible = false;
+  g.add(shellT);
+  shell._transparentTwin = shellT;
+
+  // Horizontal weld courses (every ~1.5m height)
+  for (let y = 1.5; y < H; y += 1.5) {
+    const weld = new THREE.Mesh(
+      new THREE.TorusGeometry(R + 0.02, 0.04, 6, 48),
+      mat(0x909aa0, { m:0.9, r:0.15 })
+    );
+    weld.rotation.x = Math.PI / 2;
+    weld.position.y = y;
+    g.add(weld);
+  }
+
+  // Vertical weld seams (8 vertical lines)
+  for (let i = 0; i < 8; i++) {
+    const ang = (i / 8) * Math.PI * 2;
+    const seam = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, H, 0.03),
+      mat(0x909aa0, { m:0.9, r:0.15 })
+    );
+    seam.position.set(Math.cos(ang) * R, H / 2, Math.sin(ang) * R);
+    seam.lookAt(0, H / 2, 0);
+    g.add(seam);
+  }
+
+  // Liquid inside tank
+  const fluidH = H * (td.level / 100);
+  const fluid = new THREE.Mesh(
+    new THREE.CylinderGeometry(R * 0.96, R * 0.96, fluidH, 32),
+    M.fluid(td.color)
+  );
+  fluid.position.y = fluidH / 2;
+  g.add(fluid);
+  fluidMeshes.push(fluid);
+
+  if (!td.coneRoof) {
+    // ─── FLOATING ROOF (KEY FEATURE) ───
+    const roofR = R * 0.94;
+    const roofGrp = new THREE.Group();
+
+    // Main roof disc
+    const roofDisc = new THREE.Mesh(
+      new THREE.CylinderGeometry(roofR, roofR, 0.15, 32),
+      M.roofDeck()
+    );
+    roofDisc.castShadow = true;
+    roofGrp.add(roofDisc);
+
+    // Center deck (small dome above roof)
+    const centerDeck = new THREE.Mesh(
+      new THREE.SphereGeometry(0.8, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+      M.roofDeck()
+    );
+    centerDeck.position.y = 0.07;
+    roofGrp.add(centerDeck);
+
+    // Rim seal (dark rubber torus at edge)
+    const rimSeal = new THREE.Mesh(
+      new THREE.TorusGeometry(roofR, 0.12, 8, 32),
+      M.rubber()
+    );
+    rimSeal.rotation.x = Math.PI / 2;
+    rimSeal.position.y = 0;
+    roofGrp.add(rimSeal);
+
+    // Roof legs (4 thin cylinders)
+    const legGrp = new THREE.Group();
+    for (let i = 0; i < 4; i++) {
+      const la = (i / 4) * Math.PI * 2 + Math.PI / 4;
+      const leg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.06, 0.06, H * 0.15, 6),
+        M.stainless()
+      );
+      leg.position.set(Math.cos(la) * (roofR - 1), -H * 0.075, Math.sin(la) * (roofR - 1));
+      legGrp.add(leg);
+    }
+    roofGrp.add(legGrp);
+
+    // Roof drain (flexible pipe from center going down)
+    const drainCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, -0.1, 0),
+      new THREE.Vector3(0.5, -0.8, 0.3),
+      new THREE.Vector3(0.2, -2, -0.2),
+      new THREE.Vector3(R * 0.6, -3.5, 0)
+    ]);
+    const drainPipe = new THREE.Mesh(
+      new THREE.TubeGeometry(drainCurve, 20, 0.06, 6, false),
+      M.pipe()
+    );
+    roofGrp.add(drainPipe);
+
+    // Position floating roof at liquid surface
+    const roofY = -H / 2 + fluidH;
+    roofGrp.position.y = roofY;
+    g.add(roofGrp);
+    floatingRoofs.push({ mesh: roofGrp, data: td, fluid: fluid, shell: shell });
+  } else {
+    // ─── CONE ROOF (TK-105 Fuel Oil) ───
+    const coneGeo = new THREE.ConeGeometry(R + 0.3, 2.0, 48);
+    const cone = new THREE.Mesh(coneGeo, M.shell());
+    cone.position.y = H + 1.0;
+    cone.castShadow = true;
+    g.add(cone);
+
+    // Roof rafters (visual lines under cone)
+    for (let i = 0; i < 12; i++) {
+      const ra = (i / 12) * Math.PI * 2;
+      const rafter = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, R, 6),
+        M.darkSteel()
+      );
+      rafter.position.set(Math.cos(ra) * R * 0.5, H + 0.3, Math.sin(ra) * R * 0.5);
+      rafter.rotation.z = Math.PI / 2;
+      rafter.rotation.y = ra;
+      g.add(rafter);
+    }
+    floatingRoofs.push({ mesh: null, data: td, fluid: fluid, shell: shell, coneRoof: true });
+  }
+
+  // Top shell rim ring
+  const topRim = new THREE.Mesh(
+    new THREE.TorusGeometry(R + 0.05, 0.08, 8, 48),
+    M.stainless()
+  );
+  topRim.rotation.x = Math.PI / 2;
+  topRim.position.y = H;
+  g.add(topRim);
+
+  // Gauge hatch (small box on top)
+  const hatch = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.6), M.darkSteel());
+  hatch.position.set(R * 0.4, H + 0.25, 0);
+  g.add(hatch);
+  const hatchCover = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.08, 8), M.warningR());
+  hatchCover.position.set(R * 0.4, H + 0.5, 0);
+  g.add(hatchCover);
+
+  // Breather valve
+  const breathValve = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.5, 8), M.darkSteel());
+  breathValve.position.set(-R * 0.4, H + 0.3, 0);
+  g.add(breathValve);
+
+  // Fire fighting foam chamber
+  const foamCh = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.6, 12), M.warningR());
+  foamCh.position.set(0, H + 0.35, -R * 0.3);
+  g.add(foamCh);
+  const foamNozzle = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.4, 8), M.warningR());
+  foamNozzle.position.set(0, H + 0.1, -R * 0.3);
+  foamNozzle.rotation.x = Math.PI;
+  g.add(foamNozzle);
+
+  // Stairway / vertical ladder on shell
+  const ladderH = H;
+  const ladder = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.05, 0.05, ladderH, 6),
+    M.oshaY()
+  );
+  ladder.position.set(R + 0.2, H / 2, 0);
+  g.add(ladder);
+  // Ladder rungs
+  for (let y = 0.5; y < H; y += 0.5) {
+    const rung = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.03, 0.03, 0.5, 4),
+      M.oshaY()
+    );
+    rung.rotation.x = Math.PI / 2;
+    rung.position.set(R + 0.2, y, 0);
+    g.add(rung);
+  }
+
+  // Nozzle connections (inlet/outlet/drain near bottom)
+  const nozY = 0.5;
+  // Inlet nozzle
+  const inlet = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 1.0, 12), M.pipe());
+  inlet.rotation.z = Math.PI / 2;
+  inlet.position.set(R + 0.6, nozY, -1);
+  g.add(inlet);
+  const inletFlange = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.08, 12), M.darkSteel());
+  inletFlange.rotation.z = Math.PI / 2;
+  inletFlange.position.set(R + 1.1, nozY, -1);
+  g.add(inletFlange);
+
+  // Outlet nozzle
+  const outlet = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 1.0, 12), M.pipe());
+  outlet.rotation.z = Math.PI / 2;
+  outlet.position.set(-(R + 0.6), nozY + 0.5, 1);
+  g.add(outlet);
+  const outFlange = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.08, 12), M.darkSteel());
+  outFlange.rotation.z = Math.PI / 2;
+  outFlange.position.set(-(R + 1.1), nozY + 0.5, 1);
+  g.add(outFlange);
+
+  // Drain nozzle (bottom)
+  const drain = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.8, 8), M.pipe());
+  drain.position.set(0, -0.1, R + 0.5);
+  drain.rotation.x = Math.PI / 2;
+  g.add(drain);
+
+  // Wind girder (stiffening ring at mid-height)
+  const windGirder = new THREE.Mesh(
+    new THREE.TorusGeometry(R + 0.08, 0.1, 8, 48),
+    M.darkSteel()
+  );
+  windGirder.rotation.x = Math.PI / 2;
+  windGirder.position.y = H * 0.5;
+  g.add(windGirder);
+
+  // Second wind girder (near top for tall tanks)
+  if (H > 7) {
+    const wg2 = new THREE.Mesh(
+      new THREE.TorusGeometry(R + 0.06, 0.08, 8, 48),
+      M.darkSteel()
+    );
+    wg2.rotation.x = Math.PI / 2;
+    wg2.position.y = H * 0.8;
+    g.add(wg2);
+  }
+
+  // Tank platform at top (for gauge access)
+  const platR = 1.8;
+  const platGrating = new THREE.Mesh(
+    new THREE.BoxGeometry(platR * 2, 0.06, 1.2),
+    M.grating()
+  );
+  platGrating.position.set(0, H + 0.03, R * 0.4);
+  g.add(platGrating);
+  // Platform handrail posts
+  [-platR, platR].forEach(px => {
+    const post = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.03, 0.03, 1.0, 6),
+      M.oshaY()
+    );
+    post.position.set(px, H + 0.53, R * 0.4);
+    g.add(post);
+  });
+  // Top rail
+  const topRail = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.02, 0.02, platR * 2, 6),
+    M.oshaY()
+  );
+  topRail.rotation.z = Math.PI / 2;
+  topRail.position.set(0, H + 1.03, R * 0.4);
+  g.add(topRail);
+
+  // Tank ID label (flat disc)
+  const labelDisc = new THREE.Mesh(
+    new THREE.CircleGeometry(0.6, 16),
+    mat(0xf0c040, { e:0xf0c040, ei:0.2 })
+  );
+  labelDisc.position.set(0, H + 0.05, R + 0.05);
+  labelDisc.rotation.x = -Math.PI / 2;
+  g.add(labelDisc);
+
+  // Level indicator light (green/yellow/red)
+  const lvlColor = td.level > 90 ? 0xff3333 : td.level > 75 ? 0xf59e0b : 0x22c55e;
+  const lvlLight = new THREE.Mesh(
+    new THREE.SphereGeometry(0.1, 8, 8),
+    new THREE.MeshBasicMaterial({ color: lvlColor })
+  );
+  lvlLight.position.set(0, H + 0.7, -R * 0.4);
+  g.add(lvlLight);
+  const lvlGlow = new THREE.PointLight(lvlColor, 0.4, 3);
+  lvlGlow.position.copy(lvlLight.position);
+  g.add(lvlGlow);
+
+  g.position.set(td.x, 0, td.z);
+  scene.add(g);
+}
+
+/* ─── LPG Bullet (Horizontal Pressure Vessel) ─── */
+function buildLPGBullet(x, z, idx) {
+  const g = new THREE.Group();
+  g.name = 'LPG-' + (idx + 1);
+  const r = 1.5, L = 6;
+
+  // Horizontal cylinder shell
+  const shell = new THREE.Mesh(
+    new THREE.CylinderGeometry(r, r, L, 32, 1, true),
+    M.shell()
+  );
+  shell.rotation.z = Math.PI / 2;
+  shell.position.y = r + 0.5;
+  shell.castShadow = true;
+  g.add(shell);
+
+  // Hemispherical end caps
+  const capGeo = new THREE.SphereGeometry(r, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+  const capL = new THREE.Mesh(capGeo, M.shell());
+  capL.position.set(-L / 2, r + 0.5, 0);
+  capL.rotation.z = Math.PI / 2;
+  g.add(capL);
+  const capR = new THREE.Mesh(capGeo, M.shell());
+  capR.position.set(L / 2, r + 0.5, 0);
+  capR.rotation.z = -Math.PI / 2;
+  g.add(capR);
+
+  // Concrete saddle supports (2)
+  [-1.8, 1.8].forEach(xOff => {
+    const saddle = new THREE.Mesh(
+      new THREE.BoxGeometry(1.0, r + 0.5, 2.5),
+      M.concrete()
+    );
+    saddle.position.set(xOff, (r + 0.5) / 2 - 0.1, 0);
+    g.add(saddle);
+    // Saddle cradle arc
+    const cradle = new THREE.Mesh(
+      new THREE.CylinderGeometry(r + 0.05, r + 0.05, 0.3, 32, 1, true, 0, Math.PI),
+      M.darkSteel()
+    );
+    cradle.rotation.z = Math.PI / 2;
+    cradle.rotation.y = Math.PI / 2;
+    cradle.position.set(xOff, r + 0.5, 0);
+    g.add(cradle);
+  });
+
+  // LPG nozzle (outlet)
+  const nozzle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.12, 0.12, 0.8, 8),
+    M.pipe()
+  );
+  nozzle.rotation.z = Math.PI / 2;
+  nozzle.position.set(L / 2 + 0.5, r + 0.5, 0);
+  g.add(nozzle);
+
+  // Pressure gauge
+  const gauge = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12),
+    M.darkSteel()
+  );
+  gauge.position.set(0, r + 0.7, r + 0.1);
+  g.add(gauge);
+
+  // Safety valve
+  const sv = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.1, 0.1, 0.4, 8),
+    M.warningR()
+  );
+  sv.position.set(-L / 2 + 0.5, r + 0.8, 0);
+  g.add(sv);
+
+  g.position.set(x, 0, z);
+  scene.add(g);
+
+  // Add shell to interactive
+  shell.userData.type = 'lpg';
+  shell.userData.info = { id: 'LPG-' + (idx + 1), product: 'LPG', level: 63, capacity: '21 tons', status: 'Normal' };
+  interactiveObjects.push(shell);
+}
+
+/* ─── Bund/Dyke Walls ─── */
+function buildBundWalls() {
+  const wallH = 1.5, wallW = 0.5;
+
+  // North bund wall (behind z=0 tanks)
+  const wallN = new THREE.Mesh(
+    new THREE.BoxGeometry(30, wallH, wallW),
+    M.concrete()
+  );
+  wallN.position.set(0, wallH / 2, 5);
+  wallN.castShadow = true;
+  scene.add(wallN);
+
+  // South bund wall
+  const wallS = new THREE.Mesh(
+    new THREE.BoxGeometry(30, wallH, wallW),
+    M.concrete()
+  );
+  wallS.position.set(0, wallH / 2, -5);
+  wallS.castShadow = true;
+  scene.add(wallS);
+
+  // West bund wall
+  const wallW2 = new THREE.Mesh(
+    new THREE.BoxGeometry(wallW, wallH, 10 + wallW),
+    M.concrete()
+  );
+  wallW2.position.set(-18, wallH / 2, 0);
+  wallW2.castShadow = true;
+  scene.add(wallW2);
+
+  // East bund wall
+  const wallE = new THREE.Mesh(
+    new THREE.BoxGeometry(wallW, wallH, 10 + wallW),
+    M.concrete()
+  );
+  wallE.position.set(18, wallH / 2, 0);
+  wallE.castShadow = true;
+  scene.add(wallE);
+
+  // Rear bund for TK-104/105 row
+  const wallR = new THREE.Mesh(
+    new THREE.BoxGeometry(16, wallH, wallW),
+    M.concrete()
+  );
+  wallR.position.set(0, wallH / 2, 14);
+  wallR.castShadow = true;
+  scene.add(wallR);
+
+  // Connecting walls for rear bund
+  const wallRL = new THREE.Mesh(
+    new THREE.BoxGeometry(wallW, wallH, 9),
+    M.concrete()
+  );
+  wallRL.position.set(-8, wallH / 2, 9.5);
+  scene.add(wallRL);
+
+  const wallRR = new THREE.Mesh(
+    new THREE.BoxGeometry(wallW, wallH, 9),
+    M.concrete()
+  );
+  wallRR.position.set(8, wallH / 2, 9.5);
+  scene.add(wallRR);
+}
+
+/* ─── Pump House ─── */
+function buildPumpHouse() {
+  const g = new THREE.Group();
+  g.name = 'Pump House';
+
+  // Main building
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(6, 3, 4),
+    M.concrete()
+  );
+  body.position.set(-18, 1.5, 7);
+  body.castShadow = true;
+  g.add(body);
+
+  // Roof
+  const roof = new THREE.Mesh(
+    new THREE.BoxGeometry(6.5, 0.2, 4.5),
+    M.darkSteel()
+  );
+  roof.position.set(-18, 3.1, 7);
+  g.add(roof);
+
+  // Door
+  const door = new THREE.Mesh(
+    new THREE.BoxGeometry(1.2, 2.2, 0.1),
+    mat(0xf0c040, { m:0.3, r:0.6 })
+  );
+  door.position.set(-17, 1.1, 9.06);
+  g.add(door);
+
+  // Pump indicators (3 inside)
+  for (let i = 0; i < 3; i++) {
+    const pump = new THREE.Mesh(
+      new THREE.BoxGeometry(0.8, 0.6, 0.5),
+      M.darkSteel()
+    );
+    pump.position.set(-19.5 + i * 1.5, 0.8, 7);
+    g.add(pump);
+    // Pump running light
+    const light = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 8, 8),
+      new THREE.MeshBasicMaterial({ color: i < 2 ? 0x22c55e : 0x555555 })
+    );
+    light.position.set(-19.5 + i * 1.5, 1.2, 7.3);
+    g.add(light);
+    const glow = new THREE.PointLight(i < 2 ? 0x22c55e : 0x333333, 0.3, 2);
+    glow.position.copy(light.position);
+    g.add(glow);
+  }
+
+  scene.add(g);
+}
+
+/* ─── Fire Water Monitor ─── */
+function buildFireMonitor(x, z) {
+  const g = new THREE.Group();
+  g.name = 'Fire Monitor';
+
+  // Post
+  const post = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.08, 0.1, 3, 8),
+    M.warningR()
+  );
+  post.position.set(x, 1.5, z);
+  g.add(post);
+
+  // Base plate
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.3, 0.1, 12),
+    M.darkSteel()
+  );
+  base.position.set(x, 0.05, z);
+  g.add(base);
+
+  // Swivel nozzle
+  const nozzle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.06, 0.12, 0.6, 8),
+    M.warningR()
+  );
+  nozzle.rotation.z = Math.PI / 4;
+  nozzle.position.set(x, 3.2, z);
+  g.add(nozzle);
+
+  scene.add(g);
+}
+
+/* ─── Pipe Network ─── */
+function buildPipeNetwork() {
+  function addPipe(pts, radius, pipeMat) {
+    const curve = new THREE.CatmullRomCurve3(pts);
+    const geo = new THREE.TubeGeometry(curve, 24, radius, 8, false);
+    const pipe = new THREE.Mesh(geo, pipeMat || M.pipe());
+    pipe.castShadow = true;
+    scene.add(pipe);
+  }
+
+  // Inlet manifold from left to TK-101
+  addPipe([
+    new THREE.Vector3(-24, 0.5, 0), new THREE.Vector3(-20, 0.5, 0),
+    new THREE.Vector3(-17, 0.5, -1), new THREE.Vector3(-17.6, 0.5, -1)
+  ], 0.22, mat(0x3d2b1f, { m:0.5, r:0.4 }));
+
+  // Transfer line TK-101 to TK-102
+  addPipe([
+    new THREE.Vector3(-12, 0.5, 0.8), new THREE.Vector3(-8, 0.5, 0.8),
+    new THREE.Vector3(-5, 0.5, 0.5), new THREE.Vector3(-3, 0.5, 0.5)
+  ], 0.18, M.pipe());
+
+  // Transfer line TK-102 to TK-103
+  addPipe([
+    new THREE.Vector3(3, 0.5, 0.5), new THREE.Vector3(6, 0.5, 0.5),
+    new THREE.Vector3(9, 0.5, 0.8), new THREE.Vector3(10.6, 0.5, 0.8)
+  ], 0.18, M.pipe());
+
+  // Diesel outlet from TK-103 to right
+  addPipe([
+    new THREE.Vector3(16.6, 1.0, 1), new THREE.Vector3(20, 1.0, 1),
+    new THREE.Vector3(24, 1.2, 1), new THREE.Vector3(28, 1.2, 1)
+  ], 0.2, mat(0xc8940a, { m:0.5, r:0.4 }));
+
+  // Jet fuel line to TK-104
+  addPipe([
+    new THREE.Vector3(-6, 0.5, 7.5), new THREE.Vector3(-6, 1.0, 10.5),
+    new THREE.Vector3(-6, 0.5, 12.8)
+  ], 0.15, mat(0xd4b860, { m:0.5, r:0.4 }));
+
+  // Fuel oil outlet from TK-105
+  addPipe([
+    new THREE.Vector3(10.6, 1.0, 11), new THREE.Vector3(14, 1.0, 11),
+    new THREE.Vector3(18, 1.2, 11), new THREE.Vector3(22, 1.2, 11)
+  ], 0.18, mat(0x333333, { m:0.5, r:0.4 }));
+
+  // Main header running along front
+  addPipe([
+    new THREE.Vector3(-22, 0.3, -4), new THREE.Vector3(-10, 0.3, -4),
+    new THREE.Vector3(0, 0.3, -4), new THREE.Vector3(12, 0.3, -4),
+    new THREE.Vector3(22, 0.3, -4)
+  ], 0.25, M.pipe());
+
+  // LPG lines
+  addPipe([
+    new THREE.Vector3(5, 2.5, -10), new THREE.Vector3(5, 1.5, -7),
+    new THREE.Vector3(5, 0.3, -4)
+  ], 0.12, mat(0x22d3ee, { m:0.5, r:0.3 }));
+
+  addPipe([
+    new THREE.Vector3(0, 2.5, -10), new THREE.Vector3(0, 1.5, -7),
+    new THREE.Vector3(0, 0.3, -4)
+  ], 0.12, mat(0x22d3ee, { m:0.5, r:0.3 }));
+}
+
+/* ─── Pipe Bridge/Rack ─── */
+function buildPipeRack() {
+  // Elevated pipe rack running along z=5 (between tank rows)
+  const rackLen = 36;
+  // Support columns
+  [-14, -4, 6, 16].forEach(x => {
+    const col = new THREE.Mesh(
+      new THREE.BoxGeometry(0.2, 4.5, 0.2),
+      M.darkSteel()
+    );
+    col.position.set(x, 2.25, 5);
+    scene.add(col);
+    // Cross beam
+    const beam = new THREE.Mesh(
+      new THREE.BoxGeometry(0.15, 0.15, 2.0),
+      M.darkSteel()
+    );
+    beam.position.set(x, 4.5, 5);
+    scene.add(beam);
+  });
+  // Longitudinal beams
+  [-0.5, 0.5].forEach(off => {
+    const lng = new THREE.Mesh(
+      new THREE.BoxGeometry(rackLen, 0.12, 0.12),
+      M.darkSteel()
+    );
+    lng.position.set(-2, 4.5, 5 + off);
+    scene.add(lng);
+  });
+  // Grating deck on pipe rack
+  const rackGrating = new THREE.Mesh(
+    new THREE.BoxGeometry(rackLen, 0.05, 2.5),
+    M.grating()
+  );
+  rackGrating.position.set(-2, 4.55, 5);
+  scene.add(rackGrating);
+  // Handrails on pipe rack
+  [-14, 10].forEach(xPos => {
+    [3.7, 6.3].forEach(zPos => {
+      const railPost = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.025, 0.025, 1.1, 6),
+        M.oshaY()
+      );
+      railPost.position.set(xPos, 5.1, zPos);
+      scene.add(railPost);
+    });
+  });
+}
+
+/* ─── Area Lighting Poles ─── */
+function buildAreaLighting() {
+  [[-20, 8, -3], [20, 8, -3], [0, 8, 16], [-10, 8, -7], [10, 8, -7]].forEach(([x, h, z]) => {
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.1, h, 8),
+      M.darkSteel()
+    );
+    pole.position.set(x, h / 2, z);
+    scene.add(pole);
+    // Light fixture
+    const fixture = new THREE.Mesh(
+      new THREE.BoxGeometry(0.6, 0.2, 0.6),
+      mat(0xf0c040, { e:0xf0c040, ei:0.5 })
+    );
+    fixture.position.set(x, h + 0.1, z);
+    scene.add(fixture);
+ // Area light glow
+    const areaLight = new THREE.PointLight(0xffeedd, 0.3, 20);
+    areaLight.position.set(x, h, z);
+    scene.add(areaLight);
+  });
+}
+
+/* ─── Access Road ─── */
+function buildAccessRoad() {
+  const road = new THREE.Mesh(
+    new THREE.PlaneGeometry(50, 4),
+    new THREE.MeshStandardMaterial({ color: 0x1e2428, roughness: 0.95, metalness: 0.05 })
+  );
+  road.rotation.x = -Math.PI / 2;
+  road.position.set(-2, 0.01, -7);
+  road.receiveShadow = true;
+  scene.add(road);
+  // Road center line
+  const centerLine = new THREE.Mesh(
+    new THREE.PlaneGeometry(48, 0.1),
+    new THREE.MeshBasicMaterial({ color: 0xf0c040 })
+  );
+  centerLine.rotation.x = -Math.PI / 2;
+  centerLine.position.set(-2, 0.02, -7);
+  scene.add(centerLine);
+}
+
+/* ═══════════════════════════════════════════
+   PARTICLE SYSTEMS (7)
+   ═══════════════════════════════════════════ */
+function buildParticles() {
+  // 1. Crude flowing into TK-101
+  createParticles('crudeIn', 0x3d2b1f, 250, [
+    new THREE.Vector3(-22, 0.5, 0), new THREE.Vector3(-18, 0.5, 0),
+    new THREE.Vector3(-15, 0.8, -0.5), new THREE.Vector3(-13, 2, 0)
+  ], 0.4, 0.12);
+
+  // 2. Diesel flowing out from TK-103
+  createParticles('dieselOut', 0xc8940a, 200, [
+    new THREE.Vector3(16.6, 1.0, 1), new THREE.Vector3(20, 1.0, 1),
+    new THREE.Vector3(24, 1.2, 1), new THREE.Vector3(28, 1.4, 1)
+  ], 0.45, 0.1);
+
+  // 3. Jet fuel flowing into TK-104
+  createParticles('jetIn', 0xd4b860, 180, [
+    new THREE.Vector3(-6, 0.5, 7.5), new THREE.Vector3(-6, 2, 9),
+    new THREE.Vector3(-6, 1.5, 11), new THREE.Vector3(-6, 3, 12)
+  ], 0.35, 0.09);
+
+  // 4. Fuel oil out from TK-105
+  createParticles('fuelOilOut', 0x333333, 180, [
+    new THREE.Vector3(10.6, 1.0, 11), new THREE.Vector3(14, 1.0, 11),
+    new THREE.Vector3(18, 1.2, 11), new THREE.Vector3(22, 1.4, 11)
+  ], 0.4, 0.1);
+
+  // 5. LPG circulation particles
+  createParticles('lpgFlow', 0x22d3ee, 150, [
+    new THREE.Vector3(0, 2.5, -10), new THREE.Vector3(0, 2, -7),
+    new THREE.Vector3(2.5, 1.5, -4), new THREE.Vector3(5, 2.5, -10)
+  ], 0.3, 0.08);
+
+  // 6. Main header circulation
+  createParticles('headerFlow', 0x607080, 200, [
+    new THREE.Vector3(-22, 0.3, -4), new THREE.Vector3(-10, 0.3, -4),
+    new THREE.Vector3(0, 0.3, -4), new THREE.Vector3(12, 0.3, -4),
+    new THREE.Vector3(22, 0.3, -4)
+  ], 0.3, 0.07);
+
+  // 7. Floating roof bob particles (ambient vapor above roofs)
+  createParticles('roofVapor', 0x8899aa, 120, [
+    new THREE.Vector3(-12, 7, 0), new THREE.Vector3(-12, 9, 0),
+    new THREE.Vector3(-12, 11, 0.5), new THREE.Vector3(-12, 13, 0)
+  ], 0.15, 0.06);
+}
+
+function createParticles(name, color, count, curve, speed, size) {
+  const pts = [], vels = [];
+  for (let i = 0; i < count; i++) {
+    const t = Math.random();
+    const p = curve[0].clone().lerp(curve[curve.length - 1], t);
+    p.x += (Math.random() - 0.5) * 0.3;
+    p.y += (Math.random() - 0.5) * 0.3;
+    p.z += (Math.random() - 0.5) * 0.3;
+    pts.push(p.x, p.y, p.z);
+    vels.push({ offset: t, sv: 0.7 + Math.random() * 0.6, sp: (Math.random() - 0.5) * 0.2 });
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  const pMat = new THREE.PointsMaterial({
+    color, size, transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+  });
+  const sys = new THREE.Points(geo, pMat);
+  sys.name = name;
+  sys.userData = { curve, vels, speed, count };
+  scene.add(sys);
+  particleSystems.push(sys);
+}
+
+/* ═══════════════════════════════════════════
+   RAYCASTER INTERACTION
+   ═══════════════════════════════════════════ */
+const tooltip = document.getElementById('tooltip');
+
+function onClick(e) {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, false);
+  if (hits.length > 0) {
+    const obj = hits[0].object;
+    if (obj.userData.type === 'tank') {
+      // Find tank data by position
+      const tank = tankData.find(t => {
+        const sx = obj.parent.position.x;
+        return Math.abs(sx - t.x) < 1;
+      });
+      if (tank) showTankPopup(tank);
+    } else if (obj.userData.type === 'lpg') {
+      showLPGPopup(obj.userData.info);
+    }
+  }
+}
+
+function onMouseMove(e) {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, false);
+  if (hits.length > 0) {
+    tooltip.style.display = 'block';
+    tooltip.style.left = e.clientX + 12 + 'px';
+    tooltip.style.top = e.clientY + 12 + 'px';
+    const obj = hits[0].object;
+    if (obj.userData.type === 'tank') {
+      const tank = tankData.find(t => Math.abs(obj.parent.position.x - t.x) < 1);
+      tooltip.textContent = tank ? `${tank.id} ${tank.name} — Click for details` : 'Storage Tank';
+    } else if (obj.userData.type === 'lpg') {
+      tooltip.textContent = 'LPG Bullet — Click for details';
+    }
+  } else {
+    tooltip.style.display = 'none';
+  }
+}
+
+function showTankPopup(td) {
+  const popup = document.getElementById('tank-popup');
+  const overlay = document.getElementById('popup-overlay');
+  document.getElementById('popup-title').textContent = `${td.id} — ${td.name}`;
+  document.getElementById('pk-contents').textContent = td.product;
+  document.getElementById('pk-level').textContent = td.level + '%';
+  document.getElementById('pk-vol').textContent = Math.round(td.capacity * td.level / 100) + ' m³';
+  document.getElementById('pk-cap').textContent = td.capacity + ' m³';
+  document.getElementById('pk-temp').textContent = td.temp + ' °C';
+  document.getElementById('pk-status').textContent = td.status.charAt(0).toUpperCase() + td.status.slice(1);
+  document.getElementById('pk-rate').textContent = (td.rate >= 0 ? '+' : '') + td.rate + ' m³/h';
+  document.getElementById('pk-roof').textContent = td.coneRoof ? 'Fixed Cone' : 'Internal Floating';
+  popup.style.display = 'block';
+  overlay.style.display = 'block';
+}
+
+function showLPGPopup(info) {
+  const popup = document.getElementById('tank-popup');
+  const overlay = document.getElementById('popup-overlay');
+  document.getElementById('popup-title').textContent = `${info.id} — LPG Storage`;
+  document.getElementById('pk-contents').textContent = info.product;
+  document.getElementById('pk-level').textContent = info.level + '%';
+  document.getElementById('pk-vol').textContent = Math.round(21 * info.level / 100) + ' tons';
+  document.getElementById('pk-cap').textContent = info.capacity;
+  document.getElementById('pk-temp').textContent = 'N/A (pressurized)';
+  document.getElementById('pk-status').textContent = info.status;
+  document.getElementById('pk-rate').textContent = 'Circulating';
+  document.getElementById('pk-roof').textContent = 'Bullet (Horizontal)';
+  popup.style.display = 'block';
+  overlay.style.display = 'block';
+}
+
+function closePopup() {
+  document.getElementById('tank-popup').style.display = 'none';
+  document.getElementById('popup-overlay').style.display = 'none';
+}
+
+/* ═══════════════════════════════════════════
+   VIEW MODES
+   ═══════════════════════════════════════════ */
+function setupViewToggle() {
+  document.querySelectorAll('#view-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      if (view === currentView) return;
+      currentView = view;
+      document.querySelectorAll('#view-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      animateCamera(cameraPresets[view]);
+      applyViewMode(view);
+    });
+  });
+}
+
+function applyViewMode(view) {
+  shellMeshes.forEach(shell => {
+    const twin = shell._transparentTwin;
+    if (!twin) return;
+    if (view === 'external') {
+      shell.visible = true;
+      twin.visible = false;
+      shell.material = M.shell();
+    } else if (view === 'internal' || view === 'cutaway') {
+      shell.visible = true;
+      twin.visible = true;
+      shell.material.opacity = view === 'cutaway' ? 0.25 : 0.1;
+      shell.material.transparent = true;
+    } else {
+      shell.visible = true;
+      twin.visible = false;
+      shell.material = M.shell();
+    }
+  });
+}
+
+function animateCamera(preset) {
+  const startPos = camera.position.clone();
+  const endPos = new THREE.Vector3(...preset.pos);
+  const startTarget = controls.target.clone();
+  const endTarget = new THREE.Vector3(...preset.target);
+  const dur = 1200, st = performance.now();
+  function step(now) {
+    const t = Math.min((now - st) / dur, 1);
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    camera.position.lerpVectors(startPos, endPos, ease);
+    controls.target.lerpVectors(startTarget, endTarget, ease);
+    controls.update();
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ═══════════════════════════════════════════
+   LIVE HUD UPDATE
+   ═══════════════════════════════════════════ */
+function updateHUD(t) {
+  // Slowly oscillate levels
+  tankData.forEach((td, i) => {
+    const osc = Math.sin(t * 0.1 + i * 1.5) * 0.5;
+    td.level = Math.max(5, Math.min(95, td.level + osc * 0.01));
+    const vol = Math.round(td.capacity * td.level / 100);
+    document.getElementById('lv-' + String(101 + i)).textContent = Math.round(td.level) + '%';
+  });
+
+  const totalVol = tankData.reduce((s, td) => s + Math.round(td.capacity * td.level / 100), 0);
+  document.getElementById('s-total').textContent = totalVol;
+  document.getElementById('r-total').textContent = totalVol;
+
+  const avgTemp = (38 + Math.sin(t * 0.05) * 2).toFixed(1);
+  document.getElementById('r-avgtemp').textContent = avgTemp;
+  document.getElementById('r-ambtemp').textContent = Math.round(28 + Math.sin(t * 0.03) * 2);
+
+  // Bottom panel tank levels
+  document.getElementById('s-crude').textContent = Math.round(tankData[0].level) + '%';
+  document.getElementById('s-gas').textContent = Math.round(tankData[1].level) + '%';
+  document.getElementById('s-diesel').textContent = Math.round(tankData[2].level) + '%';
+  document.getElementById('s-jet').textContent = Math.round(tankData[3].level) + '%';
+
+  // Inventory bars
+  tankData.forEach((td, i) => {
+    const ids = ['crude','gas','diesel','jet','foil'];
+    const vol = Math.round(td.capacity * td.level / 100);
+    document.getElementById('inv-' + ids[i]).textContent = vol + ' m³';
+    document.getElementById('invb-' + ids[i]).style.width = Math.round(td.level) + '%';
+  });
+
+  // Process streams
+  document.getElementById('ps-crude').textContent = (840 + Math.sin(t * 0.2) * 15).toFixed(0) + ' m³/h';
+  document.getElementById('ps-diesel').textContent = (315 + Math.sin(t * 0.15) * 8).toFixed(0) + ' m³/h';
+  document.getElementById('ps-jet').textContent = (175 + Math.sin(t * 0.18) * 6).toFixed(0) + ' m³/h';
+  document.getElementById('ps-foil').textContent = (90 + Math.sin(t * 0.12) * 5).toFixed(0) + ' m³/h';
+
+  // Safety — high level check
+  const hl = tankData.filter(td => td.level > 85);
+  document.getElementById('safe-hl').textContent = hl.length > 0 ?
+    hl.map(t => t.id + ': ' + Math.round(t.level) + '%').join(', ') : 'None';
+  document.getElementById('safe-hl').className = hl.length > 0 ? 'safe-warn' : 'safe-ok';
+
+  // TK-105 approaching 90%
+  if (tankData[4].level > 87) {
+    document.getElementById('safe-hl').textContent = 'TK-105: ' + Math.round(tankData[4].level) + '% — Approaching!';
+    document.getElementById('safe-hl').className = 'safe-warn';
+  }
+}
+
+/* ═══════════════════════════════════════════
+   ANIMATION LOOP
+   ═══════════════════════════════════════════ */
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+  controls.update();
+
+  // ─── Animate floating roofs (KEY FEATURE) ───
+  floatingRoofs.forEach((fr, i) => {
+    if (fr.coneRoof || !fr.mesh) return;
+    const td = fr.data;
+    const H = td.H;
+    const fluidH = H * (td.level / 100);
+    // Base Y = bottom of tank + fluid height
+    const baseY = -H / 2 + fluidH;
+    // Gentle bobbing oscillation
+    const bob = Math.sin(elapsed * 0.5 + i * 1.2) * 0.03;
+    fr.mesh.position.y = baseY + bob;
+    fr.mesh.rotation.y = Math.sin(elapsed * 0.3 + i) * 0.002;
+
+    // Update fluid mesh height
+    if (fr.fluid) {
+      fr.fluid.scale.y = td.level / 100;
+      fr.fluid.position.y = (fluidH * (td.level / 100)) / 2;
+    }
+  });
+
+  // ─── Animate particles ───
+  particleSystems.forEach(sys => {
+    const positions = sys.geometry.attributes.position.array;
+    const { curve, vels, speed, count } = sys.userData;
+    for (let i = 0; i < count; i++) {
+      const v = vels[i];
+      v.offset = (v.offset + delta * speed * v.sv) % 1;
+      const tLen = curve.length - 1;
+      const sF = v.offset * tLen;
+      const sI = Math.min(Math.floor(sF), tLen - 1);
+      const sT = sF - sI;
+      const p = new THREE.Vector3().lerpVectors(curve[sI], curve[sI + 1], sT);
+      p.x += v.sp * Math.sin(elapsed * 2 + i);
+      p.y += v.sp * Math.cos(elapsed * 1.5 + i);
+      p.z += v.sp * Math.sin(elapsed * 1.8 + i * 0.5);
+      positions[i * 3] = p.x;
+      positions[i * 3 + 1] = p.y;
+      positions[i * 3 + 2] = p.z;
+    }
+    sys.geometry.attributes.position.needsUpdate = true;
+  });
+
+  // ─── HUD ───
+  updateHUD(elapsed);
+
+  if (composer && camera) { composer.render(); }
+}
+
+/* ═══════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════ */
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+
+// ─── Standard Raycaster Interaction ───
+if (typeof interactiveObjects === 'undefined') { var interactiveObjects = []; }
+
+function collectInteractive() {
+  interactiveObjects = [];
+  scene.traverse(child => {
+    if (child.isMesh && child.userData.type) {
+      interactiveObjects.push(child);
+    } else if (child.isMesh && child.parent && child.parent.name && (child.parent.name.includes('-') || child.parent.name.includes(' '))) {
+      // Fallback: use parent group name as type if it looks like a label
+      child.userData.type = child.parent.name;
+      interactiveObjects.push(child);
+    }
+  });
+}
+
+function onClick(event) {
+  if (event.target !== renderer.domElement) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && !obj.userData.type) obj = obj.parent;
+    if (obj) {
+      const popup = document.getElementById('popup');
+      if (popup) {
+          const title = document.getElementById('popup-title');
+          const cont = document.getElementById('popup-content');
+          if(title) title.textContent = obj.userData.type.toUpperCase() + ' Status';
+          if(cont) cont.innerHTML = `<div class="p-row"><span class="p-lbl">Condition</span><span class="p-val">Normal</span></div>
+                                     <div class="p-row"><span class="p-lbl">Status</span><span class="p-val">Online</span></div>`;
+          popup.style.display = 'block';
+          popup.style.left = (event.clientX + 20) + 'px';
+          popup.style.top = (event.clientY - 20) + 'px';
+      }
+    }
+  }
+}
+
+function onMouseMove(event) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(interactiveObjects, true);
+  const tooltip = document.getElementById('tooltip');
+  if (hits.length > 0) {
+    let obj = hits[0].object;
+    while (obj && !obj.userData.type) obj = obj.parent;
+    if (obj && tooltip) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = event.clientX + 12 + 'px';
+      tooltip.style.top = event.clientY + 12 + 'px';
+      tooltip.textContent = obj.userData.type;
+      return;
+    }
+  }
+  if(tooltip) tooltip.style.display = 'none';
+}
+
+function simulateLoading() {
+  const fill = document.getElementById('loader-fill');
+  let p = 0;
+  const iv = setInterval(() => {
+    p += Math.random() * 18 + 6;
+    if (p >= 100) {
+      p = 100; clearInterval(iv);
+      setTimeout(() => document.getElementById('loading-screen').classList.add('hidden'), 400);
+    }
+    fill.style.width = p + '%';
+  }, 180);
+}
+
+init();
+animate();
+</script>
+</body>
+</html>
+

@@ -175,6 +175,15 @@ export const UNITS: UnitInfo[] = [
     icon: GitBranch,
   },
   {
+    id: 'tank-farm-tkfarm',
+    tag: 'TK-FARM',
+    name: 'Product Storage / Tank Farm',
+    subtitle: 'Floating roof storage systems',
+    category: 'Storage',
+    accent: '#f0c040',
+    icon: Factory,
+  },
+  {
     id: 'sour-water-stripper-t900',
     tag: 'T-900',
     name: 'Sour Water Stripper',
